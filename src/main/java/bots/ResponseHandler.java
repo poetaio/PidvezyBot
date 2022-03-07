@@ -59,9 +59,11 @@ public class ResponseHandler {
 
     private void replyToChosePassenger(long chatId) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
         sendMessage.setText("You chose passenger");
         sendMessage.setChatId(String.valueOf(chatId));
-        sendMessage.setReplyMarkup(KeyboardFactory.findDriverKeyboard());
+//        sendMessage.setReplyMarkup(KeyboardFactory.findDriverKeyboard());
+        sendMessage.setReplyMarkup(KeyboardFactory.findDriverReplyKeyboard());
 
         sender.execute(sendMessage);
     }

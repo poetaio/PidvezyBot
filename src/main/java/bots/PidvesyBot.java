@@ -32,12 +32,20 @@ public class PidvesyBot extends AbilityBot {
                 .build();
     }
 
-    public Reply replyToStartButtons() {
+    public Reply replyChooseRoleButtons() {
+        System.out.println("choose");
         Consumer<Update> action = upd -> responseHandler.replyToChooseRoleButtons(AbilityUtils.getChatId(upd), upd.getCallbackQuery().getData());
         return Reply.of(action, Flag.CALLBACK_QUERY);
     }
 
+    @Override
+    public void onUpdateReceived(Update update) {
+        super.onUpdateReceived(update);
+        System.out.println("Here");
+    }
+
     public Reply replyToFindCarButton() {
+        System.out.println("find");
         Consumer<Update> action = upd -> responseHandler.replyToFindCarButton(AbilityUtils.getChatId(upd), AbilityUtils.getUser(upd));
         return Reply.of(action, Flag.CALLBACK_QUERY);
     }

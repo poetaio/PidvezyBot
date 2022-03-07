@@ -18,4 +18,6 @@ public interface Constants {
 
     String ROLE_DRIVER = "Я";
     String ROLE_PASSENGER = "Мене";
+    String FIND_DRIVER_BUTTON = "Шукати водія!";
+    String CANCEL_BUTTON = "Назад";
 }
