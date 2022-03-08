@@ -5,7 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
@@ -18,12 +17,12 @@ public class KeyboardFactory {
         List<InlineKeyboardButton> rowLine = new ArrayList<>();
 
         InlineKeyboardButton driverRoleButton = new InlineKeyboardButton();
-        driverRoleButton.setText(Constants.ROLE_DRIVER);
-        driverRoleButton.setCallbackData(Constants.ROLE_DRIVER);
+        driverRoleButton.setText(Constants.CHOOSE_ROLE_DRIVER);
+        driverRoleButton.setCallbackData(Constants.CHOOSE_ROLE_DRIVER);
 
         InlineKeyboardButton passengerRoleButton = new InlineKeyboardButton();
-        passengerRoleButton.setText(Constants.ROLE_PASSENGER);
-        passengerRoleButton.setCallbackData(Constants.ROLE_PASSENGER);
+        passengerRoleButton.setText(Constants.CHOOSE_ROLE_PASSENGER);
+        passengerRoleButton.setCallbackData(Constants.CHOOSE_ROLE_PASSENGER);
 
         rowLine.add(driverRoleButton);
         rowLine.add(passengerRoleButton);
@@ -50,27 +49,49 @@ public class KeyboardFactory {
     }
 
     public static ReplyKeyboardMarkup chooseRoleReplyKeyboard() {
-        return null;
+        return makeOneColumnMenu(Constants.CHOOSE_ROLE_DRIVER, Constants.CHOOSE_ROLE_PASSENGER);
     }
 
-    public static ReplyKeyboardMarkup findDriverReplyKeyboard() {
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
-        markup.setSelective(true);
-        markup.setResizeKeyboard(true);
-        markup.setOneTimeKeyboard(true);
+    // driver menus
+    public static ReplyKeyboardMarkup resumeBroadcastReplyMarkup() {
+        return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.CANCEL);
+    }
 
+    public static ReplyKeyboardMarkup stopBroadcastReplyMarkup() {
+        return makeOneColumnMenu(Constants.STOP_BROADCAST, Constants.CANCEL);
+    }
+
+    // passenger menus
+    public static ReplyKeyboardMarkup chooseDestinationTypeReplyKeyboard() {
+        return makeOneColumnMenu(Constants.CHOOSE_FROM_STATION, Constants.CHOOSE_TO_STATION, Constants.CANCEL);
+    }
+
+    public static ReplyKeyboardMarkup enterToAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+    }
+
+    public static ReplyKeyboardMarkup enterFromAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+    }
+
+    public static ReplyKeyboardMarkup approveAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.APPROVE_ADDRESS, Constants.CANCEL);
+    }
+
+    private static ReplyKeyboardMarkup makeOneColumnMenu(String... buttons) {
         List<KeyboardRow> keyboard = new ArrayList<>();
-        KeyboardRow findDriverButtonRow = new KeyboardRow();
-        findDriverButtonRow.add(Constants.FIND_DRIVER_BUTTON);
 
-        KeyboardRow cancelButtonRow = new KeyboardRow();
-        KeyboardButton cancelButton = new KeyboardButton();
-        cancelButton.setText(Constants.CANCEL_BUTTON);
-        cancelButtonRow.add(cancelButton);
+        for (String button : buttons) {
+            KeyboardRow buttonRow = new KeyboardRow();
+            buttonRow.add(button);
+            keyboard.add(buttonRow);
+        }
 
-        keyboard.add(findDriverButtonRow);
-        keyboard.add(cancelButtonRow);
-        markup.setKeyboard(keyboard);
-        return markup;
+        return ReplyKeyboardMarkup.builder()
+                .selective(true)
+                .resizeKeyboard(true)
+                .oneTimeKeyboard(true)
+                .keyboard(keyboard)
+                .build();
     }
 }

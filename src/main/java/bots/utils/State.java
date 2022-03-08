@@ -1,0 +1,13 @@
+package bots.utils;
+
+public enum State {
+    CHOOSING_ROLE,
+
+    STOP_BROADCAST,
+    RESUME_BROADCAST,
+
+    CHOOSE_FROM_OR_TO,
+    ENTER_FROM_ADDRESS,
+    APPROVE_ADDRESS,
+    ENTER_TO_ADDRESS, LOOKING_FOR_DRIVER
+}
