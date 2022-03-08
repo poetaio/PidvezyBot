@@ -21,12 +21,14 @@ public class ResponseHandler {
     private final LinkedList<Long> driversList;
 
     private final Map<Long, State> chatStates;
+    private final Map<Long, String> userAddress;
 
     public ResponseHandler(MessageSender sender) {
         this.sender = sender;
         menuSender = new MenuSender(sender);
         driversList = new LinkedList<>();
         chatStates = new HashMap<>();
+        userAddress = new HashMap<>();
     }
 
     /**
@@ -58,61 +60,78 @@ public class ResponseHandler {
                 String message = upd.getMessage().getText();
                 User user;
 
-                switch (message) {
+                // TODO: refactor       !!! CRITICAL
+                if (chatStates.get(chatId) == State.ENTER_FROM_ADDRESS) {
+                    userAddress.put(chatId, message);
+                    chatStates.put(chatId, State.APPROVE_ADDRESS);
+                    user = AbilityUtils.getUser(upd);
+                    // username may be absent
+                    String checkFromString = String.format("Перевірте запит:\n%s %s просить підвезти з вул. %s на вокзал\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
+                    replyWithTextAndMenu(chatId, checkFromString, KeyboardFactory.approveAddressReplyKeyboard());
+                } else if (chatStates.get(chatId) == State.ENTER_TO_ADDRESS) {
+                    userAddress.put(chatId, message);
+                    chatStates.put(chatId, State.APPROVE_ADDRESS);
+                    user = AbilityUtils.getUser(upd);
+                    // username may be absent
+                    String checkToString = String.format("Перевірте запит:\n%s %s просить підвезти з вокзалу на вул. %s\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
+                    replyWithTextAndMenu(chatId, checkToString, KeyboardFactory.approveAddressReplyKeyboard());
+                } else {
+                    switch (message) {
 //                case Constants.CHOOSE_ROLE_REPLY:
 //                    replyToChooseRoleButtons(chatId, message);
 //                    break;
-                    case Constants.CHOOSE_ROLE_DRIVER:
-                    case Constants.RESUME_BROADCAST:
-                        chatStates.put(chatId, State.STOP_BROADCAST);
+                        case Constants.CHOOSE_ROLE_DRIVER:
+                        case Constants.RESUME_BROADCAST:
+                            chatStates.put(chatId, State.STOP_BROADCAST);
 //                    replyToChoseDriver(chatId);
-                        driversList.add(chatId);
+                            driversList.add(chatId);
 //                        menuSender.sendStopBroadcastMenu(chatId);
-                        replyWithTextAndMenu(chatId, "Сєва, придумай тєкст, пліз, без нього нот воркінг (1)", KeyboardFactory.stopBroadcastReplyMarkup());
-                        break;
-                    case Constants.STOP_BROADCAST:
-                        chatStates.put(chatId, State.RESUME_BROADCAST);
-                        driversList.remove(chatId);
+                            replyWithTextAndMenu(chatId, "Сєва, придумай тєкст, пліз, без нього нот воркінг (1)", KeyboardFactory.stopBroadcastReplyMarkup());
+                            break;
+                        case Constants.STOP_BROADCAST:
+                            chatStates.put(chatId, State.RESUME_BROADCAST);
+                            driversList.remove(chatId);
 //                        menuSender.sendResumeBroadcastMenu(chatId);
-                        replyWithTextAndMenu(chatId, Constants.BROADCAST_STOPPED_TEXT, KeyboardFactory.resumeBroadcastReplyMarkup());
-                        break;
-                    case Constants.CHOOSE_ROLE_PASSENGER:
-                        chatStates.put(chatId, State.CHOOSE_FROM_OR_TO);
+                            replyWithTextAndMenu(chatId, Constants.BROADCAST_STOPPED_TEXT, KeyboardFactory.resumeBroadcastReplyMarkup());
+                            break;
+                        case Constants.CHOOSE_ROLE_PASSENGER:
+                            chatStates.put(chatId, State.CHOOSE_FROM_OR_TO);
 //                        replyToChosePassenger(chatId);
-                        replyWithTextAndMenu(chatId, "Сєва, придумай тєкст, пліз, без нього нот воркінг (2)", KeyboardFactory.chooseDestinationTypeReplyKeyboard());
-                        break;
-                    case Constants.CHOOSE_FROM_STATION:
-                        chatStates.put(chatId, State.ENTER_TO_ADDRESS);
-                        replyWithTextAndMenu(chatId, Constants.ENTER_TO_ADDRESS, KeyboardFactory.enterToAddressReplyKeyboard());
-                        break;
-                    case Constants.CHOOSE_TO_STATION:
-                        chatStates.put(chatId, State.ENTER_FROM_ADDRESS);
+                            replyWithTextAndMenu(chatId, "Сєва, придумай тєкст, пліз, без нього нот воркінг (2)", KeyboardFactory.chooseDestinationTypeReplyKeyboard());
+                            break;
+                        case Constants.CHOOSE_FROM_STATION:
+                            chatStates.put(chatId, State.ENTER_TO_ADDRESS);
+                            replyWithTextAndMenu(chatId, Constants.ENTER_TO_ADDRESS, KeyboardFactory.enterToAddressReplyKeyboard());
+                            break;
+                        case Constants.CHOOSE_TO_STATION:
+                            chatStates.put(chatId, State.ENTER_FROM_ADDRESS);
 //                        menuSender.sendEnterFromAddress(chatId);
-                        replyWithTextAndMenu(chatId, Constants.ENTER_FROM_ADDRESS, KeyboardFactory.enterFromAddressReplyKeyboard());
-                        break;
-                    case Constants.ENTER_FROM_ADDRESS:
-                        chatStates.put(chatId, State.APPROVE_ADDRESS);
-                        user = AbilityUtils.getUser(upd);
-                        // username may be absent
-                        String checkFromString = String.format("Перевірте запит:\n%s %s просить підвезти з вул. %s на вокзал\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
-                        replyWithTextAndMenu(chatId, checkFromString, KeyboardFactory.approveAddressReplyKeyboard());
-                        break;
-                    case Constants.ENTER_TO_ADDRESS:
-                        chatStates.put(chatId, State.APPROVE_ADDRESS);
-                        user = AbilityUtils.getUser(upd);
-                        // username may be absent
-                        String checkToString = String.format("Перевірте запит:\n%s %s просить підвезти з вокзалу на вул. %s\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
-                        replyWithTextAndMenu(chatId, checkToString, KeyboardFactory.approveAddressReplyKeyboard());
-                        break;
-                    case Constants.APPROVE_ADDRESS:
-                        chatStates.put(chatId, State.LOOKING_FOR_DRIVER);
-                        replyToFindCarButton(chatId, AbilityUtils.getUser(upd), upd.getMessage().getText());
-                        break;
-                    case Constants.CANCEL:
-                        replyToCancel(chatId);
-                        break;
-                    default:
+                            replyWithTextAndMenu(chatId, Constants.ENTER_FROM_ADDRESS, KeyboardFactory.enterFromAddressReplyKeyboard());
+                            break;
+//                        case Constants.ENTER_FROM_ADDRESS:
+////                            chatStates.put(chatId, State.APPROVE_ADDRESS);
+////                            user = AbilityUtils.getUser(upd);
+////                            // username may be absent
+////                            String checkFromString = String.format("Перевірте запит:\n%s %s просить підвезти з вул. %s на вокзал\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
+////                            replyWithTextAndMenu(chatId, checkFromString, KeyboardFactory.approveAddressReplyKeyboard());
+//                            break;
+//                        case Constants.ENTER_TO_ADDRESS:
+//                            chatStates.put(chatId, State.APPROVE_ADDRESS);
+//                            user = AbilityUtils.getUser(upd);
+//                            // username may be absent
+//                            String checkToString = String.format("Перевірте запит:\n%s %s просить підвезти з вокзалу на вул. %s\n%s", user.getFirstName(), user.getLastName(), message, user.getUserName());
+//                            replyWithTextAndMenu(chatId, checkToString, KeyboardFactory.approveAddressReplyKeyboard());
+//                            break;
+                        case Constants.APPROVE_ADDRESS:
+                            chatStates.put(chatId, State.LOOKING_FOR_DRIVER);
+                            replyToFindCarButton(chatId, AbilityUtils.getUser(upd), userAddress.get(chatId));
+                            break;
+                        case Constants.CANCEL:
+                            replyToCancel(chatId);
+                            break;
+                        default:
 //                        SendMessage.builder().chatId(String.valueOf(chatId)).text("Невідома команда :(");
+                    }
                 }
             } else {
                 System.out.println("No text");
