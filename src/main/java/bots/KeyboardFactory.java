@@ -62,20 +62,27 @@ public class KeyboardFactory {
     }
 
     // passenger menus
-    public static ReplyKeyboardMarkup chooseDestinationTypeReplyKeyboard() {
+    public static ReplyKeyboardMarkup chooseTripTypeReplyKeyboard() {
         return makeOneColumnMenu(Constants.CHOOSE_FROM_STATION, Constants.CHOOSE_TO_STATION, Constants.CANCEL);
     }
 
     public static ReplyKeyboardMarkup enterToAddressReplyKeyboard() {
-        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+//        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+        return makeOneColumnMenu(Constants.CANCEL);
     }
 
     public static ReplyKeyboardMarkup enterFromAddressReplyKeyboard() {
-        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+        // removed Enter address button
+//        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
+        return makeOneColumnMenu(Constants.CANCEL);
     }
 
     public static ReplyKeyboardMarkup approveAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.APPROVE_ADDRESS, Constants.CANCEL);
+    }
+
+    public static ReplyKeyboard lookingForDriverReplyMenu() {
+        return makeOneColumnMenu(Constants.CANCEL_TRIP);
     }
 
     private static ReplyKeyboardMarkup makeOneColumnMenu(String... buttons) {
