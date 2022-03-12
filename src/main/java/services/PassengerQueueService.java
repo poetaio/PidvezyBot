@@ -95,8 +95,12 @@ public class PassengerQueueService {
      */
     public void remove(long driverId) {
         passengerQueue = passengerQueue.stream()
-                .filter(passenger -> passenger.getDriverChatId() != driverId)
+                .filter(passenger -> passenger.getDriverChatId() != null && passenger.getDriverChatId() != driverId)
                 .collect(Collectors.toList());
+    }
+
+    public void removeAll() {
+        passengerQueue = new ArrayList<>();
     }
 
     // testing queue service

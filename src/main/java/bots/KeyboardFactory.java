@@ -54,8 +54,12 @@ public class KeyboardFactory {
         return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.CHANGE_TRIP_INFO, Constants.BACK);
     }
 
-    public static ReplyKeyboard lookingForDriverReplyMenu() {
+    public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {
         return makeOneColumnMenu(Constants.CANCEL_TRIP);
+    }
+
+    public static ReplyKeyboardMarkup addressApprovedReplyMarkup() {
+        return makeOneColumnMenu(Constants.BACK);
     }
 
     private static ReplyKeyboardMarkup makeOneColumnMenu(String... buttons) {
@@ -70,7 +74,7 @@ public class KeyboardFactory {
         return ReplyKeyboardMarkup.builder()
                 .selective(true)
                 .resizeKeyboard(true)
-                .oneTimeKeyboard(true)
+//                .oneTimeKeyboard(true)
                 .keyboard(keyboard)
                 .build();
     }

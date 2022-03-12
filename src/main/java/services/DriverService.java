@@ -8,12 +8,12 @@ public class DriverService {
     private final static DriverService INSTANCE = new DriverService();
     private final List<Long> driverList;
     private final DriverUpdateService driverUpdateService;
-    private final DriverUpdateMessageService driverUpdateMessageService;
+//    private final UpdateMessageService driverUpdateMessageService;
 
     private DriverService() {
         driverList = new LinkedList<>();
         driverUpdateService = DriverUpdateService.getInstance();
-        driverUpdateMessageService = DriverUpdateMessageService.getInstance();
+//        driverUpdateMessageService = UpdateMessageService.getInstance();
     }
 
     public static DriverService getInstance() {
@@ -38,14 +38,14 @@ public class DriverService {
         driverUpdateService.resetDriverTime(chatId);
     }
 
-    // driverUpdateMessageService methods
-    public void putMessageToUpdateId(long driverChatId, int messageToUpdateId) {
-        driverUpdateMessageService.putMessageToUpdate(driverChatId, messageToUpdateId);
-    }
-
-    public Integer getMessageToUpdateId(long driverChatId) {
-        return driverUpdateMessageService.getMessageToUpdate(driverChatId);
-    }
+//    // driverUpdateMessageService methods
+//    public void putMessageToUpdateId(long driverChatId, int messageToUpdateId) {
+//        driverUpdateMessageService.putMessageToUpdate(driverChatId, messageToUpdateId);
+//    }
+//
+//    public Integer getMessageToUpdateId(long driverChatId) {
+//        return driverUpdateMessageService.getMessageToUpdate(driverChatId);
+//    }
 
     // other
     /**

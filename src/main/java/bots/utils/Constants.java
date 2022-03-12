@@ -50,4 +50,6 @@ public interface Constants {
     String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
 
     String BACK = "Назад";;
+
+    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
 }
