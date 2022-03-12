@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import models.utils.enums.TripStatus;
-import services.TripService;
 
 import javax.persistence.*;
 

@@ -1,5 +1,6 @@
 package bots;
 
+import bots.response_handler.ResponseHandler;
 import bots.utils.Constants;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
@@ -39,6 +40,10 @@ public class PidvesyBot extends AbilityBot {
     @Override
     public void onUpdateReceived(Update update) {
         super.onUpdateReceived(update);
-        responseHandler.handleUpdate(update);
+        try {
+            responseHandler.handleUpdate(update);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

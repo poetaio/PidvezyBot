@@ -1,84 +1,57 @@
 package bots;
 
 import bots.utils.Constants;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contains all menus layouts of corresponding states
+ */
 public class KeyboardFactory {
-    public static ReplyKeyboard chooseRoleKeyboard() {
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        List<InlineKeyboardButton> rowLine = new ArrayList<>();
-
-        InlineKeyboardButton driverRoleButton = new InlineKeyboardButton();
-        driverRoleButton.setText(Constants.CHOOSE_ROLE_DRIVER);
-        driverRoleButton.setCallbackData(Constants.CHOOSE_ROLE_DRIVER);
-
-        InlineKeyboardButton passengerRoleButton = new InlineKeyboardButton();
-        passengerRoleButton.setText(Constants.CHOOSE_ROLE_PASSENGER);
-        passengerRoleButton.setCallbackData(Constants.CHOOSE_ROLE_PASSENGER);
-
-        rowLine.add(driverRoleButton);
-        rowLine.add(passengerRoleButton);
-
-        rowsInline.add(rowLine);
-
-        inlineKeyboardMarkup.setKeyboard(rowsInline);
-        return inlineKeyboardMarkup;
-    }
-
-    public static ReplyKeyboard findDriverKeyboard() {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> menu = new ArrayList<>();
-        List<InlineKeyboardButton> findDriverButtonLine = new ArrayList<>();
-
-        InlineKeyboardButton findDriverButton = new InlineKeyboardButton();
-        findDriverButton.setText("Find Driver");
-        findDriverButton.setCallbackData("Find Driver");
-
-        findDriverButtonLine.add(findDriverButton);
-        menu.add(findDriverButtonLine);
-        markup.setKeyboard(menu);
-        return markup;
-    }
-
     public static ReplyKeyboardMarkup chooseRoleReplyKeyboard() {
         return makeOneColumnMenu(Constants.CHOOSE_ROLE_DRIVER, Constants.CHOOSE_ROLE_PASSENGER);
     }
 
     // driver menus
     public static ReplyKeyboardMarkup resumeBroadcastReplyMarkup() {
-        return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.CANCEL);
+        return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.BACK);
     }
 
-    public static ReplyKeyboardMarkup stopBroadcastReplyMarkup() {
-        return makeOneColumnMenu(Constants.STOP_BROADCAST, Constants.CANCEL);
+    public static ReplyKeyboardMarkup driverTookTripReplyKeyboard() {
+        return makeOneColumnMenu(Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup driverActiveReplyMarkup() {
+        return makeOneColumnMenu(Constants.TAKE_TRIP, Constants.NEXT_TRIP, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup noTripsReplyMarkup() {
+        return makeOneColumnMenu(Constants.BACK);
     }
 
     // passenger menus
-    public static ReplyKeyboardMarkup chooseTripTypeReplyKeyboard() {
-        return makeOneColumnMenu(Constants.CHOOSE_FROM_STATION, Constants.CHOOSE_TO_STATION, Constants.CANCEL);
+    public static ReplyKeyboardMarkup enterAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.BACK);
     }
 
-    public static ReplyKeyboardMarkup enterToAddressReplyKeyboard() {
-//        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
-        return makeOneColumnMenu(Constants.CANCEL);
+    public static ReplyKeyboardMarkup enterDetailsReplyKeyboard() {
+        return makeOneColumnMenu(Constants.BACK);
     }
 
-    public static ReplyKeyboardMarkup enterFromAddressReplyKeyboard() {
-        // removed Enter address button
-//        return makeOneColumnMenu(Constants.ENTER_TO_ADDRESS, Constants.CANCEL);
-        return makeOneColumnMenu(Constants.CANCEL);
+    public static ReplyKeyboardMarkup enterOnStationReplyKeyboard() {
+        return makeOneColumnMenu(Constants.ON_STATION_NO, Constants.ON_STATION_YES, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup checkingOutOnStationReplyKeyboard() {
+        return makeOneColumnMenu(Constants.I_AM_ON_STATION, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup approveAddressReplyKeyboard() {
-        return makeOneColumnMenu(Constants.APPROVE_ADDRESS, Constants.CANCEL);
+        return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.CHANGE_TRIP_INFO, Constants.BACK);
     }
 
     public static ReplyKeyboard lookingForDriverReplyMenu() {
