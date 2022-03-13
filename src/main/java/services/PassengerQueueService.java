@@ -16,7 +16,7 @@ public class PassengerQueueService {
     private List<QueuePassengerDao> passengerQueue;
 
     private PassengerQueueService() {
-        passengerQueue = new ArrayList<>();
+        passengerQueue = TestDataService.getTestPassengerQueue();
     }
 
     public static PassengerQueueService getInstance() {
@@ -36,8 +36,12 @@ public class PassengerQueueService {
         QueuePassengerDao driverPassenger = getPassengerDaoByDriverInner(driverChatId);
 
         int index;
+        int cnt = 1;
+
         if (driverPassenger == null) {
             index = 0;
+            // if no passengers were taken by driver, we must look through all of them, not all - 1
+            cnt = 0;
         } else if (passengerQueue.size() == 1) {
             // if driver took the only passenger, no options left
             driverPassenger.setDriverChatId(null);
@@ -48,13 +52,12 @@ public class PassengerQueueService {
             driverPassenger.setDriverChatId(null);
         }
 
-        int cnt = 1;
         while (passengerQueue.get(index).getDriverChatId() != null) {
             // counting and stopping on full cycle
             if (cnt >= passengerQueue.size() - 1)
                 return null;
 
-            index = index + 1 == passengerQueue.size() ? 0 : index + 1;
+            index = (index + 1) % passengerQueue.size();
             ++cnt;
         }
 
@@ -94,9 +97,21 @@ public class PassengerQueueService {
      * @param driverId Id of the driver, who views trip application
      */
     public void remove(long driverId) {
+        // todo: check if not broken (== or !=null)
         passengerQueue = passengerQueue.stream()
-                .filter(passenger -> passenger.getDriverChatId() != null && passenger.getDriverChatId() != driverId)
+                .filter(passenger -> passenger.getDriverChatId() == null || passenger.getDriverChatId() != driverId)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Unsets driver id of trip on which it was set, when driver leaves
+     * @param driverChatId  Id of the driver, who's been viewing trip application
+     */
+    public void unsetView(long driverChatId) {
+        passengerQueue.stream()
+                .filter(x -> x.getDriverChatId() != null && x.getPassengerChatId() == driverChatId)
+                .findFirst()
+                .ifPresent(queuePassengerDao -> queuePassengerDao.setDriverChatId(null));
     }
 
     public void removeAll() {

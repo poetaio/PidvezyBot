@@ -74,7 +74,7 @@ public class KeyboardFactory {
         return ReplyKeyboardMarkup.builder()
                 .selective(true)
                 .resizeKeyboard(true)
-//                .oneTimeKeyboard(true)
+                .oneTimeKeyboard(false)
                 .keyboard(keyboard)
                 .build();
     }

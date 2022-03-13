@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import services.DriverService;
 import services.PassengerQueueService;
+import services.TestDataService;
 import services.UpdateMessageService;
 
 import java.util.HashMap;
@@ -49,7 +50,9 @@ public class ResponseHandler {
         chatStates = new HashMap<>();
         userAddress = new HashMap<>();
         userDetails = new HashMap<>();
-        userInfo = new HashMap<>();
+
+        // todo: add if on test mode
+        userInfo = TestDataService.getTestUserInfo();
 
         passengerQueueService = PassengerQueueService.getInstance();
         updateMessageService = UpdateMessageService.getInstance();
@@ -70,7 +73,7 @@ public class ResponseHandler {
             @Override
             protected void sendTripOffer(long chatId, QueuePassengerDao passengerDao) throws TelegramApiException {
                 deleteLastBotMessage(chatId);
-                Message sentMessage = sender.execute(menuSender.sendDriverActiveMenu(chatId, generateDriverOfferTripMessage(passengerDao.getPassengerChatId(), passengerDao)));
+                Message sentMessage = sender.execute(menuSender.sendDriverActiveMenu(chatId, generateDriverOfferTripMessage(passengerDao)));
                 updateMessageService.putBotMessageToUpdate(chatId, sentMessage.getMessageId());
             }
         }).start();
@@ -80,9 +83,10 @@ public class ResponseHandler {
      * Replies to /start command with two roles to choose from
      * @param chatId of the chat message comes from
      */
-    public void replyToStart(long chatId) throws TelegramApiException{
+    public void replyToStart(long chatId, Update upd) throws TelegramApiException{
         chatStates.put(chatId, State.CHOOSING_ROLE);
         sender.execute(menuSender.sendChooseRoleMenu(chatId));
+        updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
     }
 
     /**
@@ -114,7 +118,8 @@ public class ResponseHandler {
 
         switch (chatStates.get(chatId)) {
             case CHOOSING_ROLE:
-                userInfo.putIfAbsent(chatId, AbilityUtils.getUser(upd));
+                userInfo.put(chatId, AbilityUtils.getUser(upd));
+//                userInfo.putIfAbsent(chatId, AbilityUtils.getUser(upd));
                 messageToSend = onChoosingRole(chatId, message);
                 break;
 
@@ -186,9 +191,15 @@ public class ResponseHandler {
 //                replyToStopBroadcast(chatId);
 //                break;
             case Constants.NEXT_TRIP:
+                QueuePassengerDao driverLastPassenger = passengerQueueService.getPassengerDaoByDriver(chatId);
+                if (driverLastPassenger == null) {
+                    // TODO: move logic to separate method (show no trips available or next trip)
+                    return menuSender.sendDriverActiveMenu(chatId, Constants.NO_TRIPS_MESSAGE);
+                }
                 driverService.resetDriverTime(chatId);
-                return menuSender.sendDriverActiveMenu(chatId, generateDriverOfferTripMessage(chatId,
-                        passengerQueueService.getNextFree(chatId)));
+                QueuePassengerDao nextPassenger = passengerQueueService.getNextFree(chatId);
+                return menuSender.sendDriverActiveMenu(chatId,
+                        generateDriverOfferTripMessage(nextPassenger));
             case Constants.TAKE_TRIP:
                 QueuePassengerDao driverPassenger = passengerQueueService.getPassengerDaoByDriver(chatId);
                 if (driverPassenger == null) {
@@ -207,8 +218,7 @@ public class ResponseHandler {
             default:
                 // TODO: move logic to separate method (show no trips available or next trip)
                 return menuSender.sendDriverActiveMenu(chatId,
-                        generateDriverOfferTripMessage(chatId,
-                                passengerQueueService.getPassengerDaoByDriver(chatId)));
+                        generateDriverOfferTripMessage(passengerQueueService.getPassengerDaoByDriver(chatId)));
         }
     }
 
@@ -357,7 +367,7 @@ public class ResponseHandler {
         }
         User passengerUserInfo = userInfo.get(tripInfo.getPassengerChatId());
         String message = String.format("%s %s шукає транспорт з вокзалу на вул. %s \n\n%s",
-                passengerUserInfo.getFirstName(), passengerUserInfo.getFirstName(),
+                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName(),
                 tripInfo.getAddress(), tripInfo.getDetails());
         return menuSender.sendDriverActiveMenu(chatId, message);
     }
@@ -405,11 +415,11 @@ public class ResponseHandler {
         return menuSender.sendAddressApprovedMenu(chatId);
     }
 
-    private String generateDriverOfferTripMessage(long chatId, QueuePassengerDao queuePassengerDao) {
+    private String generateDriverOfferTripMessage(QueuePassengerDao queuePassengerDao) {
         if (queuePassengerDao == null)
             return Constants.NO_TRIPS_MESSAGE;
 
-        User user = userInfo.get(chatId);
+        User user = userInfo.get(queuePassengerDao.getPassengerChatId());
         return String.format("%s %s шукає транспорт з вокзалу на вул. %s \n\n%s",
                  user.getFirstName(), user.getLastName(),
                 // todo: exception

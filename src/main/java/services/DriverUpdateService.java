@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class DriverUpdateService {
     private static final DriverUpdateService INSTANCE = new DriverUpdateService();
-    private PriorityQueue<DriverUpdateDao> driverUpdateQueue;
+    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
 
     private DriverUpdateService() {
         driverUpdateQueue = new PriorityQueue<>();
@@ -38,7 +38,7 @@ public class DriverUpdateService {
     }
 
     public void removeAll() {
-        driverUpdateQueue = new PriorityQueue<>();
+        driverUpdateQueue.clear();
     }
 
     public DriverUpdateDao getDriver(long chatId) {
@@ -50,19 +50,34 @@ public class DriverUpdateService {
         return driverUpdateQueue.stream().map(DriverUpdateDao::clone).collect(Collectors.toList());
     }
 
+    /**
+     * Get drivers with date of update that has already passed
+     * @return List of drivers' id's
+     */
     public List<Long> getDriversToUpdate() {
-        List<Long> resList = new LinkedList<>();
+        List<DriverUpdateDao> resList = new LinkedList<>();
         Date currentDate = new Date();
 
+        // find all driver that require update
         for (DriverUpdateDao driverUpdateDao : driverUpdateQueue) {
             if (driverUpdateDao.getNextUpdateTime().after(currentDate)) {
                 break;
             }
-            resetDriverTime(driverUpdateDao.getChatId());
-            resList.add(driverUpdateDao.getChatId());
+
+            resList.add(driverUpdateDao);
         }
 
-        return resList;
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
+
+        // reinsert found drivers with new date value
+        for (DriverUpdateDao driverUpdateDao : resList) {
+            driverUpdateDao.setNextUpdateTime(calendar.getTime());
+            driverUpdateQueue.remove(driverUpdateDao);
+            driverUpdateQueue.add(driverUpdateDao);
+        }
+
+        return resList.stream().map(DriverUpdateDao::getChatId).collect(Collectors.toList());
     }
 
     @Override

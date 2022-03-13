@@ -23,6 +23,7 @@ public class DriverService {
     public void removeDriver(long driverChatId) {
         driverList.remove(driverChatId);
         driverUpdateService.removeDriver(driverChatId);
+        PassengerQueueService.getInstance().unsetView(driverChatId);
     }
 
     public void addDriver(long driverChatId) {
