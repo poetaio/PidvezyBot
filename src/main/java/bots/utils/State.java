@@ -14,6 +14,6 @@ public enum State {
     ENTERING_ON_STATION,
 
     APPROVING_TRIP,
-
-    LOOKING_FOR_DRIVER
+    LOOKING_FOR_DRIVER,
+    FOUND_A_CAR
 }

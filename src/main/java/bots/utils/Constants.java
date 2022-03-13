@@ -4,7 +4,7 @@ public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
     int CREATOR_ID = 278171783;
-    int DRIVER_UPDATE_INTERVAL = 15;
+    int DRIVER_UPDATE_INTERVAL = 10;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
@@ -43,13 +43,18 @@ public interface Constants {
     String CHANGE_TRIP_INFO = "Змінити запит";
     String APPROVE_TRIP = "Підтвердити";
 
-    String REQUEST_SENT_MESSAGE = "Запит надіслано";
+    String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
 
-    String CANCEL_TRIP = "Відмінити поїздку";
-    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
+    String EDIT_TRIP = "Змінити поїздку";
+//    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
+    String I_FOUND_A_CAR = "Я знайшов транспорт";
+
+    String HAVE_A_NICE_TRIP = "Гарної дороги!";
+    
+    String THANK_YOU = "Дякую!";
 
     String BACK = "Назад";;
 
-    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
+    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";;;
 }

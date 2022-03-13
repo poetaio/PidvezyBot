@@ -17,6 +17,7 @@ public abstract class DriverMessageScheduler implements Runnable {
         try {
             while (true) {
                 for (Long driverChatId : DriverUpdateService.getInstance().getDriversToUpdate()) {
+
                     QueuePassengerDao lastPassengerDao = PassengerQueueService.getInstance()
                             .getPassengerDaoByDriver(driverChatId);
                     QueuePassengerDao passengerDao = PassengerQueueService.getInstance().getNextFree(driverChatId);

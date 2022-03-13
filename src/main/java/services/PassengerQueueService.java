@@ -92,12 +92,17 @@ public class PassengerQueueService {
         passengerQueue.add(passenger);
     }
 
+    public void removeByPassengerId(long passengerChatId) {
+        passengerQueue = passengerQueue.stream()
+                .filter(passenger -> passenger.getPassengerChatId() != passengerChatId)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Removes passenger trip application viewed by driver when driver accepts it
      * @param driverId Id of the driver, who views trip application
      */
-    public void remove(long driverId) {
-        // todo: check if not broken (== or !=null)
+    public void removeByDriverId(long driverId) {
         passengerQueue = passengerQueue.stream()
                 .filter(passenger -> passenger.getDriverChatId() == null || passenger.getDriverChatId() != driverId)
                 .collect(Collectors.toList());

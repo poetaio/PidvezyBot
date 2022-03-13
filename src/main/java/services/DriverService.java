@@ -62,15 +62,15 @@ public class DriverService {
      * Enable driver to get notifications about users' trips
      * @param driverChatId Driver-Bot chat id
      */
-    public void subscribeDriver(long driverChatId) {
-
+    public void subscribeDriverOnUpdate(long driverChatId) {
+        driverUpdateService.addDriver(driverChatId);
     }
 
     /**
      * Stop driver from getting notifications about users' trips
      * @param driverChatId Driver-Bot chat id
      */
-    public void unsubscribeDriver(long driverChatId) {
-
+    public void unsubscribeDriverFromUpdate(long driverChatId) {
+        driverUpdateService.removeDriver(driverChatId);
     }
 }

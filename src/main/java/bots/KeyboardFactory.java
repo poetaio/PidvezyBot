@@ -1,7 +1,6 @@
 package bots;
 
 import bots.utils.Constants;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
@@ -55,11 +54,15 @@ public class KeyboardFactory {
     }
 
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {
-        return makeOneColumnMenu(Constants.CANCEL_TRIP);
+        return makeOneColumnMenu(Constants.I_FOUND_A_CAR, Constants.EDIT_TRIP);
     }
 
     public static ReplyKeyboardMarkup addressApprovedReplyMarkup() {
         return makeOneColumnMenu(Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup haveANiceTripReplyMenu() {
+        return makeOneColumnMenu(Constants.THANK_YOU);
     }
 
     private static ReplyKeyboardMarkup makeOneColumnMenu(String... buttons) {
@@ -70,9 +73,9 @@ public class KeyboardFactory {
             buttonRow.add(button);
             keyboard.add(buttonRow);
         }
-
         return ReplyKeyboardMarkup.builder()
                 .selective(true)
+                .inputFieldPlaceholder("This text is a placeholder")
                 .resizeKeyboard(true)
                 .oneTimeKeyboard(false)
                 .keyboard(keyboard)

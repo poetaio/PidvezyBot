@@ -12,6 +12,7 @@ public class UpdateMessageService {
 
     private final Map<Long, Integer> botMessageToUpdateId;
     private final Map<Long, Integer> userMessageToUpdateId;
+    private long currentChatId;
 
     private UpdateMessageService() {
         botMessageToUpdateId = new HashMap<>();
@@ -36,5 +37,13 @@ public class UpdateMessageService {
 
     public Integer getUserMessageToUpdate(long userChatId) {
         return userMessageToUpdateId.get(userChatId);
+    }
+
+    public long getCurrentChatId() {
+        return currentChatId;
+    }
+
+    public void setCurrentChatId(long currentChatId) {
+        this.currentChatId = currentChatId;
     }
 }
