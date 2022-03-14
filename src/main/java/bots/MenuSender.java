@@ -4,17 +4,10 @@ import bots.utils.Constants;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.UpdateMessageService;
-
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Contains methods which combine messages and corresponding menus and send them to user
@@ -54,7 +47,7 @@ public class MenuSender {
     }
 
     public SendMessage sendDriverTookTripMenu(long chatId, User user) throws TelegramApiException {
-        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення\n@%s", user.getFirstName(), user.getUserName());
+        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення або дзвінок\n@%s", user.getFirstName(), user.getUserName());
         return sendTextAndMenu(chatId, userWaitsForYourCallMessage, KeyboardFactory.driverTookTripReplyKeyboard());
     }
 
@@ -68,7 +61,7 @@ public class MenuSender {
 
     public SendMessage sendApprovingTripMenu(long chatId, String address, String details, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
-        String checkFromString = String.format("%s %s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName(), address, details, user.getUserName());
+        String checkFromString = String.format("Підтвердіть запит:\n%s %s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName(), address, details, user.getUserName());
         return sendTextAndMenu(chatId, checkFromString, KeyboardFactory.approveAddressReplyKeyboard());
     }
 

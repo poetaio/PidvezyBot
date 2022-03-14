@@ -1,9 +1,11 @@
 package bots.response_handler;
 
 import bots.DriverMessageScheduler;
+import bots.KeyboardFactory;
 import bots.MenuSender;
 import bots.utils.Constants;
 import bots.utils.State;
+import models.dao.DriverUpdateDao;
 import models.dao.QueuePassengerDao;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
@@ -19,6 +21,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ResponseHandler {
+
+    // TODO: REMOVE!!!
+    private static ResponseHandler INSTANCE;
+
+    public static ResponseHandler getInstance(MessageSender sender) {
+        if (INSTANCE == null)
+            INSTANCE = new ResponseHandler(sender);
+        return INSTANCE;
+    }
+
     private final MessageSender sender;
     private final MenuSender menuSender;
 
@@ -53,16 +65,16 @@ public class ResponseHandler {
             @Override
             protected void sendNoTripsAvailable(long chatId) throws TelegramApiException {
                 synchronized (SendingMessageService.MessageSending) {
-                    deleteLastBotMessage(chatId);
                     Message sentMessage = sender.execute(menuSender.sendDriverActiveMenu(chatId, Constants.NO_TRIPS_MESSAGE));
+                    deleteLastBotMessage(chatId);
                     updateMessageService.putBotMessageToUpdate(chatId, sentMessage.getMessageId());
                 }
             }
             @Override
             protected void sendTripOffer(long chatId, QueuePassengerDao passengerDao) throws TelegramApiException {
                 synchronized (SendingMessageService.MessageSending) {
-                    deleteLastBotMessage(chatId);
                     Message sentMessage = sender.execute(menuSender.sendDriverActiveMenu(chatId, generateDriverOfferTripMessage(passengerDao)));
+                    deleteLastBotMessage(chatId);
                     updateMessageService.putBotMessageToUpdate(chatId, sentMessage.getMessageId());
                 }
             }
@@ -75,6 +87,19 @@ public class ResponseHandler {
      */
     public void replyToStart(long chatId, Update upd) throws TelegramApiException {
         userService.performCleanup(chatId);
+        // deleting previous user message
+        Integer userMessageToDelete = updateMessageService.getUserMessageToUpdate(chatId);
+        if (userMessageToDelete != null) {
+            DeleteMessage deleteLastUserMessage = DeleteMessage.builder()
+                    .messageId(userMessageToDelete)
+                    .chatId(String.valueOf(chatId))
+                    .build();
+            try {
+                sender.execute(deleteLastUserMessage);
+            } catch (Exception ignored) {}
+        }
+        updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
+        removeScheduleMessage(chatId);
         chatStates.put(chatId, State.CHOOSING_ROLE);
         synchronized (SendingMessageService.MessageSending) {
             deleteLastBotMessage(chatId);
@@ -108,7 +133,9 @@ public class ResponseHandler {
                     .messageId(userMessageToDelete)
                     .chatId(String.valueOf(chatId))
                     .build();
-            sender.execute(deleteLastUserMessage);
+            try {
+                sender.execute(deleteLastUserMessage);
+            } catch (Exception ignored) {}
         }
         updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
 
@@ -228,6 +255,7 @@ public class ResponseHandler {
                         userService.getUserInfo(driverPassenger.getPassengerChatId()));
             case Constants.BACK:
                 chatStates.put(chatId, State.CHOOSING_ROLE);
+                removeScheduleMessage(chatId);
                 driverService.removeDriver(chatId);
                 return menuSender.sendChooseRoleMenu(chatId);
             default:
@@ -241,6 +269,7 @@ public class ResponseHandler {
         switch (message) {
             case Constants.BACK:
                 chatStates.put(chatId, State.DRIVER_ACTIVE);
+                sendScheduleMessage(chatId, false);
                 driverService.subscribeDriverOnUpdate(chatId);
                 return menuSender.sendDriverActiveMenu(chatId,
                         generateDriverOfferTripMessage(passengerQueueService.getNextFree(chatId)));
@@ -372,7 +401,7 @@ public class ResponseHandler {
         switch (message) {
             case Constants.EDIT_TRIP:
                 return replyToEditTrip(chatId);
-            case Constants.I_FOUND_A_CAR:
+            case Constants.STOP_LOOKING_FOR_A_CAR:
                 return replyToFoundACar(chatId);
             default:
                 return replyWithText(chatId, Constants.REQUEST_PENDING_MESSAGE);
@@ -402,6 +431,7 @@ public class ResponseHandler {
         chatStates.put(chatId, State.DRIVER_ACTIVE);
         // adding driver to both drivers list and update queue
         driverService.addDriver(chatId);
+        sendScheduleMessage(chatId, false);
         QueuePassengerDao tripInfo = passengerQueueService.getNextFree(chatId);
         if (tripInfo == null) {
             return menuSender.sendDriverActiveMenu(chatId, Constants.NO_TRIPS_MESSAGE);
@@ -419,7 +449,7 @@ public class ResponseHandler {
         return menuSender.sendEnterAddressMenu(chatId);
     }
 
-    public SendMessage replyToStopBroadcast(long chatId) throws TelegramApiException{
+    public SendMessage replyToStopBroadcast(long chatId) throws TelegramApiException {
 //        chatStates.put(chatId, State.DRIVER_INACTIVE);
         chatStates.put(chatId, State.CHOOSING_ROLE);
         driverService.removeDriver(chatId);
@@ -490,7 +520,7 @@ public class ResponseHandler {
 
         // TODO: NULLPOINTER CHECK userInfo.get
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s",
+        return String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL +  " секунд)",
                  user.getFirstName(), user.getLastName(),
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
@@ -528,7 +558,9 @@ public class ResponseHandler {
                     .messageId(botMessageToUpdate)
                     .chatId(String.valueOf(chatId))
                     .build();
-            sender.execute(deleteLastBotMessage);
+            try {
+                sender.execute(deleteLastBotMessage);
+            } catch (Exception ignored) {}
         }
     }
 
@@ -537,5 +569,82 @@ public class ResponseHandler {
                 .chatId(String.valueOf(chatId))
                 .text(messageText)
                 .build();
+    }
+
+    // TODO: remove
+    public void sendBroadcastToDrivers(String message) throws TelegramApiException {
+        for (DriverUpdateDao driver : DriverUpdateService.getInstance().getAll()) {
+            System.out.println(driver.getChatId());
+            SendMessage.SendMessageBuilder builder = SendMessage.builder()
+                    .text(message)
+                    .chatId(String.valueOf(driver.getChatId()));
+            if (chatStates.get(driver.getChatId()) == State.DRIVER_ACTIVE)
+                builder.replyMarkup(KeyboardFactory.driverActiveReplyMarkup());
+            else if (chatStates.get(driver.getChatId()) == State.DRIVER_TOOK_TRIP)
+                builder.replyMarkup(KeyboardFactory.driverTookTripReplyKeyboard());
+            else return;
+            sender.execute(builder.build());
+        }
+    }
+
+    public void sendMessage(SendMessage build) throws TelegramApiException {
+        sender.execute(build);
+    }
+
+    public State getState(long chatId) {
+        return chatStates.get(chatId);
+    }
+
+    private String currentScheduleMessage;
+    private String currentScheduleTime;
+    private Map<Long, Integer> currentScheduleMessageId = new HashMap<>();
+
+    public void sendScheduleMessage(long chatId, boolean mailing) throws TelegramApiException {
+        if (currentScheduleMessage == null)
+            return;
+
+        SendMessage.SendMessageBuilder builder = SendMessage.builder()
+                .text(mailing ? currentScheduleMessage : currentScheduleTime)
+                .chatId(String.valueOf(chatId));
+        if (ResponseHandler.getInstance(null).getState(chatId) == State.DRIVER_ACTIVE) {
+            if (PassengerQueueService.getInstance().getPassengerDaoByDriver(chatId) == null)
+                builder.replyMarkup(KeyboardFactory.noTripsReplyMarkup());
+            else
+                builder.replyMarkup(KeyboardFactory.driverActiveReplyMarkup());
+        }
+        else if (ResponseHandler.getInstance(null).getState(chatId) == State.DRIVER_TOOK_TRIP)
+            builder.replyMarkup(KeyboardFactory.driverTookTripReplyKeyboard());
+        else return;
+
+        Message m = sender.execute(builder.build());
+        removeScheduleMessage(chatId);
+        currentScheduleMessageId.put(chatId, m.getMessageId());
+    }
+
+    private void removeScheduleMessage(long chatId) throws TelegramApiException {
+        try {
+            if (currentScheduleMessageId.get(chatId) != null)
+                sender.execute(DeleteMessage.builder()
+                        .chatId(String.valueOf(chatId))
+                        .messageId(currentScheduleMessageId.get(chatId))
+                        .build());
+        } catch (Exception ignored) {}
+    }
+
+    public String getCurrentScheduleMessage() {
+        return currentScheduleMessage;
+    }
+
+    public void setCurrentScheduleMessage(String currentScheduleMessage, String currentScheduleTime) {
+        this.currentScheduleMessage = currentScheduleMessage;
+        this.currentScheduleTime = currentScheduleTime;
+    }
+
+    public Integer getCurrentScheduleMessageId(long chatId) {
+        return currentScheduleMessageId.get(chatId);
+    }
+
+    public void setCurrentScheduleMessageId(long chatId, Integer currentScheduleMessageId) {
+        this.currentScheduleMessageId.put(chatId, currentScheduleMessageId);
     }
 }

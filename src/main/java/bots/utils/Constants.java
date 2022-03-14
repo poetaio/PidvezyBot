@@ -4,15 +4,15 @@ public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
     int CREATOR_ID = 278171783;
-    int DRIVER_UPDATE_INTERVAL = 10;
+    int DRIVER_UPDATE_INTERVAL = 20;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
 
-    String START_DESCRIPTION = "Бот для допомоги біженцям з транспортом у комендантську годину (з вокзалу та на вокзал)";
+    String START_DESCRIPTION = "Бот для допомоги з розвезенням біженців з вокзалу у комендантську годину\n22:00 - 6:00";
 
 //    String START_REPLY = "З якою ціллю ви тут?";
-    String CHOOSE_ROLE_REPLY = "Бот для допомоги біженцям з транспортом у комендантську годину (з вокзалу та на вокзал)";
+    String CHOOSE_ROLE_REPLY = "Бот для допомоги з розвезенням біженців з вокзалу у комендантську годину\n22:00 - 6:00";
 
 //    String ROLE_DRIVER = "Підвезу";
 //    String ROLE_PASSENGER = "Підвезіть";
@@ -24,7 +24,8 @@ public interface Constants {
 
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
-    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
+//    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
+    String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність та про прибуття потягу";
 
     String RESUME_BROADCAST = "Відновити розсилку";
 
@@ -43,12 +44,13 @@ public interface Constants {
     String CHANGE_TRIP_INFO = "Змінити запит";
     String APPROVE_TRIP = "Підтвердити";
 
-    String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.";
+    String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
 
     String EDIT_TRIP = "Змінити поїздку";
 //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
     String I_FOUND_A_CAR = "Я знайшов транспорт";
+    String STOP_LOOKING_FOR_A_CAR = "Зупинити пошук";
 
     String HAVE_A_NICE_TRIP = "Гарної дороги!";
     

@@ -54,7 +54,7 @@ public class KeyboardFactory {
     }
 
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {
-        return makeOneColumnMenu(Constants.I_FOUND_A_CAR, Constants.EDIT_TRIP);
+        return makeOneColumnMenu(Constants.STOP_LOOKING_FOR_A_CAR, Constants.EDIT_TRIP);
     }
 
     public static ReplyKeyboardMarkup addressApprovedReplyMarkup() {
@@ -75,7 +75,7 @@ public class KeyboardFactory {
         }
         return ReplyKeyboardMarkup.builder()
                 .selective(true)
-                .inputFieldPlaceholder("This text is a placeholder")
+//                .inputFieldPlaceholder("This text is a placeholder")
                 .resizeKeyboard(true)
                 .oneTimeKeyboard(false)
                 .keyboard(keyboard)
