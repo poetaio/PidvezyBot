@@ -471,8 +471,8 @@ public class ResponseHandler {
 
         // todo: merge with generateDriverOfferTrip
         User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        String message = String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s",
-                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName(),
+        String message = String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s",
+                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
                 tripInfo.getAddress(), tripInfo.getDetails());
         return SendMessageFactory.driverActiveSendMessage(chatId, message);
     }
@@ -552,8 +552,8 @@ public class ResponseHandler {
             return Constants.NO_TRIPS_MESSAGE;
 
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL +  " секунд)",
-                 user.getFirstName(), user.getLastName(),
+        return String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL + " секунд)",
+                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
     }

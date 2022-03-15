@@ -54,7 +54,7 @@ public class SendMessageFactory {
 
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
-        String checkFromString = String.format("Підтвердіть запит:\n%s %s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName(), address, details, user.getUserName());
+        String checkFromString = String.format("Підтвердіть запит:\n%s%s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName());
         return makeSendMessage(chatId, checkFromString, ReplyMarkupFactory.approveAddressReplyKeyboard());
     }
 
