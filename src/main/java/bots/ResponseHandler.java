@@ -3,6 +3,7 @@ package bots;
 import bots.factories.ReplyMarkupFactory;
 import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
+import bots.utils.EmptyCallback;
 import models.utils.State;
 
 import models.Trip;
@@ -11,7 +12,6 @@ import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -48,7 +48,9 @@ public class ResponseHandler {
     private final DriverService driverService;
 
     private final PassengerQueueService passengerQueueService;
-    private final UpdateMessageService updateMessageService;
+
+    // empty callback
+    private final EmptyCallback emptyCallback;
 
     public ResponseHandler(MessageSender sender) {
         this.sender = sender;
@@ -58,7 +60,7 @@ public class ResponseHandler {
         driverService = DriverService.getInstance();
 
         passengerQueueService = PassengerQueueService.getInstance();
-        updateMessageService = UpdateMessageService.getInstance();
+        emptyCallback = new EmptyCallback();
 
         setupDriverScheduler();
     }
@@ -70,57 +72,30 @@ public class ResponseHandler {
         new Thread(new DriverViewUpdateTask() {
             @Override
             protected void sendNoTripsAvailable(long chatId) throws TelegramApiException {
-                // todo: replace with async
-                synchronized (SendingMessageService.MessageSending) {
-                    Message sentMessage = sender.execute(SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE));
-                    deleteLastBotMessage(chatId);
-                    updateMessageService.putBotMessageToUpdate(chatId, sentMessage.getMessageId());
-                }
+                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE), emptyCallback);
             }
+
             @Override
             protected void sendTripOffer(long chatId, Trip passengerDao) throws TelegramApiException {
-                // todo: replace with async
-                synchronized (SendingMessageService.MessageSending) {
-                    Message sentMessage = sender.execute(SendMessageFactory.driverActiveSendMessage(chatId, generateDriverOfferTripMessage(passengerDao)));
-                    deleteLastBotMessage(chatId);
-                    updateMessageService.putBotMessageToUpdate(chatId, sentMessage.getMessageId());
-                }
+                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, generateDriverOfferTripMessage(passengerDao)), emptyCallback);
             }
         }).start();
     }
 
     /**
      * Replies to /start command with two roles to choose from
+     *
      * @param chatId of the chat message comes from
-     * @param upd Update entity containing info
      */
-    public void replyToStart(long chatId, Update upd) throws TelegramApiException {
+    public void replyToStart(long chatId) throws TelegramApiException {
         userService.performCleanup(chatId);
-        // deleting previous user message
-        Integer userMessageToDelete = updateMessageService.getUserMessageToUpdate(chatId);
-        if (userMessageToDelete != null) {
-            DeleteMessage deleteLastUserMessage = DeleteMessage.builder()
-                    .messageId(userMessageToDelete)
-                    .chatId(String.valueOf(chatId))
-                    .build();
-            try {
-                sender.execute(deleteLastUserMessage);
-            } catch (Exception ignored) {}
-        }
-        updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
-        removeScheduleMessage(chatId);
         userService.putState(chatId, State.CHOOSING_ROLE);
-        // todo: remove
-        synchronized (SendingMessageService.MessageSending) {
-            deleteLastBotMessage(chatId);
-            Message messageSent = sender.execute(SendMessageFactory.chooseRoleSendMessage(chatId));
-            updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
-            updateMessageService.putBotMessageToUpdate(chatId, messageSent.getMessageId());
-        }
+        sender.executeAsync(SendMessageFactory.chooseRoleSendMessage(chatId), emptyCallback);
     }
 
     /**
      * Main handler, handles menu actions & states
+     *
      * @param upd takes Update
      * @throws TelegramApiException Classic telegram exception
      */
@@ -135,32 +110,18 @@ public class ResponseHandler {
         if (upd.getMessage().getText().indexOf('/') == 0)
             return;
 
-        // deleting previous user message
-        Integer userMessageToDelete = updateMessageService.getUserMessageToUpdate(chatId);
-        if (userMessageToDelete != null) {
-            DeleteMessage deleteLastUserMessage = DeleteMessage.builder()
-                    .messageId(userMessageToDelete)
-                    .chatId(String.valueOf(chatId))
-                    .build();
-            try {
-                sender.execute(deleteLastUserMessage);
-            } catch (Exception ignored) {}
-        }
-        updateMessageService.putUserMessageToUpdate(chatId, upd.getMessage().getMessageId());
-
         String message = upd.getMessage().getText();
         SendMessage messageToSend;
 
         State currentState = userService.getState(chatId);
         if (currentState == null) {
-            replyToStart(chatId, upd);
+            replyToStart(chatId);
             return;
         }
 
         switch (currentState) {
             case CHOOSING_ROLE:
                 userService.putUserInfo(chatId, AbilityUtils.getUser(upd));
-//                userInfo.putIfAbsent(chatId, AbilityUtils.getUser(upd));
                 messageToSend = onChoosingRole(chatId, message);
                 break;
 
@@ -170,9 +131,6 @@ public class ResponseHandler {
                 break;
             case DRIVER_TOOK_TRIP:
                 messageToSend = onDriverTookTrip(chatId, message);
-//            case DRIVER_INACTIVE:
-//                onDriverInactive(chatId, message);
-//                break;
                 break;
 
             // Passenger states
@@ -201,17 +159,13 @@ public class ResponseHandler {
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
         }
 
-        synchronized (SendingMessageService.MessageSending) {
-            // deleting previous bot message
-            Message messageSent = sender.execute(messageToSend);
-            deleteLastBotMessage(chatId);
-            updateMessageService.putBotMessageToUpdate(chatId, messageSent.getMessageId());
-        }
+        sender.executeAsync(messageToSend, emptyCallback);
     }
 
     /**
      * Choosing role handler
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
@@ -228,10 +182,11 @@ public class ResponseHandler {
 
     /**
      * Driver role chosen handler, subscribe to getting trip applications
-     * @param chatId user chat Id
+     *
+     * @param chatId  user chat Id
      * @param message message sent by user
-     * @throws TelegramApiException Classic telegram exception
      * @return Message to send to user
+     * @throws TelegramApiException Classic telegram exception
      */
     private SendMessage onDriverActive(long chatId, String message) throws TelegramApiException {
         switch (message) {
@@ -265,7 +220,6 @@ public class ResponseHandler {
                         userService.getUserInfo(driverPassenger.getPassengerChatId()));
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
-                removeScheduleMessage(chatId);
                 driverService.removeDriver(chatId);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
@@ -277,7 +231,8 @@ public class ResponseHandler {
 
     /**
      * Handles State after driver takes trip, hits "Відгукнутися"
-     * @param chatId driver chat id
+     *
+     * @param chatId  driver chat id
      * @param message message sent by driver
      * @return message to reply with
      * @throws TelegramApiException
@@ -299,7 +254,8 @@ public class ResponseHandler {
 
     /**
      * Unsubscribe from getting trip applications
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
@@ -319,7 +275,8 @@ public class ResponseHandler {
     /**
      * Entering passenger destination address handler,
      * if entered passenger address is valid saves it for future trip
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
@@ -338,7 +295,8 @@ public class ResponseHandler {
     /**
      * Entering passenger destination address handler,
      * if entered passenger details are valid saves them for future trip
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
@@ -357,9 +315,10 @@ public class ResponseHandler {
     /**
      * Handles entering if passenger is on station (y/n)
      * If "yes" is entered passenger is asked for trip info approving
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
-     * @param upd update entity
+     * @param upd     update entity
      * @throws TelegramApiException Classic telegram exception
      */
     private SendMessage onEnteringOnStation(long chatId, String message, Update upd) throws TelegramApiException {
@@ -378,9 +337,10 @@ public class ResponseHandler {
 
     /**
      * Handles passenger's checking out on station after choosing no in "Are you on station" menu
-     * @param chatId user chat id
+     *
+     * @param chatId  user chat id
      * @param message message sent by user
-     * @param upd update entity
+     * @param upd     update entity
      * @throws TelegramApiException Classic telegram exception
      */
     private SendMessage onCheckingOutOnStation(long chatId, String message, Update upd) throws TelegramApiException {
@@ -397,9 +357,10 @@ public class ResponseHandler {
 
     /**
      * Handles state when passenger is approving trip
-     * @param chatId passenger chat id
+     *
+     * @param chatId  passenger chat id
      * @param message message sent by passenger
-     * @param upd Update entity containing info
+     * @param upd     Update entity containing info
      * @return message to reply with
      * @throws TelegramApiException basic exc
      */
@@ -424,7 +385,8 @@ public class ResponseHandler {
 
     /**
      * Handles state when passenger has approved trip and is looking for driver
-     * @param chatId passenger chat id
+     *
+     * @param chatId  passenger chat id
      * @param message message sent by passenger
      * @return message to reply with
      * @throws TelegramApiException basic exc
@@ -449,6 +411,7 @@ public class ResponseHandler {
 
     /**
      * Handles "Я знайшов транспорт" reply
+     *
      * @param chatId chat id of the passenger
      * @return Choosing role text & menu
      * @throws TelegramApiException basic telegram exception
@@ -524,6 +487,7 @@ public class ResponseHandler {
 
     /**
      * Removes passenger trip application and sets state to creating new trip
+     *
      * @param chatId chat id of the passenger
      * @return Message & menu to enter address
      */
@@ -537,6 +501,7 @@ public class ResponseHandler {
 
     /**
      * Removes trip from passengers' trips queue
+     *
      * @param chatId chat id of the passenger
      * @return Message & menu "Have a nice trip"
      */
@@ -552,14 +517,13 @@ public class ResponseHandler {
             return Constants.NO_TRIPS_MESSAGE;
 
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL +  " секунд)",
-                 user.getFirstName(), user.getLastName(),
+        return String.format("%s %s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL + " секунд)",
+                user.getFirstName(), user.getLastName(),
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
     }
 
 //    private String generateDriverTookTripMessage(long chatId, Trip queuePassengerDao) {
-//        // TODO: NULLPOINTER CHECK userInfo.get
 //        return String.format("%s шукає транспорт з вокзалу на %s \n\n%s",
 //                userService.getUserInfo(chatId).getFirstName(), queuePassengerDao.getAddress(),
 //                queuePassengerDao.getDetails());
@@ -568,32 +532,20 @@ public class ResponseHandler {
 //    private void onToCancelTrip(long chatId, User user, String address) throws TelegramApiException {
 //    private SendMessage replyToCancelTrip(long chatId) throws TelegramApiException {
 //        userService.putState(chatId, State.ENTERING_ADDRESS);
-//
-//        return SendMessageFactory.makeEnterAddressMenu(chatId);
-//        DeleteMessage deleteMessage = new DeleteMessage();
-//
-//        for (Long driver : driversList) {
-//            deleteMessage.setChatId(String.valueOf(driver));
-//            deleteMessage.setMessageId(1);
-//
-//            se.exe(deleteMessage);
-//        }
-//        replyWithText(chatId, Constants.TRIP_CANCELED_SUCCESS_MESSAGE);
-//    }
+//      }
 
-    // todo: race condition two threads try to delete one message
-    private void deleteLastBotMessage(long chatId) throws TelegramApiException {
-        Integer botMessageToUpdate = updateMessageService.getBotMessageToUpdate(chatId);
-        if (botMessageToUpdate != null) {
-            DeleteMessage deleteLastBotMessage = DeleteMessage.builder()
-                    .messageId(botMessageToUpdate)
-                    .chatId(String.valueOf(chatId))
-                    .build();
-            try {
-                sender.execute(deleteLastBotMessage);
-            } catch (Exception ignored) {}
-        }
-    }
+//    private void deleteLastBotMessage(long chatId) throws TelegramApiException {
+//        Integer botMessageToUpdate = updateMessageService.getBotMessageToUpdate(chatId);
+//        if (botMessageToUpdate != null) {
+//            DeleteMessage deleteLastBotMessage = DeleteMessage.builder()
+//                    .messageId(botMessageToUpdate)
+//                    .chatId(String.valueOf(chatId))
+//                    .build();
+//            try {
+//                sender.execute(deleteLastBotMessage);
+//            } catch (Exception ignored) {}
+//        }
+//    }
 
     private SendMessage replyWithText(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()
@@ -601,25 +553,6 @@ public class ResponseHandler {
                 .text(messageText)
                 .build();
     }
-
-//    // TODO: remove
-//    public void sendBroadcastToDrivers(String message) throws TelegramApiException {
-//        for (DriverUpdateDao driver : DriverUpdateService.getInstance().getAll()) {
-//            System.out.println(driver.getChatId());
-//            SendMessage.SendMessageBuilder builder = SendMessage.builder()
-//                    .text(message)
-//                    .chatId(String.valueOf(driver.getChatId()));
-//
-//            State driverState = userService.getState(driver.getChatId());
-//
-//            if (driverState == State.DRIVER_ACTIVE)
-//                builder.replyMarkup(KeyboardFactory.driverActiveReplyMarkup());
-//            else if (driverState == State.DRIVER_TOOK_TRIP)
-//                builder.replyMarkup(KeyboardFactory.driverTookTripReplyKeyboard());
-//            else return;
-//            se.exe(builder.build());
-//        }
-//    }
 
     private String currentScheduleMessage;
     private String currentScheduleTime;
@@ -653,30 +586,18 @@ public class ResponseHandler {
             builder.replyMarkup(ReplyMarkupFactory.driverTookTripReplyKeyboard());
         else return;
 
-        sender.executeAsync(builder.build(), new SentCallback<Message>() {
-            @SneakyThrows
-            @Override
-            public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-                removeScheduleMessage(chatId);
-                currentScheduleMessageId.put(chatId, message.getMessageId());
-            }
-
-            @Override
-            public void onError(BotApiMethod<Message> botApiMethod, TelegramApiRequestException e) {}
-            @Override
-            public void onException(BotApiMethod<Message> botApiMethod, Exception e) {}
-        });
+        sender.executeAsync(builder.build(), emptyCallback);
     }
 
-    private void removeScheduleMessage(long chatId) {
-        try {
-            if (currentScheduleMessageId.get(chatId) != null)
-                sender.execute(DeleteMessage.builder()
-                        .chatId(String.valueOf(chatId))
-                        .messageId(currentScheduleMessageId.get(chatId))
-                        .build());
-        } catch (Exception ignored) {}
-    }
+//    private void removeScheduleMessage(long chatId) {
+//        try {
+//            if (currentScheduleMessageId.get(chatId) != null)
+//                sender.execute(DeleteMessage.builder()
+//                        .chatId(String.valueOf(chatId))
+//                        .messageId(currentScheduleMessageId.get(chatId))
+//                        .build());
+//        } catch (Exception ignored) {}
+//    }
 
     public String getCurrentScheduleMessage() {
         return currentScheduleMessage;
