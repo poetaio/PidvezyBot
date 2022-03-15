@@ -1,4 +1,4 @@
-package services;
+package services.driver_services;
 
 import bots.utils.Constants;
 import models.dao.DriverUpdateDao;
@@ -6,43 +6,44 @@ import models.dao.DriverUpdateDao;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DriverUpdateService {
-    private static final DriverUpdateService INSTANCE = new DriverUpdateService();
-    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
-
-    private DriverUpdateService() {
-        driverUpdateQueue = new PriorityQueue<>();
-    }
-
-    public static DriverUpdateService getInstance() {
+/**
+ * Service that contains drivers and their date/time of the next view (passenger trip application) update
+ *
+ */
+public class DriverViewUpdateService {
+    // singleton
+    private static final DriverViewUpdateService INSTANCE = new DriverViewUpdateService();
+    public static DriverViewUpdateService getInstance() {
         return INSTANCE;
     }
 
-    public void resetDriverTime(long chatId) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
+    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
 
-        DriverUpdateDao newUpdateDao = new DriverUpdateDao(chatId, calendar.getTime());
-        driverUpdateQueue.remove(newUpdateDao);
-        driverUpdateQueue.add(newUpdateDao);
+    private DriverViewUpdateService() {
+        driverUpdateQueue = new PriorityQueue<>();
     }
 
-    public void addDriver(long chatId) {
+
+    /**
+     * Subscribe driver for view update
+     * @param driverChatId driver chat id
+     */
+    public void addDriver(long driverChatId) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
-        driverUpdateQueue.add(new DriverUpdateDao(chatId, calendar.getTime()));
+        driverUpdateQueue.add(new DriverUpdateDao(driverChatId, calendar.getTime()));
     }
 
-    public void removeDriver(long chatId) {
-        driverUpdateQueue.remove(new DriverUpdateDao(chatId));
+    public void removeDriver(long driverChatId) {
+        driverUpdateQueue.remove(new DriverUpdateDao(driverChatId));
     }
 
     public void removeAll() {
         driverUpdateQueue.clear();
     }
 
-    public DriverUpdateDao getDriver(long chatId) {
-        Optional<DriverUpdateDao> resDao = driverUpdateQueue.stream().filter(x -> x.getChatId() == chatId).findFirst();
+    public DriverUpdateDao getDriver(long driverChatId) {
+        Optional<DriverUpdateDao> resDao = driverUpdateQueue.stream().filter(x -> x.getChatId() == driverChatId).findFirst();
         return resDao.isEmpty() ? null : resDao.get();
     }
 
@@ -78,6 +79,19 @@ public class DriverUpdateService {
         }
 
         return resList.stream().map(DriverUpdateDao::getChatId).collect(Collectors.toList());
+    }
+
+    /**
+     * Reset driver's date/time of the next view update (set to now + Constants.DRIVER_UPDATE_INTERVAL)
+     * @param driverChatId driver chat id
+     */
+    public void resetDriverTime(long driverChatId) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
+
+        DriverUpdateDao newUpdateDao = new DriverUpdateDao(driverChatId, calendar.getTime());
+        driverUpdateQueue.remove(newUpdateDao);
+        driverUpdateQueue.add(newUpdateDao);
     }
 
     @Override

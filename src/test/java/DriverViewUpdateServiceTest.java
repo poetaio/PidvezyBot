@@ -1,23 +1,23 @@
 import bots.utils.Constants;
 import models.dao.DriverUpdateDao;
 import org.junit.jupiter.api.*;
-import services.DriverUpdateService;
+import services.driver_services.DriverViewUpdateService;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class DriverUpdateServiceTest {
-    private static DriverUpdateService driverUpdateService;
+public class DriverViewUpdateServiceTest {
+    private static DriverViewUpdateService driverViewUpdateService;
 
     @BeforeAll
     static void setup() {
-        driverUpdateService = DriverUpdateService.getInstance();
+        driverViewUpdateService = DriverViewUpdateService.getInstance();
     }
 
     @BeforeEach
     void removeAllDaos() {
-        driverUpdateService.removeAll();
+        driverViewUpdateService.removeAll();
     }
 
     @RepeatedTest(20)
@@ -28,8 +28,8 @@ public class DriverUpdateServiceTest {
         calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
         long expectedTime = calendar.getTimeInMillis();
 
-        driverUpdateService.addDriver(chatId);
-        Date actualTime = driverUpdateService.getDriver(chatId).getNextUpdateTime();
+        driverViewUpdateService.addDriver(chatId);
+        Date actualTime = driverViewUpdateService.getDriver(chatId).getNextUpdateTime();
 
         Assertions.assertTrue(actualTime.getTime() - expectedTime < 200);
     }
@@ -39,12 +39,12 @@ public class DriverUpdateServiceTest {
         long chatId1 = 1;
         long chatId2 = 2;
 
-        driverUpdateService.addDriver(chatId1);
-        driverUpdateService.addDriver(chatId2);
+        driverViewUpdateService.addDriver(chatId1);
+        driverViewUpdateService.addDriver(chatId2);
         Thread.sleep(1000);
-        driverUpdateService.resetDriverTime(chatId1);
+        driverViewUpdateService.resetDriverTime(chatId1);
 
-        List<DriverUpdateDao> resList = driverUpdateService.getAll();
+        List<DriverUpdateDao> resList = driverViewUpdateService.getAll();
         long expectedFirst = 2;
         long expectedSecond = 1;
         Assertions.assertEquals(resList.get(0).getChatId(), expectedFirst);

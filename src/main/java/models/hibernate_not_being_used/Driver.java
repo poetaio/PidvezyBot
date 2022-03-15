@@ -1,7 +1,7 @@
-package models;
+package models.hibernate_not_being_used;
 
 import lombok.*;
-import models.utils.enums.DriverStatus;
+//import models.utils.enums.DriverStatus;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
@@ -21,12 +21,12 @@ public class Driver {
     @Column(unique = true, nullable = false)
     private int telegramId;
 
-    @Enumerated(EnumType.STRING)
-    private DriverStatus driverStatus;
+//    @Enumerated(EnumType.STRING)
+//    private DriverStatus driverStatus;
 
     public Driver(int telegramId) {
         this.telegramId = telegramId;
-        driverStatus = DriverStatus.Free;
+//        driverStatus = DriverStatus.Free;
     }
 
     @Override

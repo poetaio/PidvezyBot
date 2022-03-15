@@ -1,35 +1,27 @@
 package models;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import models.utils.enums.TripStatus;
+import lombok.*;
 
-import javax.persistence.*;
-
-@Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+@ToString(of = "passengerChatId")
 public class Trip {
-    @Id
-    @GeneratedValue
-    private int tripId;
+    private long passengerChatId;
+    private String address;
+    private String details;
+    private Long driverChatId;
 
-    @ManyToOne
-    @JoinColumn(name = "driver_id")
-    private Driver driver;
+    public Trip(long passengerChatId, String address, String details) {
+        this.passengerChatId = passengerChatId;
+        this.address = address;
+        this.details = details;
+    }
 
-    @ManyToOne
-    @JoinColumn(name = "passenger_id")
-    private Passenger passengerId;
-    @Enumerated(EnumType.STRING)
-    private TripStatus status;
-
-    public Trip(Passenger passengerId) {
-        this.passengerId = passengerId;
-        status = TripStatus.LookingForDriver;
+    @Override
+    public Trip clone() {
+        return new Trip(passengerChatId, address, details, driverChatId);
     }
 }

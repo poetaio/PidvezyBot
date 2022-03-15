@@ -1,8 +1,8 @@
-import models.dao.QueuePassengerDao;
+import models.Trip;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import services.PassengerQueueService;
+import services.passenger_services.PassengerQueueService;
 
 public class PassengerQueueServiceTest {
     private static PassengerQueueService passengerQueueService;
@@ -18,6 +18,6 @@ public class PassengerQueueServiceTest {
 
     @Test
     void shouldGetNextTrip() {
-        passengerQueueService.add(new QueuePassengerDao(1, "Address", "Details"));
+        passengerQueueService.add(new Trip(1, "Address", "Details"));
     }
 }

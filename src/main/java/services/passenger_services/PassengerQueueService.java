@@ -1,6 +1,7 @@
-package services;
+package services.passenger_services;
 
-import models.dao.QueuePassengerDao;
+import models.Trip;
+import services.TestDataService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,12 +9,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * When passenger approves trip and makes application, it is added to queue of all application
- * which are currently being viewed by drivers and accepted or skipped
+ * Service that contains trip application queue for drivers to view.
+ * Details:
+ * When passenger approves trip and makes application, it is added to queue of all applications
+ * which then are viewed(driver id is set) and
+ * accepted - driver id remains non-null, until user hits "I found a car" and the whole trip is removed
+ * or skipped - stays in queue, driver id -> null
  */
 public class PassengerQueueService {
     private static final PassengerQueueService INSTANCE = new PassengerQueueService();
-    private List<QueuePassengerDao> passengerQueue;
+    private List<Trip> passengerQueue;
 
     private PassengerQueueService() {
         passengerQueue = TestDataService.getTestPassengerQueue();
@@ -24,16 +29,17 @@ public class PassengerQueueService {
     }
 
     /**
-     * Get passenger not viewed by anyone, based on current passenger viewed by driver (if any exist)
+     * Get passenger not viewed by anyone (driver id is null),
+     * based on current passenger viewed by driver (if any exist)
      * @param driverChatId Id of the driver to show passenger trip application to
      * @return QueuePassengerDao of the first passenger not viewed by anyone
      */
-    public QueuePassengerDao getNextFree(long driverChatId) {
+    public Trip getNextFree(long driverChatId) {
         if (passengerQueue.isEmpty())
             return null;
 
         // finding passenger viewed/blocked by the driver
-        QueuePassengerDao driverPassenger = getPassengerDaoByDriverInner(driverChatId);
+        Trip driverPassenger = getPassengerDaoByDriverInner(driverChatId);
 
         int index;
         int cnt = 1;
@@ -62,22 +68,22 @@ public class PassengerQueueService {
         }
 
         // setting driver id to block the passenger and restrain access for other drivers
-        QueuePassengerDao returnPassenger = passengerQueue.get(index);
+        Trip returnPassenger = passengerQueue.get(index);
         returnPassenger.setDriverChatId(driverChatId);
         // returning a copy!!
         return returnPassenger.clone();
     }
 
-    public QueuePassengerDao getPassengerDaoByDriver(long driverChatId) {
-        Optional<QueuePassengerDao> resPassengerDao = passengerQueue.stream()
+    public Trip getPassengerDaoByDriver(long driverChatId) {
+        Optional<Trip> resPassengerDao = passengerQueue.stream()
                 .filter(passenger -> passenger.getDriverChatId() != null
                         && driverChatId == passenger.getDriverChatId())
                 .findFirst();
         return resPassengerDao.isEmpty() ? null : resPassengerDao.get().clone();
     }
 
-    private QueuePassengerDao getPassengerDaoByDriverInner(long driverChatId) {
-        Optional<QueuePassengerDao> resPassengerDao = passengerQueue.stream()
+    private Trip getPassengerDaoByDriverInner(long driverChatId) {
+        Optional<Trip> resPassengerDao = passengerQueue.stream()
                 .filter(passenger -> passenger.getDriverChatId() != null
                         && driverChatId == passenger.getDriverChatId())
                 .findFirst();
@@ -88,7 +94,7 @@ public class PassengerQueueService {
      * Add passenger trip application to "queue" for viewing by drivers
      * @param passenger Trip to add to queue
      */
-    public void add(QueuePassengerDao passenger) {
+    public void add(Trip passenger) {
         passengerQueue.add(passenger);
     }
 
@@ -123,28 +129,28 @@ public class PassengerQueueService {
         passengerQueue = new ArrayList<>();
     }
 
-    // testing queue service
-    public static void main(String[] args) {
-        PassengerQueueService pqservice = new PassengerQueueService();
-        QueuePassengerDao ps2 = new QueuePassengerDao(2l, "Lavruhina", "A child, a mom", 7l);
-        QueuePassengerDao ps3 = new QueuePassengerDao(3l, "Lavruhina", "A child, a mom", 6l);
-        QueuePassengerDao ps4 = new QueuePassengerDao(4l, "Lavruhina", "A child, a mom", 5l);
-        QueuePassengerDao ps5 = new QueuePassengerDao(5l,"Lavruhina", "A child, a mom", 3l);
-        QueuePassengerDao ps6 = new QueuePassengerDao(6l,"Lavruhina", "A child, a mom", 4l);
-
-        pqservice.add(ps2);
-        pqservice.add(ps3);
-        pqservice.add(ps4);
-        pqservice.add(ps5);
-        pqservice.add(ps6);
-
-        System.out.println(pqservice.getNextFree(2)); // all passengers are being viewed
-        System.out.println(pqservice.getNextFree(3)); // frees passenger 5
-        System.out.println(pqservice.getNextFree(5)); // gets passenger 5
-
-        System.out.println("___");
-        PassengerQueueService pq = new PassengerQueueService();
-        pq.add(ps2);
-        System.out.println(pq.getNextFree(7));
-    }
+//    // testing queue service
+//    public static void main(String[] args) {
+//        PassengerQueueService pqservice = new PassengerQueueService();
+//        Trip ps2 = new Trip(2l, "Lavruhina", "A child, a mom", 7l);
+//        Trip ps3 = new Trip(3l, "Lavruhina", "A child, a mom", 6l);
+//        Trip ps4 = new Trip(4l, "Lavruhina", "A child, a mom", 5l);
+//        Trip ps5 = new Trip(5l,"Lavruhina", "A child, a mom", 3l);
+//        Trip ps6 = new Trip(6l,"Lavruhina", "A child, a mom", 4l);
+//
+//        pqservice.add(ps2);
+//        pqservice.add(ps3);
+//        pqservice.add(ps4);
+//        pqservice.add(ps5);
+//        pqservice.add(ps6);
+//
+//        System.out.println(pqservice.getNextFree(2)); // all passengers are being viewed
+//        System.out.println(pqservice.getNextFree(3)); // frees passenger 5
+//        System.out.println(pqservice.getNextFree(5)); // gets passenger 5
+//
+//        System.out.println("___");
+//        PassengerQueueService pq = new PassengerQueueService();
+//        pq.add(ps2);
+//        System.out.println(pq.getNextFree(7));
+//    }
 }

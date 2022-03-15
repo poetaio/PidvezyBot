@@ -1,18 +1,23 @@
-package services;
+package services.passenger_services;
 
-import models.dao.QueuePassengerDao;
-import org.telegram.telegrambots.meta.api.objects.User;
+import models.Trip;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service that contains information about user trip application
+ * (address, details, driver who views & takes the trip)
+ */
 public class PassengerService {
+    // singleton
     private static final PassengerService INSTANCE = new PassengerService();
-    private final Map<Long, QueuePassengerDao> tripInfo;
-
     public static PassengerService getInstance() {
         return INSTANCE;
     }
+
+    // chat id - trip
+    private final Map<Long, Trip> tripInfo;
 
     private PassengerService() {
         tripInfo = new HashMap<>();
@@ -23,11 +28,11 @@ public class PassengerService {
      * @param passengerChatId User-Bot chat id
      * @param passengerInfo QueuePassengerDao entity, contains user chat id, address, details, driver chat id
      */
-    public void putPassengerInfo(long passengerChatId, QueuePassengerDao passengerInfo) {
+    public void putPassengerInfo(long passengerChatId, Trip passengerInfo) {
         tripInfo.put(passengerChatId, passengerInfo);
     }
 
-    public QueuePassengerDao getTripInfo(long passengerUserId) {
+    public Trip getTripInfo(long passengerUserId) {
         return tripInfo.get(passengerUserId).clone();
     }
 
@@ -61,10 +66,10 @@ public class PassengerService {
         tripInfo.remove(chatId);
     }
 
-    private QueuePassengerDao getTripInfoWithDefault(long chatId) {
-        QueuePassengerDao passengerTripInfo = tripInfo.get(chatId);
+    private Trip getTripInfoWithDefault(long chatId) {
+        Trip passengerTripInfo = tripInfo.get(chatId);
         if (passengerTripInfo == null) {
-            passengerTripInfo = new QueuePassengerDao();
+            passengerTripInfo = new Trip();
             passengerTripInfo.setPassengerChatId(chatId);
             tripInfo.put(chatId, passengerTripInfo);
         }

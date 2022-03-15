@@ -1,4 +1,4 @@
-package models;
+package models.hibernate_not_being_used;
 
 import lombok.*;
 import org.hibernate.Hibernate;

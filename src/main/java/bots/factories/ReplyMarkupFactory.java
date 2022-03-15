@@ -1,4 +1,4 @@
-package bots;
+package bots.factories;
 
 import bots.utils.Constants;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Contains all menus layouts of corresponding states
+ * Creates all menus layouts
  */
-public class KeyboardFactory {
+public class ReplyMarkupFactory {
     public static ReplyKeyboardMarkup chooseRoleReplyKeyboard() {
         return makeOneColumnMenu(Constants.CHOOSE_ROLE_DRIVER, Constants.CHOOSE_ROLE_PASSENGER);
     }

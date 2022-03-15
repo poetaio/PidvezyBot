@@ -1,4 +1,4 @@
-package bots.utils;
+package models.utils;
 
 public enum State {
     CHOOSING_ROLE,
