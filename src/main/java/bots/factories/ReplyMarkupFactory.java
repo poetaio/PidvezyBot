@@ -37,6 +37,14 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup editAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup editDetailsReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
+    }
+
     public static ReplyKeyboardMarkup enterDetailsReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
     }

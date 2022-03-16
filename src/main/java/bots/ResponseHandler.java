@@ -140,6 +140,12 @@ public class ResponseHandler {
             case ENTERING_DETAILS:
                 messageToSend = onEnteringDetails(chatId, message, upd);
                 break;
+            case EDITING_ADDRESS:
+                messageToSend = onEditingAddress(chatId, message, upd);
+                break;
+            case EDITING_DETAILS:
+                messageToSend = onEditingDetails(chatId, message, upd);
+                break;
             case APPROVING_TRIP:
                 messageToSend = onApprovingTrip(chatId, message, upd);
                 break;
@@ -156,7 +162,9 @@ public class ResponseHandler {
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
         }
 
-        sender.executeAsync(messageToSend, emptyCallback);
+//        sender.executeAsync(messageToSend, emptyCallback);
+        // to see errors in logs
+        sender.execute(messageToSend);
     }
 
     /**
@@ -319,6 +327,39 @@ public class ResponseHandler {
         }
     }
 
+    private SendMessage onEditingAddress(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.BACK:
+                // todo: refactor
+                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
+            case Constants.DO_NOT_CHANGE:
+                userService.putState(chatId, State.EDITING_DETAILS);
+                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+            default:
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditAddress(chatId, message);
+                } else {
+                    return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+                }
+        }
+    }
+
+    private SendMessage onEditingDetails(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.DO_NOT_CHANGE:
+                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
+            case Constants.BACK:
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            default:
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEnterDetails(chatId, message, upd);
+                } else {
+                    return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                }
+        }
+    }
+
     /**
      * Handles state when passenger is approving trip
      *
@@ -333,8 +374,8 @@ public class ResponseHandler {
             case Constants.APPROVE_TRIP:
                 return replyToApproveAddress(chatId);
             case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.ENTERING_ADDRESS);
-                return SendMessageFactory.enterAddressSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.BACK:
                 userService.putState(chatId, State.ENTERING_DETAILS);
                 return SendMessageFactory.enterDetailsSendMessage(chatId);
@@ -355,8 +396,8 @@ public class ResponseHandler {
                 }
                 return replyToApproveAddress(chatId);
             case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.ENTERING_ADDRESS);
-                return SendMessageFactory.enterAddressSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.BACK:
                 userService.putState(chatId, State.ENTERING_DETAILS);
                 return SendMessageFactory.enterDetailsSendMessage(chatId);
@@ -424,7 +465,7 @@ public class ResponseHandler {
         userService.putState(chatId, State.DRIVER_ACTIVE);
         // todo: merge with generateDriverOfferTrip
         User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        String message = String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s",
+        String message = String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
                 tripInfo.getAddress(), tripInfo.getDetails());
         return SendMessageFactory.driverActiveSendMessage(chatId, message);
@@ -463,6 +504,12 @@ public class ResponseHandler {
                 tripService.getTripDetails(chatId), upd);
     }
 
+    private SendMessage replyToEditAddress(long chatId, String message) throws TelegramApiException {
+        tripService.addAddressToTrip(chatId, message);
+        userService.putState(chatId, State.EDITING_DETAILS);
+        return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+    }
+
     public SendMessage replyToApproveAddress(long chatId) throws TelegramApiException {
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
         passengerQueueService.add(new QueueTrip(chatId, tripService.getTripAddress(chatId),
@@ -477,9 +524,9 @@ public class ResponseHandler {
      * @return Message & menu to enter address
      */
     private SendMessage replyToEditTrip(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.ENTERING_ADDRESS);
+        userService.putState(chatId, State.EDITING_ADDRESS);
         tripService.removeTripFromQueueByPassengerId(chatId);
-        return SendMessageFactory.enterAddressSendMessage(chatId);
+        return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
     }
 
     /**
@@ -502,7 +549,7 @@ public class ResponseHandler {
         }
 
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL + " секунд)",
+        return String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());

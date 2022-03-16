@@ -3,6 +3,7 @@ package bots.factories;
 import bots.utils.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.util.AbilityUtils;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -33,6 +34,7 @@ public class SendMessageFactory {
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(message)
+                .parseMode(ParseMode.HTML)
                 .build();
 
         if (message.equals(Constants.NO_TRIPS_MESSAGE))
@@ -47,7 +49,7 @@ public class SendMessageFactory {
     }
 
     public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details) throws TelegramApiException {
-        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення або дзвінок\n@%s\n\n%s\n%s", user.getFirstName(), user.getUserName(),
+        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName(),
                 address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTripReplyKeyboard());
     }
@@ -63,20 +65,23 @@ public class SendMessageFactory {
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
         int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        String generatedApplication = String.format("%s%s шукає транспорт з вокзалу на вул. %s\n%s\n@%s", user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName());
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
-            return makeSendMessage(chatId, String.format("Підтвердіть запит:\n\n%s", generatedApplication),
+            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName()),
                     ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
-
-        return makeSendMessage(chatId, String.format("Ваш запит збережено:\n\n%s\n\nБот працює лише під час " +
-                "комендантської години. Ви зможете його відправити лише після %d:00",
-                generatedApplication, Constants.CURFEW_START_HOUR), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
-
+        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName()), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
     public static SendMessage enterDetailsSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.ENTER_DETAILS, ReplyMarkupFactory.enterDetailsReplyKeyboard());
+    }
+
+    public static SendMessage editAddressSendMessage(long chatId, String oldAddress) throws TelegramApiException {
+        return makeSendMessage(chatId, String.format(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
+    }
+
+    public static SendMessage editDetailsSendMessage(long chatId, String oldDetails) throws TelegramApiException {
+        return makeSendMessage(chatId, String.format(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
     }
 
     public static SendMessage checkingOutOnStationSendMessage(long chatId) throws TelegramApiException {
@@ -101,6 +106,7 @@ public class SendMessageFactory {
 //        if (messageId == null)
             return SendMessage.builder()
                     .chatId(String.valueOf(chatId))
+                    .parseMode(ParseMode.HTML)
                     .text(messageText)
                     .replyMarkup(replyMarkup)
                     .build();
