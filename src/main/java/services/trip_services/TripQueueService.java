@@ -1,6 +1,7 @@
 package services.trip_services;
 
 import models.QueueTrip;
+import models.utils.TripComparator;
 import services.TestDataService;
 
 import java.util.*;
@@ -19,9 +20,11 @@ public class TripQueueService {
     private static final TripQueueService INSTANCE = new TripQueueService();
     // pq goes in here, yeah boiiii
     private Queue<QueueTrip> tripQueue;
+    private Queue<QueueTrip> bufferedTrips;
 
     private TripQueueService() {
         tripQueue = TestDataService.getTestPassengerQueue();
+        bufferedTrips = new PriorityQueue<>(TripComparator.TRIP_COMPARATOR);
     }
 
     public static TripQueueService getInstance() {
@@ -89,6 +92,42 @@ public class TripQueueService {
      */
     public void add(QueueTrip trip) {
         tripQueue.add(trip);
+    }
+
+    public void returnTripFromBuffer(long passengerChatId) {
+        try {
+            QueueTrip tripToReturn = bufferedTrips.stream()
+                    .filter(trip -> trip.getPassengerChatId() == passengerChatId)
+                    .findFirst()
+                    .get();
+
+            bufferedTrips.remove(tripToReturn);
+            add(tripToReturn);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeTripFromBuffer(long passengerChatId) {
+        try {
+            bufferedTrips.removeIf(passenger -> passenger.getPassengerChatId() != passengerChatId);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeAndSaveInBufferByPassengerId(long passengerChatId) {
+        try {
+            QueueTrip tripToBuffer = tripQueue.stream()
+                    .filter(trip -> trip.getPassengerChatId() == passengerChatId)
+                    .findFirst()
+                    .get();
+
+            bufferedTrips.add(tripToBuffer);
+            tripQueue.removeIf(trip -> trip.getPassengerChatId() != passengerChatId);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
     }
 
     public void removeByPassengerId(long passengerChatId) {

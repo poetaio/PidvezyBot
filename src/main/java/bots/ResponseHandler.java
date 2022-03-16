@@ -151,7 +151,7 @@ public class ResponseHandler {
                 messageToSend = onLookingForDriver(chatId, message);
                 break;
             case FOUND_A_CAR:
-                messageToSend = onFoundACar(chatId);
+                messageToSend = onFoundACar(chatId, message);
                 break;
             default:
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
@@ -208,8 +208,16 @@ public class ResponseHandler {
                             generateDriverOfferTripMessage(chatId, nextPassenger1));
                 }
                 driverService.unsubscribeDriverFromUpdate(chatId);
-                tripService.takeTrip(chatId);
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
+
+                passengerQueueService.removeAndSaveInBufferByPassengerId(chatId);
+
+                User driver = userService.getUserInfo(chatId);
+
+                userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
+                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
+                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
+
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
@@ -421,9 +429,22 @@ public class ResponseHandler {
      * @return Choosing role text & menu
      * @throws TelegramApiException basic telegram exception
      */
-    private SendMessage onFoundACar(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHOOSING_ROLE);
-        return SendMessageFactory.chooseRoleSendMessage(chatId);
+    private SendMessage onFoundACar(long chatId, String message) throws TelegramApiException {
+        switch (message){
+            case Constants.FOUND_TRIP:
+                tripService.takeTrip(chatId);
+                passengerQueueService.removeTripFromBuffer(chatId);
+                return SendMessageFactory.wishAGoodTripSendMessage(chatId);
+            case Constants.FIND_AGAIN:
+                passengerQueueService.returnTripFromBuffer(chatId);
+                userService.putState(chatId, State.LOOKING_FOR_DRIVER);
+                return SendMessageFactory.addressApprovedSendMessage(chatId);
+            case Constants.THANKS:
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.returnToSearchingSendMessage(chatId);
+        }
     }
 
     // replyTo... - handlers to every message in every state
