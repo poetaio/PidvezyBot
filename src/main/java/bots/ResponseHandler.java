@@ -214,6 +214,11 @@ public class ResponseHandler {
                 // then it is eventually removed from passenger's queue
                 driverService.unsubscribeDriverFromUpdate(chatId);
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
+
+                User driver = userService.getUserInfo(chatId);
+
+                sender.executeAsync(SendMessageFactory.noticingPassengerDriverRookTripSendMessage(driverPassenger.getPassengerChatId(), driver),  emptyCallback);
+
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverPassenger.getPassengerChatId()),

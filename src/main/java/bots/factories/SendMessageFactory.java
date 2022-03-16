@@ -39,8 +39,13 @@ public class SendMessageFactory {
         return sendMessage;
     }
 
+    public static SendMessage noticingPassengerDriverRookTripSendMessage(long chatId, @NotNull User driver) throws TelegramApiException {
+        String message = String.format("%s відгукнувся на вашу заявку\n@%s", driver.getFirstName(), driver.getUserName());
+        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
+    }
+
     public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details) throws TelegramApiException {
-        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення або дзвінок\n@%s\n\n%s\n%s", user.getFirstName(), user.getUserName(),
+        String userWaitsForYourCallMessage = String.format("%s чекає на ваше повідомлення або дзвінок\n@%s\n\n%s\n%s", user.getFirstName(), user.getUserName(),
                 address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTripReplyKeyboard());
     }

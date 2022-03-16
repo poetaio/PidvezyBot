@@ -24,6 +24,10 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup passengerConfirmingTakingHimReplyKeyboard() {
+        return makeOneColumnMenu(Constants.FOUND_TRIP, Constants.FIND_AGAIN);
+    }
+
     public static ReplyKeyboardMarkup driverActiveReplyMarkup() {
         return makeOneColumnMenu(Constants.TAKE_TRIP, Constants.NEXT_TRIP, Constants.BACK);
     }
