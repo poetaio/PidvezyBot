@@ -19,9 +19,11 @@ import java.util.stream.Collectors;
 public class PassengerQueueService {
     private static final PassengerQueueService INSTANCE = new PassengerQueueService();
     private List<Trip> passengerQueue;
+    private List<Trip> bufferedTrips;
 
     private PassengerQueueService() {
         passengerQueue = TestDataService.getTestPassengerQueue();
+        bufferedTrips = new ArrayList<>();
     }
 
     public static PassengerQueueService getInstance() {
@@ -96,6 +98,47 @@ public class PassengerQueueService {
      */
     public void add(Trip passenger) {
         passengerQueue.add(passenger);
+    }
+
+    public void returnTripFromBuffer(long passengerChatId) {
+        try {
+            Trip tripToReturn = bufferedTrips.stream()
+                    .filter(trip -> trip.getPassengerChatId() == passengerChatId)
+                    .findFirst()
+                    .get();
+
+            bufferedTrips.remove(tripToReturn);
+            add(tripToReturn);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeTripFromBuffer(long passengerChatId) {
+        try {
+            bufferedTrips = bufferedTrips.stream()
+                    .filter(passenger -> passenger.getPassengerChatId() != passengerChatId)
+                    .collect(Collectors.toList());
+
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeAndSaveInBufferByPassengerId(long driverChatId) {
+        try {
+            Trip tripToBuffer = passengerQueue.stream()
+                    .filter(passenger -> passenger.getDriverChatId() == driverChatId)
+                    .findFirst()
+                    .get();
+
+            bufferedTrips.add(tripToBuffer);
+            passengerQueue = passengerQueue.stream()
+                    .filter(passenger -> passenger.getDriverChatId() != driverChatId)
+                    .collect(Collectors.toList());
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
     }
 
     public void removeByPassengerId(long passengerChatId) {

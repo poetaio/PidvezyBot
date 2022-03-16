@@ -10,19 +10,14 @@ import models.Trip;
 
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.meta.updateshandlers.SentCallback;
 import services.*;
 import services.driver_services.DriverService;
 import services.passenger_services.PassengerQueueService;
 import services.passenger_services.PassengerService;
-import lombok.SneakyThrows;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -152,7 +147,7 @@ public class ResponseHandler {
                 messageToSend = onLookingForDriver(chatId, message);
                 break;
             case FOUND_A_CAR:
-                messageToSend = onFoundACar(chatId);
+                messageToSend = onFoundACar(chatId, message);
                 break;
             default:
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
@@ -215,9 +210,13 @@ public class ResponseHandler {
                 driverService.unsubscribeDriverFromUpdate(chatId);
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
 
+                passengerQueueService.removeAndSaveInBufferByPassengerId(chatId);
+
                 User driver = userService.getUserInfo(chatId);
 
-                sender.executeAsync(SendMessageFactory.noticingPassengerDriverRookTripSendMessage(driverPassenger.getPassengerChatId(), driver),  emptyCallback);
+                userService.putState(driverPassenger.getPassengerChatId(), State.FOUND_A_CAR);
+                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverPassenger.getPassengerChatId(), driver),  emptyCallback);
+                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverPassenger.getPassengerChatId()),  emptyCallback);
 
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
@@ -418,9 +417,22 @@ public class ResponseHandler {
      * @return Choosing role text & menu
      * @throws TelegramApiException basic telegram exception
      */
-    private SendMessage onFoundACar(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHOOSING_ROLE);
-        return SendMessageFactory.chooseRoleSendMessage(chatId);
+    private SendMessage onFoundACar(long chatId, String message) throws TelegramApiException {
+        switch (message){
+            case Constants.FOUND_TRIP:
+                passengerService.removeTripInfo(chatId);
+                passengerQueueService.removeTripFromBuffer(chatId);
+                return SendMessageFactory.wishAGoodTripSendMessage(chatId);
+            case Constants.FIND_AGAIN:
+                passengerQueueService.returnTripFromBuffer(chatId);
+                userService.putState(chatId, State.LOOKING_FOR_DRIVER);
+                return SendMessageFactory.addressApprovedSendMessage(chatId);
+            case Constants.THANKS:
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.returnToSearchingSendMessage(chatId);
+        }
     }
 
     // replyTo... - handlers to every message in every state
@@ -511,8 +523,6 @@ public class ResponseHandler {
     private SendMessage replyToFoundACar(long chatId) throws TelegramApiException {
         // todo: handle if driver views trip
         userService.putState(chatId, State.FOUND_A_CAR);
-        passengerService.removeTripInfo(chatId);
-        passengerQueueService.removeByPassengerId(chatId);
         return SendMessageFactory.haveANiceTripSendMessage(chatId);
     }
 

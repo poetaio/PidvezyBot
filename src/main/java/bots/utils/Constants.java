@@ -3,9 +3,9 @@ package bots.utils;
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     // production token
-//    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
+    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
     // dev token
-    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
+//    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
 
@@ -53,14 +53,14 @@ public interface Constants {
     String FOUND_TRIP = "Я знайшов(ла) транспорт";
     String FIND_AGAIN = "Шукати знову";
 
+    String THANKS = "Дякую";
+
     String EDIT_TRIP = "Змінити поїздку";
 //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
     String I_FOUND_A_CAR = "Я знайшов транспорт";
     String STOP_LOOKING_FOR_A_CAR = "Зупинити пошук";
 
     String HAVE_A_NICE_TRIP = "Гарної дороги!";
-    
-    String THANK_YOU = "Дякую!";
 
     String BACK = "Назад";;
 
