@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 /**
  * Service that contains drivers and their date/time of the next view (passenger trip application) update
- *
  */
 public class DriverViewUpdateService {
     // singleton
@@ -17,10 +16,15 @@ public class DriverViewUpdateService {
         return INSTANCE;
     }
 
-    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
+    // no need of pq here :( all drivers are set +15 seconds,
+    // and automatically moved to the end of the queue
+    // cause others have then <=15 left
+    // aaand they're automatically sorted.. by the time of the insertion
+//    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
+    private final List<DriverUpdateDao> driverUpdateQueue;
 
     private DriverViewUpdateService() {
-        driverUpdateQueue = new PriorityQueue<>();
+        driverUpdateQueue = new LinkedList<>();
     }
 
 

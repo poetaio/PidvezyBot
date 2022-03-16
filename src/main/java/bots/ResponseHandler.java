@@ -49,7 +49,6 @@ public class ResponseHandler {
 
     private final PassengerQueueService passengerQueueService;
 
-    // empty callback
     private final EmptyCallback emptyCallback;
 
     public ResponseHandler(MessageSender sender) {
