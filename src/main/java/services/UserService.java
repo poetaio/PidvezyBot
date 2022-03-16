@@ -4,26 +4,31 @@ import models.utils.State;
 
 import org.telegram.telegrambots.meta.api.objects.User;
 import services.driver_services.DriverService;
-import services.passenger_services.PassengerService;
+import services.trip_services.TripService;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class UserService {
     // singleton pattern
-    private static final UserService INSTANCE = new UserService();
-    public static UserService getInstance() {
-        return INSTANCE;
-    }
+//    private static final UserService INSTANCE = new UserService();
+//    public static UserService getInstance() {
+//        return INSTANCE;
+//    }
+    private final DriverService driverService;
+    private final TripService tripService;
 
     // chat id - user
     private final Map<Long, User> userInfo;
     // chat id - state
     private final Map<Long, State> userState;
 
-    private UserService() {
+    public UserService(DriverService driverService, TripService tripService) {
         userInfo = TestDataService.getTestUserInfo();
         userState = new HashMap<>();
+
+        this.driverService = driverService;
+        this.tripService = tripService;
     }
 
     /**
@@ -50,8 +55,8 @@ public class UserService {
      * @param chatId id of the chat with bot
      */
     public void performCleanup(long chatId) {
-        PassengerService.getInstance().removeTripInfo(chatId);
-        DriverService.getInstance().removeDriver(chatId);
+        tripService.removeTripFromQueueByPassengerId(chatId);
+        driverService.removeDriver(chatId);
     }
 
     /**

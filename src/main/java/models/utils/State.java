@@ -4,6 +4,7 @@ public enum State {
     CHOOSING_ROLE,
 
     DRIVER_ACTIVE,
+    NO_TRIPS_AVAILABLE,
     DRIVER_TOOK_TRIP,
 
     DRIVER_INACTIVE,

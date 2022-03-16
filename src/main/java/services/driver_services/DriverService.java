@@ -1,6 +1,6 @@
 package services.driver_services;
 
-import services.passenger_services.PassengerQueueService;
+import services.trip_services.TripQueueService;
 
 import java.util.*;
 
@@ -8,20 +8,22 @@ import java.util.*;
  * Service to manage all users who have hit "Я волонтер"
  */
 public class DriverService {
-    private final static DriverService INSTANCE = new DriverService();
+    // singleton
+//    private final static DriverService INSTANCE = new DriverService();
+//    public static DriverService getInstance() {
+//    return INSTANCE;
+//}
+
     private final List<Long> driverList;
 
     private final DriverViewUpdateService driverViewUpdateService;
 
-    private DriverService() {
+    public DriverService() {
         driverList = new LinkedList<>();
         driverViewUpdateService = DriverViewUpdateService.getInstance();
 //        driverUpdateMessageService = UpdateMessageService.getInstance();
     }
 
-    public static DriverService getInstance() {
-        return INSTANCE;
-    }
 
     /**
      * Removes driver from list and unsubscribes him from updates
@@ -30,7 +32,7 @@ public class DriverService {
     public void removeDriver(long driverChatId) {
         driverList.remove(driverChatId);
         driverViewUpdateService.removeDriver(driverChatId);
-        PassengerQueueService.getInstance().unsetView(driverChatId);
+        TripQueueService.getInstance().unsetView(driverChatId);
     }
 
     /**

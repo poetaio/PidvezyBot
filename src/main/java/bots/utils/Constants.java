@@ -12,10 +12,10 @@ public interface Constants {
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
 
-    String START_DESCRIPTION = "Бот для допомоги з розвезенням біженців з вокзалу у комендантську годину\n22:00 - 6:00";
+    String START_DESCRIPTION = "Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (22:00 - 6:00)";
 
 //    String START_REPLY = "З якою ціллю ви тут?";
-    String CHOOSE_ROLE_REPLY = "Бот для допомоги з розвезенням біженців з вокзалу у комендантську годину\n22:00 - 6:00";
+    String CHOOSE_ROLE_REPLY = "Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (22:00 - 6:00)";
 
 //    String ROLE_DRIVER = "Підвезу";
 //    String ROLE_PASSENGER = "Підвезіть";
@@ -23,6 +23,8 @@ public interface Constants {
     String CHOOSE_ROLE_DRIVER = "Я волонтер";
 
     String TAKE_TRIP = "Відгукнутися";
+    String TRIP_TAKEN_MESSAGE = "Поїздка уже неактивна :(";
+
     String NEXT_TRIP = "Наступний запит";
 
     String STOP_BROADCAST = "Зупинити розсилку";
@@ -34,7 +36,7 @@ public interface Constants {
 
     String CHOOSE_ROLE_PASSENGER = "Я потребую транспорт";
 
-    String ENTER_ADDRESS = "Введіть адресу прибуття";
+    String ENTER_ADDRESS = "Введіть адресу прибуття:\nЗ вокзалу на ...";
     String ENTER_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
 
     String ARE_YOU_ON_STATION = "Ви вже прибули на станцію?";
@@ -61,5 +63,5 @@ public interface Constants {
 
     String BACK = "Назад";;
 
-    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";;;
+    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
 }
