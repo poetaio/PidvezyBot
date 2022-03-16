@@ -39,8 +39,9 @@ public class SendMessageFactory {
         return sendMessage;
     }
 
-    public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user) throws TelegramApiException {
-        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення або дзвінок\n@%s", user.getFirstName(), user.getUserName());
+    public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details) throws TelegramApiException {
+        String userWaitsForYourCallMessage = String.format("%s Чекає на ваше повідомлення або дзвінок\n@%s\n\n%s\n%s", user.getFirstName(), user.getUserName(),
+                address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTripReplyKeyboard());
     }
 
@@ -54,7 +55,7 @@ public class SendMessageFactory {
 
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
-        String checkFromString = String.format("Підтвердіть запит:\n%s %s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName(), address, details, user.getUserName());
+        String checkFromString = String.format("Підтвердіть запит:\n%s%s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName());
         return makeSendMessage(chatId, checkFromString, ReplyMarkupFactory.approveAddressReplyKeyboard());
     }
 
