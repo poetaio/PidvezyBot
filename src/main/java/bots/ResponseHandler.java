@@ -20,6 +20,8 @@ import services.passenger_services.PassengerService;
 import services.trip_services.TripQueueService;
 import services.trip_services.TripService;
 
+import java.util.Calendar;
+
 /**
  * Main class to handle all responses
  */
@@ -136,16 +138,13 @@ public class ResponseHandler {
                 messageToSend = onEnteringAddress(chatId, message);
                 break;
             case ENTERING_DETAILS:
-                messageToSend = onEnteringDetails(chatId, message);
-                break;
-            case ENTERING_ON_STATION:
-                messageToSend = onEnteringOnStation(chatId, message, upd);
-                break;
-            case CHECKING_OUT_ON_STATION:
-                messageToSend = onCheckingOutOnStation(chatId, message, upd);
+                messageToSend = onEnteringDetails(chatId, message, upd);
                 break;
             case APPROVING_TRIP:
                 messageToSend = onApprovingTrip(chatId, message, upd);
+                break;
+            case TRY_AGAIN_DURING_CURFEW:
+                messageToSend = onTryAgainDuringCurfew(chatId, message, upd);
                 break;
             case LOOKING_FOR_DRIVER:
                 messageToSend = onLookingForDriver(chatId, message);
@@ -309,57 +308,14 @@ public class ResponseHandler {
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
-    private SendMessage onEnteringDetails(long chatId, String message) throws TelegramApiException {
+    private SendMessage onEnteringDetails(long chatId, String message, Update upd) throws TelegramApiException {
         if (message.equals(Constants.BACK)) {
             userService.putState(chatId, State.ENTERING_ADDRESS);
             return SendMessageFactory.enterAddressSendMessage(chatId);
         } else if (!message.isEmpty() && !message.isBlank()) {
-            return replyToEnterDetails(chatId, message);
+            return replyToEnterDetails(chatId, message, upd);
         } else {
             return SendMessageFactory.enterDetailsSendMessage(chatId);
-        }
-    }
-
-    /**
-     * Handles entering if passenger is on station (y/n)
-     * If "yes" is entered passenger is asked for trip info approving
-     *
-     * @param chatId  user chat id
-     * @param message message sent by user
-     * @param upd     update entity
-     * @throws TelegramApiException Classic telegram exception
-     */
-    private SendMessage onEnteringOnStation(long chatId, String message, Update upd) throws TelegramApiException {
-        switch (message) {
-            case Constants.ON_STATION_NO:
-                return replyToNotOnStation(chatId);
-            case Constants.ON_STATION_YES:
-                return replyToOnStation(chatId, upd);
-            case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_DETAILS);
-                return SendMessageFactory.enterDetailsSendMessage(chatId);
-            default:
-                return SendMessageFactory.enterOnStationSendMessage(chatId);
-        }
-    }
-
-    /**
-     * Handles passenger's checking out on station after choosing no in "Are you on station" menu
-     *
-     * @param chatId  user chat id
-     * @param message message sent by user
-     * @param upd     update entity
-     * @throws TelegramApiException Classic telegram exception
-     */
-    private SendMessage onCheckingOutOnStation(long chatId, String message, Update upd) throws TelegramApiException {
-        switch (message) {
-            case Constants.I_AM_ON_STATION:
-                return replyToOnStation(chatId, upd);
-            case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_ON_STATION);
-                return SendMessageFactory.enterOnStationSendMessage(chatId);
-            default:
-                return SendMessageFactory.checkingOutOnStationSendMessage(chatId);
         }
     }
 
@@ -385,6 +341,33 @@ public class ResponseHandler {
             default:
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                         tripService.getTripDetails(chatId), upd);
+        }
+    }
+
+    private SendMessage onTryAgainDuringCurfew(long chatId, String message, Update upd) throws TelegramApiException {
+        int currentHour;
+        switch (message) {
+            case Constants.TRY_AGAIN:
+                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
+                    return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                            tripService.getTripDetails(chatId), upd);
+                }
+                return replyToApproveAddress(chatId);
+            case Constants.CHANGE_TRIP_INFO:
+                userService.putState(chatId, State.ENTERING_ADDRESS);
+                return SendMessageFactory.enterAddressSendMessage(chatId);
+            case Constants.BACK:
+                userService.putState(chatId, State.ENTERING_DETAILS);
+                return SendMessageFactory.enterDetailsSendMessage(chatId);
+            default:
+                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+                    userService.putState(chatId, State.APPROVING_TRIP);
+                }
+                return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                        tripService.getTripDetails(chatId), upd);
+
         }
     }
 
@@ -466,21 +449,16 @@ public class ResponseHandler {
         return SendMessageFactory.enterDetailsSendMessage(chatId);
     }
 
-    private SendMessage replyToEnterDetails(long chatId, String details) throws TelegramApiException {
+    private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
         tripService.addDetailsToTrip(chatId, details);
         // TODO: username or phone may be absent
         // TODO: "please allow your phone info, or enter your phone"
-        userService.putState(chatId, State.ENTERING_ON_STATION);
-        return SendMessageFactory.enterOnStationSendMessage(chatId);
-    }
-
-    private SendMessage replyToNotOnStation(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHECKING_OUT_ON_STATION);
-        return SendMessageFactory.checkingOutOnStationSendMessage(chatId);
-    }
-
-    private SendMessage replyToOnStation(long chatId, Update upd) throws TelegramApiException {
-        userService.putState(chatId, State.APPROVING_TRIP);
+        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+            userService.putState(chatId, State.APPROVING_TRIP);
+        } else {
+            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+        }
         return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                 tripService.getTripDetails(chatId), upd);
     }

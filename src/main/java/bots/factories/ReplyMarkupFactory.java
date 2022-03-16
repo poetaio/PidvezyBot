@@ -53,6 +53,10 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.CHANGE_TRIP_INFO, Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup tryAgainDuringCurfewReplyKeyboard() {
+        return makeOneColumnMenu(Constants.TRY_AGAIN, Constants.CHANGE_TRIP_INFO, Constants.BACK);
+    }
+
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {
         return makeOneColumnMenu(Constants.STOP_LOOKING_FOR_A_CAR, Constants.EDIT_TRIP);
     }

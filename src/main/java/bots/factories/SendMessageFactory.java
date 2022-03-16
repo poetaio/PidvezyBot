@@ -9,6 +9,9 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Combines messages and corresponding menus from ReplyMarkupFactory
  */
@@ -59,8 +62,17 @@ public class SendMessageFactory {
 
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
-        String checkFromString = String.format("Підтвердіть запит:\n%s%s шукає транспорт з вокзалу на вул. %s\n\n%s\n\n@%s", user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName());
-        return makeSendMessage(chatId, checkFromString, ReplyMarkupFactory.approveAddressReplyKeyboard());
+        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        String generatedApplication = String.format("%s%s шукає транспорт з вокзалу на вул. %s\n%s\n@%s", user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName());
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+            return makeSendMessage(chatId, String.format("Підтвердіть запит:\n\n%s", generatedApplication),
+                    ReplyMarkupFactory.approveAddressReplyKeyboard());
+        }
+
+        return makeSendMessage(chatId, String.format("Ваш запит збережено:\n\n%s\n\nБот працює лише під час " +
+                "комендантської години. Ви зможете його відправити лише після %d:00",
+                generatedApplication, Constants.CURFEW_START_HOUR), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
+
     }
 
     public static SendMessage enterDetailsSendMessage(long chatId) throws TelegramApiException {

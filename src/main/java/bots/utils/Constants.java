@@ -1,5 +1,8 @@
 package bots.utils;
 
+import java.util.Calendar;
+import java.util.Date;
+
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     // production token
@@ -8,6 +11,8 @@ public interface Constants {
     String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
+    int CURFEW_START_HOUR = 23;
+    int CURFEW_END_HOUR = 6;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
@@ -48,6 +53,7 @@ public interface Constants {
 
     String CHANGE_TRIP_INFO = "Змінити запит";
     String APPROVE_TRIP = "Підтвердити";
+    String TRY_AGAIN = "Спробувати ще раз";
 
     String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
