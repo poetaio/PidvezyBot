@@ -2,7 +2,10 @@ package bots.utils;
 
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
-    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
+    // production token
+//    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
+    // dev token
+    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
 
