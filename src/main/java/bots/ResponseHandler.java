@@ -262,7 +262,9 @@ public class ResponseHandler {
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
-                        userService.getUserInfo(driverPassenger.getPassengerChatId()));
+                        userService.getUserInfo(driverPassenger.getPassengerChatId()),
+                        driverPassenger.getAddress(),
+                        driverPassenger.getDetails());
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 removeScheduleMessage(chatId);
@@ -291,9 +293,12 @@ public class ResponseHandler {
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         generateDriverOfferTripMessage(passengerQueueService.getNextFree(chatId)));
             default:
+                Trip driverPassenger = passengerQueueService.getPassengerDaoByDriver(chatId);
                 // TODO: NULLPOINTER CHECK userInfo.get and passengerQueueService.getByDriver
                 return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
-                        passengerQueueService.getPassengerDaoByDriver(chatId).getPassengerChatId()));
+                                passengerQueueService.getPassengerDaoByDriver(chatId).getPassengerChatId()),
+                        driverPassenger.getAddress(),
+                        driverPassenger.getDetails());
         }
     }
 
