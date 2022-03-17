@@ -4,7 +4,6 @@ import bots.factories.ReplyMarkupFactory;
 import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
-import models.TakenTrip;
 import models.utils.State;
 
 import models.QueueTrip;
@@ -221,20 +220,18 @@ public class ResponseHandler {
 
                 User driver = userService.getUserInfo(chatId);
 
-//                passengerQueueService.removeAndSaveInBufferByPassengerId(driverViewTrip.getPassengerChatId());
-                tripService.takeDriverTrip(chatId);
-
                 userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
 
                 sender.executeAsync(SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
                         driverViewTrip.getAddress(),
-                        driverViewTrip.getDetails()), emptyCallback);
+                        driverViewTrip.getDetails(),
+                        passengerService.getNumber(driverViewTrip.getPassengerChatId())), emptyCallback);
 
                 sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
                 sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
 
-                tripService.takeTripByDriverId(chatId);
+                tripService.takeDriverTrip(chatId);
 
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
@@ -272,7 +269,7 @@ public class ResponseHandler {
             case Constants.BACK:
                 userService.putState(chatId, State.DRIVER_ACTIVE);
                 sendNotificationToDrivers(chatId, false);
-                tripService.dismissTripByDriver(chatId);
+                tripService.dismissDriverTrip(chatId);
                 driverService.subscribeDriverOnUpdate(chatId);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         generateDriverOfferTripMessage(chatId, passengerQueueService.getNextFree(chatId)));
@@ -280,12 +277,13 @@ public class ResponseHandler {
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
-                QueueTrip passenger = passengerQueueService.getPassengerDaoByDriver(chatId);
+                QueueTrip driverPassenger = passengerQueueService.getPassengerDaoByDriver(chatId);
                 // TODO: NULLPOINTER CHECK userInfo.get and passengerQueueService.getByDriver
                 return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
                                 passengerQueueService.getPassengerDaoByDriver(chatId).getPassengerChatId()),
-                        passenger.getAddress(),
-                        passenger.getDetails());
+                        driverPassenger.getAddress(),
+                        driverPassenger.getDetails(),
+                        passengerService.getNumber(driverPassenger.getPassengerChatId()));
         }
     }
 
@@ -492,7 +490,7 @@ public class ResponseHandler {
                 tripService.removeTripFromQueueByPassengerId(chatId);
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
-                tripService.dismissTrip(chatId);
+                tripService.dismissPassengerTrip(chatId);
                 userService.putState(chatId, State.LOOKING_FOR_DRIVER);
                 return SendMessageFactory.addressApprovedSendMessage(chatId);
             case Constants.THANKS:
@@ -612,7 +610,6 @@ public class ResponseHandler {
     private SendMessage replyToFoundACar(long chatId) throws TelegramApiException {
         // todo: handle if driver views trip
         userService.putState(chatId, State.FOUND_A_CAR);
-        tripService.removeTripFromQueueByPassengerId(chatId);
         tripService.passengerFoundACar(chatId);
         return SendMessageFactory.haveANiceTripSendMessage(chatId);
     }

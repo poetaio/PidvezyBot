@@ -86,7 +86,7 @@ public class TripService {
         takenTripService.addTakenTrip(takenTrip);
     }
 
-    public void takeTripByDriverId(long driverId) {
+    public void takeDriverTrip(long driverId) {
         QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverId);
         TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
         takenTripService.addTakenTrip(takenTrip);
@@ -112,11 +112,6 @@ public class TripService {
         // if not already dismissed by driver
         if (takenTrip != null)
             tripQueueService.add(new QueueTrip(takenTrip));
-    }
-
-    public void dismissTripByDriver(long driverChatId) {
-        TakenTrip takenTrip = takenTripService.getTripByDriverChatId(driverChatId);
-        tripQueueService.add(new QueueTrip(takenTrip));
     }
 
     public void approveTrip(long driverChatId) {

@@ -71,7 +71,7 @@ public class SendMessageFactory {
     public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details, String number) throws TelegramApiException {
         String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName(),
                 number, address, details);
-        return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTripReplyKeyboard());
+        return makeSendMessage(chatId, userWaitsForYourCallMessage);
     }
 
     public static SendMessage driverInactiveSendMessage(long chatId) throws TelegramApiException {
