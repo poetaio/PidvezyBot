@@ -78,6 +78,13 @@ public class TripQueueService {
         return resPassengerDao.isEmpty() ? null : resPassengerDao.get().clone();
     }
 
+    public QueueTrip getPassengerDaoByPassenger(long passengerChatId) {
+        Optional<QueueTrip> resPassengerDao = tripQueue.stream()
+                .filter(trip -> trip.getPassengerChatId() == passengerChatId)
+                .findFirst();
+        return resPassengerDao.isEmpty() ? null : resPassengerDao.get().clone();
+    }
+
     private QueueTrip getPassengerDaoByDriverInner(long driverChatId) {
         Optional<QueueTrip> resPassengerDao = tripQueue.stream()
                 .filter(trip -> trip.getDriverList() != null
@@ -145,6 +152,12 @@ public class TripQueueService {
     public QueueTrip getAndRemoveByDriverId(long driverChatId) {
         QueueTrip resTrip = getPassengerDaoByDriver(driverChatId);
         removeByDriverId(driverChatId);
+        return resTrip;
+    }
+
+    public QueueTrip getAndRemoveByPassengerId(long passengerChatId) {
+        QueueTrip resTrip = getPassengerDaoByPassenger(passengerChatId);
+        removeByPassengerId(passengerChatId);
         return resTrip;
     }
 

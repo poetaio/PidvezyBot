@@ -28,10 +28,10 @@ public class TakenTripService {
 
     /**
      * When driver approves trip after contacting with the passenger
-     * @param driverChatId driver chat id
+//     * @param driverChatId driver chat id
      */
-    public void approveTrip(long driverChatId) {
-        TakenTrip trip = getTripByPassengerChatId(driverChatId);
+    public void approveTrip(long passengerChatId) {
+        TakenTrip trip = getTripByPassengerChatId(passengerChatId);
         trip.setTripStatus(TripStatus.TAKEN);
     }
 

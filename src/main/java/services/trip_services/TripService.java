@@ -2,6 +2,7 @@ package services.trip_services;
 
 import models.QueueTrip;
 import models.TakenTrip;
+import models.hibernate_not_being_used.Trip;
 
 /**
  * Common service to manage trips (delegation)
@@ -69,11 +70,12 @@ public class TripService {
     /**
      * Assign the driver for the trip, that he's currently viewing.
      * Create taken trip to block trip for other drivers to take
-     * @param driverChatId driver chat id
+//     * @param driverChatId driver chat id
      */
-    public void takeTrip(long driverChatId) {
-        QueueTrip driverTrip = tripQueueService.getAndRemoveByDriverId(driverChatId);
-        TakenTrip takenTrip = new TakenTrip(driverTrip, driverChatId);
+    public void takeTrip(long passengerId) {
+//        QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverChatId);
+        QueueTrip trip = tripQueueService.getAndRemoveByPassengerId(passengerId);
+        TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
         takenTripService.addTakenTrip(takenTrip);
     }
 
@@ -81,10 +83,10 @@ public class TripService {
 
     /**
      * When driver doesn't like the passenger and hits "Dismiss"
-     * @param driverChatId driver chat id
+//     * @param driverChatId driver chat id
      */
-    public void dismissTrip(long driverChatId) {
-        TakenTrip takenTrip = takenTripService.getAndRemoveTripByDriverChatId(driverChatId);
+    public void dismissTrip(long passengerChatId) {
+        TakenTrip takenTrip = takenTripService.getTripByPassengerChatId(passengerChatId);
         tripQueueService.add(new QueueTrip(takenTrip));
     }
 

@@ -210,9 +210,9 @@ public class ResponseHandler {
                 driverService.unsubscribeDriverFromUpdate(chatId);
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
 
-                passengerQueueService.removeAndSaveInBufferByPassengerId(chatId);
-
                 User driver = userService.getUserInfo(chatId);
+
+                passengerQueueService.removeAndSaveInBufferByPassengerId(driverViewTrip.getPassengerChatId());
 
                 userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
                 sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
@@ -433,10 +433,11 @@ public class ResponseHandler {
         switch (message){
             case Constants.FOUND_TRIP:
                 tripService.takeTrip(chatId);
-                passengerQueueService.removeTripFromBuffer(chatId);
+//                passengerQueueService.removeTripFromBuffer(chatId);
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
-                passengerQueueService.returnTripFromBuffer(chatId);
+                tripService.dismissTrip(chatId);
+//                passengerQueueService.returnTripFromBuffer(chatId);
                 userService.putState(chatId, State.LOOKING_FOR_DRIVER);
                 return SendMessageFactory.addressApprovedSendMessage(chatId);
             case Constants.THANKS:
@@ -510,6 +511,7 @@ public class ResponseHandler {
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
         passengerQueueService.add(new QueueTrip(chatId, tripService.getTripAddress(chatId),
                 tripService.getTripDetails(chatId)));
+//        tripService.approveTrip(chatId);
         return SendMessageFactory.addressApprovedSendMessage(chatId);
     }
 
@@ -535,7 +537,6 @@ public class ResponseHandler {
         // todo: handle if driver views trip
         userService.putState(chatId, State.FOUND_A_CAR);
         tripService.removeTripFromQueueByPassengerId(chatId);
-        passengerQueueService.removeByPassengerId(chatId);
         return SendMessageFactory.haveANiceTripSendMessage(chatId);
     }
 
