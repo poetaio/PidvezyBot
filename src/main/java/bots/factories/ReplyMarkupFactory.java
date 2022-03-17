@@ -21,12 +21,12 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.BACK);
     }
 
-    public static ReplyKeyboardMarkup driverTookTripReplyKeyboard() {
-        return makeOneColumnMenu(Constants.BACK);
-    }
-
     public static ReplyKeyboardMarkup passengerConfirmingTakingHimReplyKeyboard() {
         return makeOneColumnMenu(Constants.FOUND_TRIP, Constants.FIND_AGAIN);
+    }
+
+    public static ReplyKeyboardMarkup driverConfirmingFinishingTripReplyKeyboard() {
+        return makeOneColumnMenu(Constants.FINISH_TRIP, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup passengerThanksReplyKeyboard() {

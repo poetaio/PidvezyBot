@@ -45,6 +45,10 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
     }
 
+    public static SendMessage askingDriverToInformAboutEndOfTripSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.APPROVING_FINISH_TRIP, ReplyMarkupFactory.driverConfirmingFinishingTripReplyKeyboard());
+    }
+
     public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
         String message = "Гарної дороги";
         return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());

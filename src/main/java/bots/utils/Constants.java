@@ -69,10 +69,13 @@ public interface Constants {
     String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
 
-    String FOUND_TRIP = "Я знайшов(ла) транспорт";
+    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
     String FIND_AGAIN = "Шукати знову";
 
     String THANKS = "Дякую";
+
+    String APPROVING_FINISH_TRIP = "Повідомте нас про завершення поїздки";
+    String FINISH_TRIP = "Поїздка завершена";
 
     String EDIT_TRIP = "Змінити поїздку";
 //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
