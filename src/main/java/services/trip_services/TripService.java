@@ -73,8 +73,13 @@ public class TripService {
 //     * @param driverChatId driver chat id
      */
     public void takeTrip(long passengerId) {
-//        QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverChatId);
         QueueTrip trip = tripQueueService.getAndRemoveByPassengerId(passengerId);
+        TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
+        takenTripService.addTakenTrip(takenTrip);
+    }
+
+    public void takeTripByDriverId(long driverId) {
+        QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverId);
         TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
         takenTripService.addTakenTrip(takenTrip);
     }
@@ -90,10 +95,11 @@ public class TripService {
         tripQueueService.add(new QueueTrip(takenTrip));
     }
 
-    /**
-     * Make trip status "TAKEN" to start a wonderful journey to destination address
-     * @param driverChatId driver chat id
-     */
+    public void dismissTripByDriver(long driverChatId) {
+        TakenTrip takenTrip = takenTripService.getTripByDriverChatId(driverChatId);
+        tripQueueService.add(new QueueTrip(takenTrip));
+    }
+
     public void approveTrip(long driverChatId) {
         takenTripService.approveTrip(driverChatId);
     }

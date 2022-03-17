@@ -8,8 +8,8 @@ public interface Constants {
 //    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
-    int CURFEW_START_HOUR = 26;
-    int CURFEW_END_HOUR = -1;
+    int CURFEW_START_HOUR = 18;
+    int CURFEW_END_HOUR = 18;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
@@ -67,10 +67,13 @@ public interface Constants {
     String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
 
-    String FOUND_TRIP = "Я знайшов(ла) транспорт";
+    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
     String FIND_AGAIN = "Шукати знову";
 
     String THANKS = "Дякую";
+
+    String APPROVING_FINISH_TRIP = "Повідомте нас про завершення поїздки";
+    String FINISH_TRIP = "Поїздка завершена";
 
     String EDIT_TRIP = "Змінити поїздку";
 //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
