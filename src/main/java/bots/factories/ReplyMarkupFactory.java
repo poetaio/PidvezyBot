@@ -45,6 +45,14 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup editAddressReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup editDetailsReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
+    }
+
     public static ReplyKeyboardMarkup enterDetailsReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
     }
@@ -59,6 +67,10 @@ public class ReplyMarkupFactory {
 
     public static ReplyKeyboardMarkup approveAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.CHANGE_TRIP_INFO, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup tryAgainDuringCurfewReplyKeyboard() {
+        return makeOneColumnMenu(Constants.TRY_AGAIN, Constants.CHANGE_TRIP_INFO, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {

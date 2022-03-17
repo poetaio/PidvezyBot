@@ -20,6 +20,8 @@ import services.passenger_services.PassengerService;
 import services.trip_services.TripQueueService;
 import services.trip_services.TripService;
 
+import java.util.Calendar;
+
 /**
  * Main class to handle all responses
  */
@@ -136,16 +138,19 @@ public class ResponseHandler {
                 messageToSend = onEnteringAddress(chatId, message);
                 break;
             case ENTERING_DETAILS:
-                messageToSend = onEnteringDetails(chatId, message);
+                messageToSend = onEnteringDetails(chatId, message, upd);
                 break;
-            case ENTERING_ON_STATION:
-                messageToSend = onEnteringOnStation(chatId, message, upd);
+            case EDITING_ADDRESS:
+                messageToSend = onEditingAddress(chatId, message, upd);
                 break;
-            case CHECKING_OUT_ON_STATION:
-                messageToSend = onCheckingOutOnStation(chatId, message, upd);
+            case EDITING_DETAILS:
+                messageToSend = onEditingDetails(chatId, message, upd);
                 break;
             case APPROVING_TRIP:
                 messageToSend = onApprovingTrip(chatId, message, upd);
+                break;
+            case TRY_AGAIN_DURING_CURFEW:
+                messageToSend = onTryAgainDuringCurfew(chatId, message, upd);
                 break;
             case LOOKING_FOR_DRIVER:
                 messageToSend = onLookingForDriver(chatId, message);
@@ -157,7 +162,9 @@ public class ResponseHandler {
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
         }
 
-        sender.executeAsync(messageToSend, emptyCallback);
+//        sender.executeAsync(messageToSend, emptyCallback);
+        // to see errors in logs
+        sender.execute(messageToSend);
     }
 
     /**
@@ -317,57 +324,47 @@ public class ResponseHandler {
      * @param message message sent by user
      * @throws TelegramApiException Classic telegram exception
      */
-    private SendMessage onEnteringDetails(long chatId, String message) throws TelegramApiException {
+    private SendMessage onEnteringDetails(long chatId, String message, Update upd) throws TelegramApiException {
         if (message.equals(Constants.BACK)) {
             userService.putState(chatId, State.ENTERING_ADDRESS);
             return SendMessageFactory.enterAddressSendMessage(chatId);
         } else if (!message.isEmpty() && !message.isBlank()) {
-            return replyToEnterDetails(chatId, message);
+            return replyToEnterDetails(chatId, message, upd);
         } else {
             return SendMessageFactory.enterDetailsSendMessage(chatId);
         }
     }
 
-    /**
-     * Handles entering if passenger is on station (y/n)
-     * If "yes" is entered passenger is asked for trip info approving
-     *
-     * @param chatId  user chat id
-     * @param message message sent by user
-     * @param upd     update entity
-     * @throws TelegramApiException Classic telegram exception
-     */
-    private SendMessage onEnteringOnStation(long chatId, String message, Update upd) throws TelegramApiException {
+    private SendMessage onEditingAddress(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
-            case Constants.ON_STATION_NO:
-                return replyToNotOnStation(chatId);
-            case Constants.ON_STATION_YES:
-                return replyToOnStation(chatId, upd);
             case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_DETAILS);
-                return SendMessageFactory.enterDetailsSendMessage(chatId);
+                // todo: refactor
+                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
+            case Constants.DO_NOT_CHANGE:
+                userService.putState(chatId, State.EDITING_DETAILS);
+                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                return SendMessageFactory.enterOnStationSendMessage(chatId);
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditAddress(chatId, message);
+                } else {
+                    return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+                }
         }
     }
 
-    /**
-     * Handles passenger's checking out on station after choosing no in "Are you on station" menu
-     *
-     * @param chatId  user chat id
-     * @param message message sent by user
-     * @param upd     update entity
-     * @throws TelegramApiException Classic telegram exception
-     */
-    private SendMessage onCheckingOutOnStation(long chatId, String message, Update upd) throws TelegramApiException {
+    private SendMessage onEditingDetails(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
-            case Constants.I_AM_ON_STATION:
-                return replyToOnStation(chatId, upd);
+            case Constants.DO_NOT_CHANGE:
+                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
             case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_ON_STATION);
-                return SendMessageFactory.enterOnStationSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             default:
-                return SendMessageFactory.checkingOutOnStationSendMessage(chatId);
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEnterDetails(chatId, message, upd);
+                } else {
+                    return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                }
         }
     }
 
@@ -385,14 +382,41 @@ public class ResponseHandler {
             case Constants.APPROVE_TRIP:
                 return replyToApproveAddress(chatId);
             case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.ENTERING_ADDRESS);
-                return SendMessageFactory.enterAddressSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.BACK:
                 userService.putState(chatId, State.ENTERING_DETAILS);
                 return SendMessageFactory.enterDetailsSendMessage(chatId);
             default:
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                         tripService.getTripDetails(chatId), upd);
+        }
+    }
+
+    private SendMessage onTryAgainDuringCurfew(long chatId, String message, Update upd) throws TelegramApiException {
+        int currentHour;
+        switch (message) {
+            case Constants.TRY_AGAIN:
+                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
+                    return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                            tripService.getTripDetails(chatId), upd);
+                }
+                return replyToApproveAddress(chatId);
+            case Constants.CHANGE_TRIP_INFO:
+                userService.putState(chatId, State.EDITING_ADDRESS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            case Constants.BACK:
+                userService.putState(chatId, State.ENTERING_DETAILS);
+                return SendMessageFactory.enterDetailsSendMessage(chatId);
+            default:
+                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+                    userService.putState(chatId, State.APPROVING_TRIP);
+                }
+                return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                        tripService.getTripDetails(chatId), upd);
+
         }
     }
 
@@ -463,7 +487,7 @@ public class ResponseHandler {
         userService.putState(chatId, State.DRIVER_ACTIVE);
         // todo: merge with generateDriverOfferTrip
         User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        String message = String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s",
+        String message = String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
                 tripInfo.getAddress(), tripInfo.getDetails());
         return SendMessageFactory.driverActiveSendMessage(chatId, message);
@@ -488,23 +512,24 @@ public class ResponseHandler {
         return SendMessageFactory.enterDetailsSendMessage(chatId);
     }
 
-    private SendMessage replyToEnterDetails(long chatId, String details) throws TelegramApiException {
+    private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
         tripService.addDetailsToTrip(chatId, details);
         // TODO: username or phone may be absent
         // TODO: "please allow your phone info, or enter your phone"
-        userService.putState(chatId, State.ENTERING_ON_STATION);
-        return SendMessageFactory.enterOnStationSendMessage(chatId);
-    }
-
-    private SendMessage replyToNotOnStation(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHECKING_OUT_ON_STATION);
-        return SendMessageFactory.checkingOutOnStationSendMessage(chatId);
-    }
-
-    private SendMessage replyToOnStation(long chatId, Update upd) throws TelegramApiException {
-        userService.putState(chatId, State.APPROVING_TRIP);
+        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+            userService.putState(chatId, State.APPROVING_TRIP);
+        } else {
+            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+        }
         return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                 tripService.getTripDetails(chatId), upd);
+    }
+
+    private SendMessage replyToEditAddress(long chatId, String message) throws TelegramApiException {
+        tripService.addAddressToTrip(chatId, message);
+        userService.putState(chatId, State.EDITING_DETAILS);
+        return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
     }
 
     public SendMessage replyToApproveAddress(long chatId) throws TelegramApiException {
@@ -522,9 +547,9 @@ public class ResponseHandler {
      * @return Message & menu to enter address
      */
     private SendMessage replyToEditTrip(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.ENTERING_ADDRESS);
+        userService.putState(chatId, State.EDITING_ADDRESS);
         tripService.removeTripFromQueueByPassengerId(chatId);
-        return SendMessageFactory.enterAddressSendMessage(chatId);
+        return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
     }
 
     /**
@@ -546,7 +571,7 @@ public class ResponseHandler {
         }
 
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format("%s%s шукає транспорт з вокзалу на %s \n\n%s\n\n" + "(Заявка оновлюється кожні " + Constants.DRIVER_UPDATE_INTERVAL + " секунд)",
+        return String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
