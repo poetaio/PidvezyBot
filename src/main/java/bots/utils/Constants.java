@@ -8,8 +8,8 @@ public interface Constants {
     String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
-    int CURFEW_START_HOUR = 26;
-    int CURFEW_END_HOUR = -1;
+    int CURFEW_START_HOUR = 18;
+    int CURFEW_END_HOUR = 18;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
