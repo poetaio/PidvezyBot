@@ -157,7 +157,7 @@ public class ResponseHandler {
                 messageToSend = onLookingForDriver(chatId, message);
                 break;
             case FOUND_A_CAR:
-                messageToSend = onFoundACar(chatId);
+                messageToSend = onFoundACar(chatId, message);
                 break;
             default:
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
@@ -216,8 +216,17 @@ public class ResponseHandler {
                             generateDriverOfferTripMessage(chatId, nextPassenger1));
                 }
                 driverService.unsubscribeDriverFromUpdate(chatId);
-                tripService.takeTrip(chatId);
                 userService.putState(chatId, State.DRIVER_TOOK_TRIP);
+
+                User driver = userService.getUserInfo(chatId);
+
+//                passengerQueueService.removeAndSaveInBufferByPassengerId(driverViewTrip.getPassengerChatId());
+                tripService.takeDriverTrip(chatId);
+
+                userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
+                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
+                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
+
                 // TODO: NULLPOINTER CHECK
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
@@ -258,7 +267,7 @@ public class ResponseHandler {
             case Constants.BACK:
                 userService.putState(chatId, State.DRIVER_ACTIVE);
                 sendNotificationToDrivers(chatId, false);
-                tripService.dismissTrip(chatId);
+                tripService.dismissDriverTrip(chatId);
                 driverService.subscribeDriverOnUpdate(chatId);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         generateDriverOfferTripMessage(chatId, passengerQueueService.getNextFree(chatId)));
@@ -339,7 +348,7 @@ public class ResponseHandler {
         switch (message) {
             case Constants.BACK:
                 userService.putState(chatId, State.EDITING_DETAILS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
+                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 return SendMessageFactory.enterNumberSendMessage(chatId);
         }
@@ -349,8 +358,15 @@ public class ResponseHandler {
         switch (message) {
             case Constants.BACK:
                 // todo: refactor
-                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+//                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
             case Constants.DO_NOT_CHANGE:
+                String currentDetails = tripService.getTripDetails(chatId);
+                if (currentDetails == null) {
+                    userService.putState(chatId, State.EDITING_DETAILS);
+                    return SendMessageFactory.enterDetailsSendMessage(chatId);
+                }
                 userService.putState(chatId, State.EDITING_DETAILS);
                 return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
@@ -390,7 +406,7 @@ public class ResponseHandler {
     private SendMessage onApprovingTrip(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.APPROVE_TRIP:
-                return replyToApproveAddress(chatId);
+                return replyToApproveTrip(chatId);
             case Constants.CHANGE_TRIP_INFO:
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
@@ -412,7 +428,7 @@ public class ResponseHandler {
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                             tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
                 }
-                return replyToApproveAddress(chatId);
+                return replyToApproveTrip(chatId);
             case Constants.CHANGE_TRIP_INFO:
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
@@ -463,9 +479,24 @@ public class ResponseHandler {
      * @return Choosing role text & menu
      * @throws TelegramApiException basic telegram exception
      */
-    private SendMessage onFoundACar(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHOOSING_ROLE);
-        return SendMessageFactory.chooseRoleSendMessage(chatId);
+    private SendMessage onFoundACar(long chatId, String message) throws TelegramApiException {
+        switch (message){
+            case Constants.FOUND_TRIP:
+                tripService.takePassengerTrip(chatId);
+//                passengerQueueService.removeTripFromBuffer(chatId);
+                userService.putState(chatId, State.HAVE_A_NICE_TRIP);
+                return SendMessageFactory.wishAGoodTripSendMessage(chatId);
+            case Constants.FIND_AGAIN:
+                tripService.dismissPassengerTrip(chatId);
+//                passengerQueueService.returnTripFromBuffer(chatId);
+                userService.putState(chatId, State.LOOKING_FOR_DRIVER);
+                return SendMessageFactory.addressApprovedSendMessage(chatId);
+            case Constants.THANKS:
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.returnToSearchingSendMessage(chatId);
+        }
     }
 
     // replyTo... - handlers to every message in every state
@@ -490,6 +521,11 @@ public class ResponseHandler {
     }
 
     public SendMessage replyToChooseRolePassenger(long chatId) throws TelegramApiException {
+        String currentAddress = tripService.getTripAddress(chatId);
+        if (currentAddress != null) {
+            userService.putState(chatId, State.EDITING_ADDRESS);
+            return SendMessageFactory.editAddressSendMessage(chatId, currentAddress);
+        }
         userService.putState(chatId, State.ENTERING_ADDRESS);
         return SendMessageFactory.enterAddressSendMessage(chatId);
     }
@@ -535,14 +571,19 @@ public class ResponseHandler {
 
     private SendMessage replyToEditAddress(long chatId, String message) throws TelegramApiException {
         tripService.addAddressToTrip(chatId, message);
+        String currentDetails = tripService.getTripDetails(chatId);
+        if (currentDetails == null) {
+            userService.putState(chatId, State.EDITING_DETAILS);
+            return SendMessageFactory.enterDetailsSendMessage(chatId);
+        }
         userService.putState(chatId, State.EDITING_DETAILS);
         return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
     }
 
-    public SendMessage replyToApproveAddress(long chatId) throws TelegramApiException {
+    public SendMessage replyToApproveTrip(long chatId) throws TelegramApiException {
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
-        passengerQueueService.add(new QueueTrip(chatId, tripService.getTripAddress(chatId),
-                tripService.getTripDetails(chatId)));
+        tripService.addNewTrip(chatId);
+//        tripService.approveTrip(chatId);
         return SendMessageFactory.addressApprovedSendMessage(chatId);
     }
 
@@ -568,7 +609,7 @@ public class ResponseHandler {
         // todo: handle if driver views trip
         userService.putState(chatId, State.FOUND_A_CAR);
         tripService.removeTripFromQueueByPassengerId(chatId);
-        passengerQueueService.removeByPassengerId(chatId);
+        tripService.passengerFoundACar(chatId);
         return SendMessageFactory.haveANiceTripSendMessage(chatId);
     }
 

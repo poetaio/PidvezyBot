@@ -25,6 +25,14 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup passengerConfirmingTakingHimReplyKeyboard() {
+        return makeOneColumnMenu(Constants.FOUND_TRIP, Constants.FIND_AGAIN);
+    }
+
+    public static ReplyKeyboardMarkup passengerThanksReplyKeyboard() {
+        return makeOneColumnMenu(Constants.THANKS);
+    }
+
     public static ReplyKeyboardMarkup driverActiveReplyMarkup() {
         return makeOneColumnMenu(Constants.TAKE_TRIP, Constants.NEXT_TRIP, Constants.BACK);
     }
@@ -82,7 +90,7 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup haveANiceTripReplyMenu() {
-        return makeOneColumnMenu(Constants.THANK_YOU);
+        return makeOneColumnMenu(Constants.THANKS);
     }
 
     private static ReplyKeyboardMarkup makeOneColumnMenu(String... buttons) {

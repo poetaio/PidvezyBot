@@ -17,18 +17,17 @@ public class QueueTrip {
     private long passengerChatId;
     private String address;
     private String details;
-    private List<Long> driverList;
+    private List<Long> driverList = new LinkedList<>();
     private Date lastViewDate;
 
     public QueueTrip(long passengerChatId, String address, String details) {
         this.passengerChatId = passengerChatId;
         this.address = address;
         this.details = details;
-        driverList = new LinkedList<>();
     }
 
     public QueueTrip(long passengerChatId) {
-        this.passengerChatId = passengerChatId;
+        this(passengerChatId, null, null);
     }
 
     public QueueTrip(TakenTrip takenTrip) {

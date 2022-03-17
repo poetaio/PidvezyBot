@@ -14,10 +14,10 @@ public interface Constants {
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
 
-    String START_DESCRIPTION = "Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (22:00 - 6:00)";
+    String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String START_REPLY = "З якою ціллю ви тут?";
-    String CHOOSE_ROLE_REPLY = "Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (22:00 - 6:00)";
+    String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String ROLE_DRIVER = "Підвезу";
 //    String ROLE_PASSENGER = "Підвезіть";
@@ -69,14 +69,17 @@ public interface Constants {
     String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
 
+    String FOUND_TRIP = "Я знайшов(ла) транспорт";
+    String FIND_AGAIN = "Шукати знову";
+
+    String THANKS = "Дякую";
+
     String EDIT_TRIP = "Змінити поїздку";
 //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
     String I_FOUND_A_CAR = "Я знайшов транспорт";
     String STOP_LOOKING_FOR_A_CAR = "Зупинити пошук";
 
     String HAVE_A_NICE_TRIP = "Гарної дороги!";
-    
-    String THANK_YOU = "Дякую!";
 
     String BACK = "Назад";;
 

@@ -22,15 +22,6 @@ public class SendMessageFactory {
     }
 
     public static SendMessage driverActiveSendMessage(long chatId, String message) throws TelegramApiException {
-//         if message is present, delete, send new and reset
-//         otherwise send new and reset
-//        Integer messageToUpdateId = DriverService.getInstance().getMessageToUpdateId(chatId);
-//
-//        if (messageToUpdateId != null) {
-//            DeleteMessage deleteMessage = new DeleteMessage(String.valueOf(chatId), messageToUpdateId);
-//            sender.execute(deleteMessage);
-//        }
-
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(message)
@@ -42,6 +33,31 @@ public class SendMessageFactory {
         else
             sendMessage.setReplyMarkup(ReplyMarkupFactory.driverActiveReplyMarkup());
         return sendMessage;
+    }
+
+    public static SendMessage noticingPassengerDriverTookTripSendMessage(long chatId, @NotNull User driver) throws TelegramApiException {
+        String message = String.format("%s відгукнувся на вашу заявку\n@%s", driver.getFirstName(), driver.getUserName());
+        return makeSendMessage(chatId, message);
+    }
+
+    public static SendMessage askingPassengerToInformAboutTripSendMessage(long chatId) throws TelegramApiException {
+        String message = "Повідомте нас про статус заявки";
+        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
+    }
+
+    public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
+        String message = "Гарної дороги";
+        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+    }
+
+    public static SendMessage returnToSearchingSendMessage(long chatId) throws TelegramApiException {
+        String message = "Повертаємось до пошуків";
+        return makeSendMessage(chatId, message);
+    }
+
+    public static SendMessage returningToCh(long chatId) throws TelegramApiException {
+        String message = "Повертаємось до пошуків";
+        return makeSendMessage(chatId, message);
     }
 
     public static SendMessage tripAlreadyTakenSendMessage(long chatId) throws TelegramApiException {
@@ -105,21 +121,20 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.haveANiceTripReplyMenu());
     }
 
-    private static SendMessage makeSendMessage(long chatId, String messageText, ReplyKeyboardMarkup replyMarkup) throws TelegramApiException {
-//        Integer messageId = UpdateMessageService.getInstance().getBotMessageToUpdate(chatId);
 
-//        if (messageId == null)
+    private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {
+        return SendMessage.builder()
+                .chatId(String.valueOf(chatId))
+                .text(messageText)
+                .build();
+    }
+
+    private static SendMessage makeSendMessage(long chatId, String messageText, ReplyKeyboardMarkup replyMarkup) throws TelegramApiException {
             return SendMessage.builder()
                     .chatId(String.valueOf(chatId))
                     .parseMode(ParseMode.HTML)
                     .text(messageText)
                     .replyMarkup(replyMarkup)
                     .build();
-
-//        return EditMessageReplyMarkup.builder()
-//                .chatId(String.valueOf(chatId))
-//                .messageId(UpdateMessageService.getInstance().getBotMessageToUpdate(chatId))
-//                .replyMarkup(markup)
-//                .build();
     }
 }

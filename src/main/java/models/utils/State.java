@@ -20,5 +20,6 @@ public enum State {
     TRY_AGAIN_DURING_CURFEW,
 
     LOOKING_FOR_DRIVER,
-    FOUND_A_CAR
+    FOUND_A_CAR,
+    HAVE_A_NICE_TRIP
 }
