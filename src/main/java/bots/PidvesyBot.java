@@ -15,7 +15,7 @@ public class PidvesyBot extends AbilityBot {
     }
     
     public PidvesyBot() {
-        super(Constants.BOT_TOKEN, Constants.BOT_USERNAME);
+        super(System.getenv("PIDVEZY_BOT_TOKEN"), Constants.BOT_USERNAME);
         // TODO: REMOVE
         responseHandler = ResponseHandler.getInstance(sender);
 
