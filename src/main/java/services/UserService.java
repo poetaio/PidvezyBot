@@ -56,6 +56,7 @@ public class UserService {
      */
     public void performCleanup(long chatId) {
         tripService.removeTripFromQueueByPassengerId(chatId);
+        tripService.removeTripDetails(chatId);
         driverService.removeDriver(chatId);
     }
 

@@ -30,8 +30,9 @@ public abstract class DriverViewUpdateTask implements Runnable {
                     if (lastPassengerDao == null && nextPassengerDao == null)
                         continue;
 
-                    if (nextPassengerDao == null)
+                    if (nextPassengerDao == null) {
                         sendNoTripsAvailable(driverChatId);
+                    }
                     else if (lastPassengerDao == null ||
                             (nextPassengerDao.getPassengerChatId() != lastPassengerDao.getPassengerChatId() ||
                                     !nextPassengerDao.getAddress().equals(lastPassengerDao.getAddress()) ||
