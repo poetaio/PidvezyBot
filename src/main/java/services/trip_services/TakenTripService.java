@@ -23,7 +23,7 @@ public class TakenTripService {
      * @param takenTrip trip
      */
     public void addTakenTrip(TakenTrip takenTrip) {
-        takenTrips.add(takenTrip);
+        takenTrips.add(0, takenTrip);
     }
 
     /**
@@ -55,15 +55,21 @@ public class TakenTripService {
         ).collect(Collectors.toList());
     }
 
+    public void removePassengerTrip(long passengerChatId) {
+        takenTrips = takenTrips.stream().filter(
+                x -> x.getPassengerChatId() != passengerChatId
+        ).collect(Collectors.toList());
+    }
+
     public TakenTrip getAndRemoveTripByDriverChatId(long driverChatId) {
         TakenTrip trip = getTripByDriverChatId(driverChatId);
-        takenTrips.remove(trip);
+        takenTrips = takenTrips.stream().filter(x -> x.getDriverChatId() != driverChatId).collect(Collectors.toList());
         return trip;
     }
 
     public TakenTrip getAndRemoveTripByPassengerChatId(long passengerChatId) {
         TakenTrip trip = getTripByPassengerChatId(passengerChatId);
-        takenTrips.remove(trip);
+        takenTrips = takenTrips.stream().filter(x -> x.getPassengerChatId() != passengerChatId).collect(Collectors.toList());
         return trip;
     }
 }

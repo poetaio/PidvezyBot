@@ -26,7 +26,7 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup driverConfirmingFinishingTripReplyKeyboard() {
-        return makeOneColumnMenu(Constants.FINISH_TRIP, Constants.BACK);
+        return makeOneColumnMenu(Constants.FINISH_TRIP);
     }
 
     public static ReplyKeyboardMarkup passengerThanksReplyKeyboard() {
@@ -39,6 +39,10 @@ public class ReplyMarkupFactory {
 
     public static ReplyKeyboardMarkup noTripsReplyMarkup() {
         return makeOneColumnMenu(Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup driverTookTrip() {
+        return makeOneColumnMenu(Constants.DRIVER_PIDVEZY, Constants.DRIVER_DISMISS_TRIP);
     }
 
     // passenger menus

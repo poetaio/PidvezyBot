@@ -3,13 +3,13 @@ package bots.utils;
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     // production token
-//    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
+    String BOT_TOKEN = "5188947417:AAGv4CH8a7xnhXTFgvJdkh5obYkQQGOYBZ4";
     // dev token
-    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
+//    String BOT_TOKEN = "5141770807:AAFK307HOeH8ewoxuZDU8q8c8_-JUd-7Qn0";
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 5;
     int CURFEW_START_HOUR = 18;
-    int CURFEW_END_HOUR = 18;
+    int CURFEW_END_HOUR = 5;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
@@ -36,6 +36,9 @@ public interface Constants {
 
     String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
     String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність та про прибуття потягу";
+
+    String DRIVER_PIDVEZY = "Підвезу";
+    String DRIVER_DISMISS_TRIP = "Відмовитись";
 
     String RESUME_BROADCAST = "Відновити розсилку";
 

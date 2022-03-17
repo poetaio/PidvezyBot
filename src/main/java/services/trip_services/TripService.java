@@ -49,6 +49,10 @@ public class TripService {
         return tripBuilderService.getDetails(passengerChatId);
     }
 
+    public void removeTripDetails(long passengerChatId) {
+        tripBuilderService.removeTripInfo(passengerChatId);
+    }
+
     public void addTripToQueue(QueueTrip trip) {
         tripQueueService.add(trip);
     }
@@ -97,19 +101,20 @@ public class TripService {
      * @param driverChatId driver chat id
      */
     public void dismissDriverTrip(long driverChatId) {
-        TakenTrip takenTrip = takenTripService.getAndRemoveTripByDriverChatId(driverChatId);
-        // if not already dismissed by user
-        if (takenTrip != null)
-            tripQueueService.add(new QueueTrip(takenTrip));
+//        TakenTrip takenTrip = takenTripService.getAndRemoveTripByDriverChatId(driverChatId);
+//        // if not already dismissed by user
+//        if (takenTrip != null)
+//            tripQueueService.add(new QueueTrip(takenTrip));
     }
 
-    public void takePassengerTrip(long passengerChatId) {
-        // poxuy
+    // removes from taken when finishing trip by passenger
+    public void finishPassengerTrip(long passengerChatId) {
+        takenTripService.removePassengerTrip(passengerChatId);
     }
 
+    // when passenger does not like driver
     public void dismissPassengerTrip(long passengerChatId) {
-        TakenTrip takenTrip = takenTripService.getAndRemoveTripByDriverChatId(passengerChatId);
-        // if not already dismissed by driver
+        TakenTrip takenTrip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
         if (takenTrip != null)
             tripQueueService.add(new QueueTrip(takenTrip));
     }
