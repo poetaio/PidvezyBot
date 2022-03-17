@@ -249,6 +249,9 @@ public class ResponseHandler {
 
                 userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
 
+//                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
+//                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
+
                 sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver), new ResultCallback() {
                     @SneakyThrows
                     @Override
@@ -313,6 +316,9 @@ public class ResponseHandler {
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         generateDriverOfferTripMessage(chatId, nextTrip));
             case Constants.DRIVER_PIDVEZY:
+//                if (currentTrip == null) {
+//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), emptyCallback);
+//                    return replyToChooseRoleDriver(chatId);
                 TakenTrip currentTrip = tripService.getTakenTripByDriver(chatId);
                 if (currentTrip == null) {
                     sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
