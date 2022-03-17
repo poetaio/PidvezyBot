@@ -23,7 +23,7 @@ public class TakenTripService {
      * @param takenTrip trip
      */
     public void addTakenTrip(TakenTrip takenTrip) {
-        takenTrips.add(takenTrip);
+        takenTrips.add(0, takenTrip);
     }
 
     /**
@@ -52,6 +52,12 @@ public class TakenTripService {
     public void removeTrip(long driverChatId) {
         takenTrips = takenTrips.stream().filter(
                 x -> x.getDriverChatId() != driverChatId
+        ).collect(Collectors.toList());
+    }
+
+    public void removePassengerTrip(long passengerChatId) {
+        takenTrips = takenTrips.stream().filter(
+                x -> x.getPassengerChatId() != passengerChatId
         ).collect(Collectors.toList());
     }
 

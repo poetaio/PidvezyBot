@@ -12,7 +12,7 @@ import java.util.*;
 public class TestDataService {
     public static Map<Long, User> getTestUserInfo() {
         Map<Long, User> resMap = new HashMap<>();
-        resMap.put(1L, new User(1L, "Єгор", false, "не", "kalio", "ua", true, true, true));
+//        resMap.put(1L, new User(1L, "Єгор", false, "не", "kalio", "ua", true, true, true));
 //        resMap.put(2L, new User(2L, "Ольга", false, "Геращенко", "kalio", "ua", true, true, true));
 //        resMap.put(3L, new User(3L, "Анна", false, "Готенко", "kalio", "ua", true, true, true));
 //        resMap.put(4L, new User(4L, "Сєва", false, "Нє Лох", "kalio", "ua", true, true, true));
