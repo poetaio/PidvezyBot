@@ -212,7 +212,12 @@ public class ResponseHandler {
                     // move logic to services as max as possible
                     driverService.resetDriverTime(chatId);
                     QueueTrip nextPassenger1 = passengerQueueService.getNextFree(chatId);
-                    return SendMessageFactory.driverActiveSendMessage(chatId,
+                    if (nextPassenger1 == null) {
+                        userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
+                        return SendMessageFactory.driverActiveSendMessage(chatId,
+                                Constants.NO_TRIPS_MESSAGE);
+                    }
+                    else return SendMessageFactory.driverActiveSendMessage(chatId,
                             generateDriverOfferTripMessage(chatId, nextPassenger1));
                 }
                 driverService.unsubscribeDriverFromUpdate(chatId);
