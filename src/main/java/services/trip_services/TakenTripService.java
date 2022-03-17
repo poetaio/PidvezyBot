@@ -63,13 +63,13 @@ public class TakenTripService {
 
     public TakenTrip getAndRemoveTripByDriverChatId(long driverChatId) {
         TakenTrip trip = getTripByDriverChatId(driverChatId);
-        takenTrips.remove(trip);
+        takenTrips = takenTrips.stream().filter(x -> x.getDriverChatId() != driverChatId).collect(Collectors.toList());
         return trip;
     }
 
     public TakenTrip getAndRemoveTripByPassengerChatId(long passengerChatId) {
         TakenTrip trip = getTripByPassengerChatId(passengerChatId);
-        takenTrips.remove(trip);
+        takenTrips = takenTrips.stream().filter(x -> x.getPassengerChatId() != passengerChatId).collect(Collectors.toList());
         return trip;
     }
 }
