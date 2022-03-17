@@ -11,6 +11,7 @@ import models.QueueTrip;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -99,13 +100,10 @@ public class ResponseHandler {
     public void handleUpdate(Update upd) throws TelegramApiException {
         long chatId = AbilityUtils.getChatId(upd);
 
-        if (!upd.hasMessage() || !upd.getMessage().hasText()) {
-            SendMessage.builder().chatId(String.valueOf(chatId)).text("Пусте повідомлення :(");
+        if (!upd.hasMessage() || ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
+                && upd.getMessage().getContact() == null)) {
             return;
         }
-
-        if (upd.getMessage().getText().indexOf('/') == 0)
-            return;
 
         String message = upd.getMessage().getText();
         SendMessage messageToSend;
@@ -139,6 +137,9 @@ public class ResponseHandler {
                 break;
             case ENTERING_DETAILS:
                 messageToSend = onEnteringDetails(chatId, message, upd);
+                break;
+            case ENTERING_NUMBER:
+                messageToSend = onEnteringNumber(chatId, message, upd);
                 break;
             case EDITING_ADDRESS:
                 messageToSend = onEditingAddress(chatId, message, upd);
@@ -221,7 +222,8 @@ public class ResponseHandler {
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
                         driverViewTrip.getAddress(),
-                        driverViewTrip.getDetails());
+                        driverViewTrip.getDetails(),
+                        passengerService.getNumber(driverViewTrip.getPassengerChatId()));
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 driverService.removeDriver(chatId);
@@ -266,7 +268,8 @@ public class ResponseHandler {
                 return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
                                 passengerQueueService.getPassengerDaoByDriver(chatId).getPassengerChatId()),
                         driverPassenger.getAddress(),
-                        driverPassenger.getDetails());
+                        driverPassenger.getDetails(),
+                        passengerService.getNumber(driverPassenger.getPassengerChatId()));
         }
     }
 
@@ -318,12 +321,27 @@ public class ResponseHandler {
      */
     private SendMessage onEnteringDetails(long chatId, String message, Update upd) throws TelegramApiException {
         if (message.equals(Constants.BACK)) {
-            userService.putState(chatId, State.ENTERING_ADDRESS);
-            return SendMessageFactory.enterAddressSendMessage(chatId);
+            userService.putState(chatId, State.EDITING_ADDRESS);
+            return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
         } else if (!message.isEmpty() && !message.isBlank()) {
             return replyToEnterDetails(chatId, message, upd);
         } else {
             return SendMessageFactory.enterDetailsSendMessage(chatId);
+        }
+    }
+
+    private SendMessage onEnteringNumber(long chatId, String message, Update upd) throws TelegramApiException {
+        Contact contact = upd.getMessage().getContact();
+        if (contact != null) {
+            return replyToEnterNumber(chatId, contact.getPhoneNumber(), upd);
+        }
+
+        switch (message) {
+            case Constants.BACK:
+                userService.putState(chatId, State.EDITING_DETAILS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
+            default:
+                return SendMessageFactory.enterNumberSendMessage(chatId);
         }
     }
 
@@ -377,11 +395,11 @@ public class ResponseHandler {
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_DETAILS);
-                return SendMessageFactory.enterDetailsSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_DETAILS);
+                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), upd);
+                        tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
         }
     }
 
@@ -392,22 +410,22 @@ public class ResponseHandler {
                 currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
                 if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                            tripService.getTripDetails(chatId), upd);
+                            tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
                 }
                 return replyToApproveAddress(chatId);
             case Constants.CHANGE_TRIP_INFO:
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.BACK:
-                userService.putState(chatId, State.ENTERING_DETAILS);
-                return SendMessageFactory.enterDetailsSendMessage(chatId);
+                userService.putState(chatId, State.EDITING_DETAILS);
+                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
                 if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
                     userService.putState(chatId, State.APPROVING_TRIP);
                 }
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), upd);
+                        tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
 
         }
     }
@@ -492,8 +510,19 @@ public class ResponseHandler {
 
     private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
         tripService.addDetailsToTrip(chatId, details);
-        // TODO: username or phone may be absent
-        // TODO: "please allow your phone info, or enter your phone"
+        String number = passengerService.getNumber(chatId);
+        if (number != null) {
+            userService.putState(chatId, State.APPROVING_TRIP);
+            return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                    tripService.getTripDetails(chatId), number, upd);
+        } else {
+            userService.putState(chatId, State.ENTERING_NUMBER);
+            return SendMessageFactory.enterNumberSendMessage(chatId);
+        }
+    }
+
+    private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
+        passengerService.addNumber(chatId, number);
         int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             userService.putState(chatId, State.APPROVING_TRIP);
@@ -501,7 +530,7 @@ public class ResponseHandler {
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
         }
         return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                tripService.getTripDetails(chatId), upd);
+                tripService.getTripDetails(chatId), number, upd);
     }
 
     private SendMessage replyToEditAddress(long chatId, String message) throws TelegramApiException {

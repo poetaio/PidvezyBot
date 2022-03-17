@@ -34,8 +34,7 @@ public interface Constants {
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>";
 
-    // todo: add phone number
-    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s";
+    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
     String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність та про прибуття потягу";
 
     String RESUME_BROADCAST = "Відновити розсилку";
@@ -44,6 +43,9 @@ public interface Constants {
 
     String ENTER_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на ...";
     String ENTER_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
+    String ENTER_NUMBER_MESSAGE = "Вкажіть ваш контактний номер телефону";
+
+    String ENTER_NUMBER = "Вказати номер телефону";
 
     String EDIT_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на <b>%s</b>";
     String EDIT_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"\n<b>%s</b>";
@@ -61,8 +63,8 @@ public interface Constants {
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
 
-    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
-    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s";
+    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
+    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s";
 
     String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";

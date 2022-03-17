@@ -48,9 +48,9 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.TRIP_TAKEN_MESSAGE, ReplyMarkupFactory.driverActiveReplyMarkup());
     }
 
-    public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details) throws TelegramApiException {
+    public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details, String number) throws TelegramApiException {
         String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName(),
-                address, details);
+                number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTripReplyKeyboard());
     }
 
@@ -62,18 +62,23 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.ENTER_ADDRESS, ReplyMarkupFactory.enterAddressReplyKeyboard());
     }
 
-    public static SendMessage approvingTripSendMessage(long chatId, String address, String details, Update upd) throws TelegramApiException {
+    public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
         int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
-            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName()),
-                    ReplyMarkupFactory.approveAddressReplyKeyboard());
+            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+                            user.getUserName(), number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
-        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details, user.getUserName()), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
+        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+                user.getUserName(), number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
     public static SendMessage enterDetailsSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.ENTER_DETAILS, ReplyMarkupFactory.enterDetailsReplyKeyboard());
+    }
+
+    public static SendMessage enterNumberSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.ENTER_NUMBER_MESSAGE, ReplyMarkupFactory.enterNumberReplyKeyboard());
     }
 
     public static SendMessage editAddressSendMessage(long chatId, String oldAddress) throws TelegramApiException {

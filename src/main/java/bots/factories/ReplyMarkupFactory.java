@@ -2,6 +2,7 @@ package bots.factories;
 
 import bots.utils.Constants;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
@@ -53,6 +54,13 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.ON_STATION_NO, Constants.ON_STATION_YES, Constants.BACK);
     }
 
+    public static ReplyKeyboardMarkup enterNumberReplyKeyboard() {
+        return makeOneColumnMenu(KeyboardButton.builder()
+                .text(Constants.ENTER_NUMBER)
+                .requestContact(true)
+                .build(), new KeyboardButton(Constants.BACK));
+    }
+
     public static ReplyKeyboardMarkup checkingOutOnStationReplyKeyboard() {
         return makeOneColumnMenu(Constants.I_AM_ON_STATION, Constants.BACK);
     }
@@ -81,6 +89,23 @@ public class ReplyMarkupFactory {
         List<KeyboardRow> keyboard = new ArrayList<>();
 
         for (String button : buttons) {
+            KeyboardRow buttonRow = new KeyboardRow();
+            buttonRow.add(button);
+            keyboard.add(buttonRow);
+        }
+        return ReplyKeyboardMarkup.builder()
+                .selective(true)
+//                .inputFieldPlaceholder("This text is a placeholder")
+                .resizeKeyboard(true)
+                .oneTimeKeyboard(false)
+                .keyboard(keyboard)
+                .build();
+    }
+
+    private static ReplyKeyboardMarkup makeOneColumnMenu(KeyboardButton... buttons) {
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        for (KeyboardButton button : buttons) {
             KeyboardRow buttonRow = new KeyboardRow();
             buttonRow.add(button);
             keyboard.add(buttonRow);
