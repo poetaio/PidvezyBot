@@ -23,6 +23,7 @@ public class CustomHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
+        System.out.println("Handling...");
         try {
             if ("GET".equals(httpExchange.getRequestMethod())) {
                 switch (httpExchange.getRequestURI().toString()) {

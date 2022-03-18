@@ -13,7 +13,7 @@ public class Main {
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(new PidvesyBot());
-            ResponseHandler responseHandler = ResponseHandler.getInstance();
+            ResponseHandler responseHandler = ResponseHandler.getInstance(null);
             AdminService adminService = responseHandler.createAdminService();
             new Thread(() -> {
                 try {

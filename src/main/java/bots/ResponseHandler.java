@@ -5,10 +5,15 @@ import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
-import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
+
+import models.QueueTrip;
+
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -18,7 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.UserService;
+import services.*;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.PassengerService;
@@ -41,10 +46,7 @@ public class ResponseHandler {
         return INSTANCE;
     }
 
-    public static ResponseHandler getInstance() {
-        return INSTANCE;
-    }
-
+    private static final String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     private final MessageSender sender;
 
     private final UserService userService;
@@ -223,6 +225,20 @@ public class ResponseHandler {
      * @throws TelegramApiException Classic telegram exception
      */
     private SendMessage onChoosingRole(long chatId, String message) throws TelegramApiException {
+        if (message.equals(ADMIN_SECRET)) {
+            AdminService as = createAdminService();
+            ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+            try {
+                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Active Drivers:\n" + objectWriter.writeValueAsString(as.getActiveDrivers())), emptyCallback);
+                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Inactive Trips:\n" + objectWriter.writeValueAsString(as.getInactiveTrips())), emptyCallback);
+                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Queue Trips:\n" + objectWriter.writeValueAsString(as.getTripInQueue())), emptyCallback);
+                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Taken Trips:\n" + objectWriter.writeValueAsString(as.getTakenTrips())), emptyCallback);
+                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Finished Trips:\n" + objectWriter.writeValueAsString(as.getFinishedTrips())), emptyCallback);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
         switch (message) {
             case Constants.CHOOSE_ROLE_DRIVER:
                 return replyToChooseRoleDriver(chatId);

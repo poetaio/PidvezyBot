@@ -2,9 +2,10 @@ package bots.utils;
 
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
+    String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
-    int CURFEW_START_HOUR = 17;
+    int CURFEW_START_HOUR = 22;
     int CURFEW_END_HOUR = 6;
 
     String DRIVER_STATES = "DRIVER_STATES";
