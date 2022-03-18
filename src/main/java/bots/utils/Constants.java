@@ -28,7 +28,7 @@ public interface Constants {
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
-    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>";
+    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + " с)";
 
     String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
     String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність та про прибуття потягу";
@@ -46,8 +46,8 @@ public interface Constants {
 
     String ENTER_NUMBER = "Вказати номер телефону";
 
-    String EDIT_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на <b>%s</b>";
-    String EDIT_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"\n<b>%s</b>";
+    String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на <b>%s</b>";
+    String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n<b>%s</b>";
 
     String DO_NOT_CHANGE = "Лишити без змін";
 
