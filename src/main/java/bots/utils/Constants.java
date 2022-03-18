@@ -5,7 +5,7 @@ public interface Constants {
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
     int CURFEW_START_HOUR = 22;
-    int CURFEW_END_HOUR = 16;
+    int CURFEW_END_HOUR = 6;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
