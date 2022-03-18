@@ -18,6 +18,6 @@ public class Server {
     public void start() {
         server.createContext("/", new CustomHttpHandler());
         server.start();
-        System.out.println("Server is started on port " + PORT + "...");
+        System.out.println("Server is running on port " + PORT + "...");
     }
 }
