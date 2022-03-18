@@ -635,6 +635,8 @@ public class ResponseHandler {
 
     private SendMessage onTripSearchStopped(long chatId, String message) throws TelegramApiException {
         switch (message) {
+            case Constants.RESUME_SEARCH:
+                return replyToApproveTrip(chatId);
             case Constants.CANCEL_TRIP:
                 tripService.removeTripDetails(chatId);
                 userService.putState(chatId, State.CHOOSING_ROLE);

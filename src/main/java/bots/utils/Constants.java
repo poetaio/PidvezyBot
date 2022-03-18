@@ -3,7 +3,7 @@ package bots.utils;
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     int CREATOR_ID = 278171783;
-    int DRIVER_UPDATE_INTERVAL = 5;
+    int DRIVER_UPDATE_INTERVAL = 20;
     int CURFEW_START_HOUR = 18;
     int CURFEW_END_HOUR = 5;
 
@@ -81,9 +81,10 @@ public interface Constants {
     String FINISH_TRIP = "Поїздка завершена";
 
     String EDIT_TRIP = "Змінити поїздку";
-//    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
+    //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";
     String I_FOUND_A_CAR = "Я знайшов транспорт";
     String STOP_LOOKING_FOR_A_CAR = "Зупинити пошук";
+    String RESUME_SEARCH = "Відновити пошук";
 
     String HAVE_A_NICE_TRIP = "Гарної дороги!";
 

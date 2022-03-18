@@ -89,6 +89,10 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.STOP_LOOKING_FOR_A_CAR, Constants.EDIT_TRIP);
     }
 
+    public static ReplyKeyboardMarkup searchStoppedReplyMenu() {
+        return makeOneColumnMenu(Constants.RESUME_SEARCH, Constants.CHANGE_TRIP_INFO, Constants.CANCEL_TRIP);
+    }
+
     public static ReplyKeyboardMarkup addressApprovedReplyMarkup() {
         return makeOneColumnMenu(Constants.BACK);
     }
@@ -129,9 +133,5 @@ public class ReplyMarkupFactory {
                 .oneTimeKeyboard(false)
                 .keyboard(keyboard)
                 .build();
-    }
-
-    public static ReplyKeyboardMarkup searchStoppedReplyMenu() {
-        return makeOneColumnMenu(Constants.CANCEL_TRIP, Constants.CHANGE_TRIP_INFO);
     }
 }
