@@ -13,16 +13,16 @@ public class Main {
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(new PidvesyBot());
-            ResponseHandler responseHandler = ResponseHandler.getInstance();
-            AdminService adminService = responseHandler.createAdminService();
-            new Thread(() -> {
-                try {
-                    AdminServer adminServer = new AdminServer(adminService);
-                    adminServer.startAdminSever();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+//            ResponseHandler responseHandler = ResponseHandler.getInstance();
+//            AdminService adminService = responseHandler.createAdminService();
+//            new Thread(() -> {
+//                try {
+//                    AdminServer adminServer = new AdminServer(adminService);
+//                    adminServer.startAdminSever();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }).start();
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

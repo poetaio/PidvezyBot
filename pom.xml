@@ -71,33 +71,81 @@
             <version>2.13.2</version>
         </dependency>
 
-
-
     </dependencies>
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>appassembler-maven-plugin</artifactId>-->
+<!--                <version>1.1.1</version>-->
+<!--                <configuration>-->
+<!--                    <assembleDirectory>target</assembleDirectory>-->
+<!--                    <programs>-->
+<!--                        <program>-->
+<!--                            <mainClass>Main</mainClass>-->
+<!--                            <name>PidvezyBot</name>-->
+<!--                        </program>-->
+<!--                    </programs>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase><goals><goal>assemble</goal></goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--&lt;!&ndash;                <artifactId>maven-dependency-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;                <version>3.0.1</version>&ndash;&gt;-->
+<!--&lt;!&ndash;                <executions>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <execution>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <id>copy-dependencies</id>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <phase>package</phase>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <goals><goal>Main</goal></goals>&ndash;&gt;-->
+<!--&lt;!&ndash;                    </execution>&ndash;&gt;-->
+<!--&lt;!&ndash;                </executions>&ndash;&gt;-->
+<!--                <artifactId>maven-jar-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <archive>-->
+<!--                        <manifest>-->
+<!--                            <addClasspath>true</addClasspath>-->
+<!--                            <mainClass>Main</mainClass>-->
+<!--                        </manifest>-->
+<!--                    </archive>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.1.1</version>
-                <configuration>
-                    <assembleDirectory>target</assembleDirectory>
-                    <programs>
-                        <program>
-                            <mainClass>Main</mainClass>
-                            <name>PidvezyBot</name>
-                        </program>
-                    </programs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase><goals><goal>assemble</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+    <plugins>
+        <!-- any other plugins -->
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+                <archive>
+                <manifest>
+                    <mainClass>Main</mainClass>
+                </manifest>
+            </archive>
+            </configuration>
+        </plugin>
+    </plugins>
     </build>
-
 
 
 </project>
