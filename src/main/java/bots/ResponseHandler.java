@@ -5,15 +5,10 @@ import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
+import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
-
-import models.QueueTrip;
-
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -23,7 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.*;
+import services.UserService;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.PassengerService;
@@ -43,6 +38,10 @@ public class ResponseHandler {
     public static ResponseHandler getInstance(MessageSender sender) {
         if (INSTANCE == null)
             INSTANCE = new ResponseHandler(sender);
+        return INSTANCE;
+    }
+
+    public static ResponseHandler getInstance() {
         return INSTANCE;
     }
 

@@ -1,14 +1,26 @@
 package server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import services.admin_services.AdminService;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import static server.utils.Constants.*;
 
 public class CustomHttpHandler implements HttpHandler {
+
+    private AdminService adminService;
+    private ObjectMapper objectMapper;
+
+    public CustomHttpHandler(AdminService adminService) {
+        this.adminService = adminService;
+        objectMapper = new ObjectMapper();
+    }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         try {
@@ -26,46 +38,52 @@ public class CustomHttpHandler implements HttpHandler {
                     case FINISHED_TRIPS_RESOURCE:
                         getFinishedTrips(httpExchange);
                         break;
+                    case ACTIVE_DRIVERS:
+                        getActiveDrivers(httpExchange);
+                        break;
                     default:
                         sendErrorResponse(httpExchange, "No such endpoint...");
                 }
             }
         } catch (RuntimeException e) {
+            e.printStackTrace();
             sendErrorResponse(httpExchange, e.getMessage());
         }
     }
 
     private void getTripQueue(HttpExchange httpExchange) throws IOException {
-        // get trip queue
-        String tripQueueResponseJson = "\"tripQueue\": [{\"tripId\":\"ID1\"}, {\"tripId\":\"ID2\"}, {\"tripId\":\"ID3\"}]";
-        sendResponse(httpExchange, tripQueueResponseJson, 200);
+        sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getTripInQueue()), 200);
     }
 
     private void getInactiveTrips(HttpExchange httpExchange) throws IOException {
-        // get inactive trips
-        String inactiveTripsResponseJson = "\"inactiveTrips\": [{\"tripId\":\"ID1\"}, {\"tripId\":\"ID2\"}, {\"tripId\":\"ID3\"}]";
-        sendResponse(httpExchange, inactiveTripsResponseJson, 200);
+        sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getInactiveTrips()), 200);
     }
 
     private void getTakenTrips(HttpExchange httpExchange) throws IOException {
-        // get taken trips
-        String inactiveTripsResponseJson = "\"takenTrips\": [{\"tripId\":\"ID1\"}, {\"tripId\":\"ID2\"}, {\"tripId\":\"ID3\"}]";
-        sendResponse(httpExchange, inactiveTripsResponseJson, 200);
+        sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getTakenTrips()), 200);
     }
 
     private void getFinishedTrips(HttpExchange httpExchange) throws IOException {
-        // get finished trips
-        String inactiveTripsResponseJson = "\"finishedTrips\": [{\"tripId\":\"ID1\"}, {\"tripId\":\"ID2\"}, {\"tripId\":\"ID3\"}]";
-        sendResponse(httpExchange, inactiveTripsResponseJson, 200);
+        sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getFinishedTrips()), 200);
+    }
+
+    private void getActiveDrivers(HttpExchange httpExchange) throws IOException {
+        sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getActiveDrivers()), 200);
     }
 
 
-    private void sendResponse(HttpExchange httpExchange, String responseText, Integer status) throws IOException {
-        OutputStream outputStream = httpExchange.getResponseBody();
-        httpExchange.sendResponseHeaders(status, responseText.length());
-        outputStream.write(responseText.getBytes());
-        outputStream.flush();
-        outputStream.close();
+    private void sendResponse(HttpExchange httpExchange, String responseText, Integer status) {
+        try {
+            byte[] bs = responseText.getBytes(StandardCharsets.UTF_16);
+            httpExchange.sendResponseHeaders(200, bs.length);
+            OutputStream os = httpExchange.getResponseBody();
+            os.write(bs);
+            os.flush();
+            os.close();
+        } catch (RuntimeException | IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Can't send response. " + e.getMessage());
+        }
     }
 
     private void sendErrorResponse(HttpExchange httpExchange) throws IOException {
