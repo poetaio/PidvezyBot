@@ -1,1 +1,1 @@
-worker: java -jar target/PidvezyBot-4.0.0-Release-jar-with-dependencies.jar
+web: java -jar target/PidvezyBot-4.0.0-Release-jar-with-dependencies.jar

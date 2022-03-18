@@ -13,7 +13,7 @@ public class Server {
     private AdminService adminService;
 
     public Server(AdminService adminService) throws IOException {
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", PORT), 0);
+        server = HttpServer.create(new InetSocketAddress(PORT), 0);
         this.adminService = adminService;
     }
 
