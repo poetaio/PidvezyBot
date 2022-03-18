@@ -11,7 +11,7 @@ import static server.utils.Constants.PORT;
 public class Server {
 
     public static HttpServer server;
-    private AdminService adminService;
+    private final AdminService adminService;
 
     public Server(AdminService adminService) throws IOException {
         server = HttpServer.create(new InetSocketAddress("localhost", PORT), 0);
@@ -19,7 +19,8 @@ public class Server {
     }
 
     public void start() {
-        server.createContext("/", new CustomHttpHandler(adminService));
+        server.createContext("/", new AdminHttpHandler(adminService));
+        server.createContext("/auth", new AuthHttpHandler());
         server.start();
         System.out.println("Server is running on port " + PORT + "...");
     }
