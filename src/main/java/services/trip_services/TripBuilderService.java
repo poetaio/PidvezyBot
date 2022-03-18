@@ -1,19 +1,22 @@
 package services.trip_services;
 
 import models.QueueTrip;
+import models.hibernate_not_being_used.Trip;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service that builds and stores information about user trip application
  * (address, details, driver who views & takes the trip)
  */
 public class TripBuilderService {
-    private final Map<Long, QueueTrip> tripInfo;
+    private final Map<Long, QueueTrip> tripInfoMap;
 
     public TripBuilderService() {
-        tripInfo = new HashMap<>();
+        tripInfoMap = new HashMap<>();
     }
     /**
      * Saving user info to database
@@ -21,11 +24,11 @@ public class TripBuilderService {
      * @param passengerInfo QueuePassengerDao entity, contains user chat id, address, details, driver chat id
      */
     public void putPassengerInfo(long passengerChatId, QueueTrip passengerInfo) {
-        tripInfo.put(passengerChatId, passengerInfo);
+        tripInfoMap.put(passengerChatId, passengerInfo);
     }
 
     public QueueTrip getTripInfo(long passengerUserId) {
-        return tripInfo.get(passengerUserId).clone();
+        return tripInfoMap.get(passengerUserId).clone();
     }
 
     /**
@@ -55,16 +58,20 @@ public class TripBuilderService {
     }
 
     public void removeTripInfo(long chatId) {
-        tripInfo.remove(chatId);
+        tripInfoMap.remove(chatId);
     }
 
     private QueueTrip getTripInfoWithDefault(long chatId) {
-        QueueTrip passengerTripInfo = tripInfo.get(chatId);
+        QueueTrip passengerTripInfo = tripInfoMap.get(chatId);
         if (passengerTripInfo == null) {
             passengerTripInfo = new QueueTrip();
             passengerTripInfo.setPassengerChatId(chatId);
-            tripInfo.put(chatId, passengerTripInfo);
+            tripInfoMap.put(chatId, passengerTripInfo);
         }
         return passengerTripInfo;
+    }
+
+    public List<QueueTrip> getAll() {
+        return tripInfoMap.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList());
     }
 }

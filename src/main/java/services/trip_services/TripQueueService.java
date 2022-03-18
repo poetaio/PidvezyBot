@@ -180,6 +180,10 @@ public class TripQueueService {
         return tripQueue.stream().map(QueueTrip::getPassengerChatId).collect(Collectors.toList());
     }
 
+    public List<QueueTrip> getAll() {
+        return tripQueue.stream().map(QueueTrip::clone).collect(Collectors.toList());
+    }
+
 //    // testing queue service
 //    public static void main(String[] args) {
 //        PassengerQueueService pqservice = new PassengerQueueService();

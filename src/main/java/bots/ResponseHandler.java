@@ -5,6 +5,9 @@ import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
 import models.TakenTrip;
 import models.utils.State;
@@ -21,6 +24,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import services.*;
+import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.PassengerService;
 import services.trip_services.TripService;
@@ -915,5 +919,9 @@ public class ResponseHandler {
 
     public String getCurrentScheduleMessage() {
         return currentScheduleMessage;
+    }
+
+    public AdminService createAdminService() {
+        return new AdminService(userService, driverService, passengerService, tripService);
     }
 }

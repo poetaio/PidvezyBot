@@ -72,4 +72,8 @@ public class TakenTripService {
         takenTrips = takenTrips.stream().filter(x -> x.getPassengerChatId() != passengerChatId).collect(Collectors.toList());
         return trip;
     }
+
+    public List<TakenTrip> getAll() {
+        return takenTrips.stream().map(TakenTrip::clone).collect(Collectors.toList());
+    }
 }

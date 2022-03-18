@@ -25,4 +25,10 @@ public class FinishedTripService {
                 .filter(x -> x.getDriverChatId() == driverChatId)
                 .collect(Collectors.toList());
     }
+
+    public List<TakenTrip> getAll() {
+        return finishedTrips.stream()
+                .map(TakenTrip::clone)
+                .collect(Collectors.toList());
+    }
 }

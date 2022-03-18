@@ -52,7 +52,7 @@ public class DriverViewUpdateService {
         return driverUpdateQueue.stream().map(DriverUpdateDao::clone).collect(Collectors.toList());
     }
 
-    public List<Long> getAllDriversIds() {
+    public List<Long> getAllActiveDriversIds() {
         return driverUpdateQueue.stream().map(DriverUpdateDao::getChatId).collect(Collectors.toList());
     }
 

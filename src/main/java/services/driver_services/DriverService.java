@@ -76,7 +76,7 @@ public class DriverService {
     }
 
     public List<Long> getDrivers() {
-        return driverViewUpdateService.getAllDriversIds();
+        return driverViewUpdateService.getAllActiveDriversIds();
     }
 
     public List<Long> getDriversToUpdate() {

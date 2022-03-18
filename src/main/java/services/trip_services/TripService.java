@@ -3,6 +3,7 @@ package services.trip_services;
 import models.QueueTrip;
 import models.TakenTrip;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -55,6 +56,10 @@ public class TripService {
         tripBuilderService.removeTripInfo(passengerChatId);
     }
 
+    public List<QueueTrip> getAllTrips() {
+        return tripBuilderService.getAll();
+    }
+
     public void addTripToQueue(QueueTrip trip) {
         tripQueueService.add(trip);
     }
@@ -63,12 +68,20 @@ public class TripService {
         return tripQueueService.getPassengerDaoByDriver(driverChatId);
     }
 
+    public QueueTrip getTripFromQueueByPassenger(long passengerChatId) {
+        return tripQueueService.getPassengerDaoByPassenger(passengerChatId);
+    }
+
     public QueueTrip findNextQueueTrip(long driverChatId) {
         return tripQueueService.getNextFree(driverChatId);
     }
 
     public void removeTripFromQueueByPassengerId(long passengerChatId) {
         tripQueueService.removeByPassengerId(passengerChatId);
+    }
+
+    public List<QueueTrip> getAllTripsFromQueue() {
+        return tripQueueService.getAll();
     }
 
     public void passengerFoundACar(long passengerChatId) {
@@ -163,5 +176,13 @@ public class TripService {
 
     public List<Long> getPassengersInQueue() {
         return tripQueueService.getPassengersInQueue();
+    }
+
+    public List<TakenTrip> getAllTakenTrips() {
+        return takenTripService.getAll();
+    }
+
+    public List<TakenTrip> getFinishedTrips() {
+        return finishedTripService.getAll();
     }
 }
