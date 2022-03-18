@@ -79,6 +79,10 @@ public class DriverService {
         return driverViewUpdateService.getAllDriversIds();
     }
 
+    public List<Long> getDriversToUpdate() {
+        return driverViewUpdateService.getDriversToUpdate();
+    }
+
     protected void onDriverQueueEmptyEvent() {}
     protected void onDriverQueueNotEmptyEvent() {}
 }

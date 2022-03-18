@@ -73,6 +73,9 @@ public class SendMessageFactory {
     }
 
     public static SendMessage driverTookTripSendMessage(long chatId, @NotNull User user, String address, String details, String number) throws TelegramApiException {
+        if (number != null && number.indexOf('+') != 0) {
+            number = '+' + number;
+        }
         String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName(),
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
@@ -89,6 +92,9 @@ public class SendMessageFactory {
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
         int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        if (number != null && number.indexOf('+') != 0) {
+            number = '+' + number;
+        }
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                             user.getUserName(), number), ReplyMarkupFactory.approveAddressReplyKeyboard());
@@ -134,6 +140,9 @@ public class SendMessageFactory {
     }
 
     public static SendMessage tripSearchStoppedSendMessage(long chatId, User user, String address, String details, String number) throws TelegramApiException {
+        if (number != null && number.indexOf('+') != 0) {
+            number = '+' + number;
+        }
         return makeSendMessage(chatId, String.format(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
                 user.getLastName() == null ? "" : " " + user.getLastName(), address,
                 details, number), ReplyMarkupFactory.searchStoppedReplyMenu());

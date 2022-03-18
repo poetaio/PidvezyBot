@@ -5,7 +5,7 @@ public interface Constants {
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = 20;
     int CURFEW_START_HOUR = 22;
-    int CURFEW_END_HOUR = 15;
+    int CURFEW_END_HOUR = 16;
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
@@ -28,10 +28,10 @@ public interface Constants {
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
-    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + " с)";
+    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с)";
 
     String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
-    String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність та про прибуття потягу";
+    String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність.";
 
     String DRIVER_PIDVEZY = "Підвезу";
     String DRIVER_DISMISS_TRIP = "Відмовитись";

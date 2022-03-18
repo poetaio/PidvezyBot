@@ -106,7 +106,7 @@ public class ResponseHandler {
 
             @Override
             protected List<Long> getDriversToUpdate() {
-                return driverService.getDrivers();
+                return driverService.getDriversToUpdate();
             }
         }).start();
     }
