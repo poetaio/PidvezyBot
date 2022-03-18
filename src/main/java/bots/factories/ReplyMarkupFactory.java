@@ -130,4 +130,8 @@ public class ReplyMarkupFactory {
                 .keyboard(keyboard)
                 .build();
     }
+
+    public static ReplyKeyboardMarkup searchStoppedReplyMenu() {
+        return makeOneColumnMenu(Constants.CANCEL_TRIP, Constants.CHANGE_TRIP_INFO);
+    }
 }

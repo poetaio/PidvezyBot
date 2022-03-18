@@ -30,21 +30,21 @@ public class DriverNotificationTask implements Runnable {
 
     @Override
     public void run() {
-        try {
-            thread:
-            while (true) {
-                Date currentDate = new Date();
-                if (dateOfNotificationMessage.before(currentDate)) {
-                    // todo: remove
-                    for (DriverUpdateDao driver : DriverViewUpdateService.getInstance().getAll()) {
-                        ResponseHandler.getInstance(null).sendNotificationToDrivers(driver.getChatId(), notificationMessage, defaultMessage);
-                        break thread;
-                    }
-                }
-                Thread.sleep(10000);
-            }
-        } catch (InterruptedException | TelegramApiException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            thread:
+//            while (true) {
+//                Date currentDate = new Date();
+//                if (dateOfNotificationMessage.before(currentDate)) {
+//                    // todo: remove
+//                    for (DriverUpdateDao driver : DriverViewUpdateService.getInstance().getAll()) {
+//                        ResponseHandler.getInstance(null).sendNotificationToDrivers(driver.getChatId(), notificationMessage, defaultMessage);
+//                        break thread;
+//                    }
+//                }
+//                Thread.sleep(10000);
+//            }
+//        } catch (InterruptedException | TelegramApiException e) {
+//            e.printStackTrace();
+//        }
     }
 }

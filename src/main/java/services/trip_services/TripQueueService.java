@@ -176,6 +176,10 @@ public class TripQueueService {
         tripQueue.clear();
     }
 
+    public List<Long> getPassengersInQueue() {
+        return tripQueue.stream().map(QueueTrip::getPassengerChatId).collect(Collectors.toList());
+    }
+
 //    // testing queue service
 //    public static void main(String[] args) {
 //        PassengerQueueService pqservice = new PassengerQueueService();

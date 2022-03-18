@@ -5,18 +5,21 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import services.driver_services.DriverViewUpdateService;
 import services.trip_services.TripQueueService;
 
+import java.util.List;
+
 /**
  * Service to update current trip application viewed by driver every "@Constants.DRIVER_UPDATE_INTERVAL" seconds
  */
 public abstract class DriverViewUpdateTask implements Runnable {
     protected abstract void sendNoTripsAvailable(long chatId) throws TelegramApiException;
     protected abstract void sendTripOffer(long chatId, QueueTrip passengerDao) throws TelegramApiException;
+    protected abstract List<Long> getDriversToUpdate();
 
     @Override
     public void run() {
         try {
             while (true) {
-                for (Long driverChatId : DriverViewUpdateService.getInstance().getDriversToUpdate()) {
+                for (Long driverChatId : getDriversToUpdate()) {
 
                     // last trip viewed by driver
                     // todo: remove

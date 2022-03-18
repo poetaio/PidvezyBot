@@ -65,8 +65,12 @@ public interface Constants {
     String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
     String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s";
 
-    String REQUEST_SENT_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
+    String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
+    String REQUEST_SENT_MESSAGE = "Запит надіслано.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
+    String DRIVERS_GOT_YOUR_MESSAGE = "Волонтери отримали ваш запит. Очікуємо на підтвердження...";
+
+    String CANCEL_TRIP = "Скасувати запит";
 
     String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
     String FIND_AGAIN = "Шукати знову";
@@ -86,4 +90,5 @@ public interface Constants {
     String BACK = "Назад";;
 
     String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
+    String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s.\n%s\n%s";
 }

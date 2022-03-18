@@ -11,7 +11,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Combines messages and corresponding menus from ReplyMarkupFactory
@@ -112,38 +111,55 @@ public class SendMessageFactory {
 
     public static SendMessage editDetailsSendMessage(long chatId, String oldDetails) throws TelegramApiException {
         return makeSendMessage(chatId, String.format(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
-    }
+}
 
     public static SendMessage checkingOutOnStationSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.CHECKING_OUT_ON_STATION_MESSAGE, ReplyMarkupFactory.checkingOutOnStationReplyKeyboard());
-    }
+}
 
     public static SendMessage enterOnStationSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.ARE_YOU_ON_STATION, ReplyMarkupFactory.enterOnStationReplyKeyboard());
     }
 
-    public static SendMessage addressApprovedSendMessage(long chatId) throws TelegramApiException {
+    public static SendMessage requestSentSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.REQUEST_SENT_MESSAGE, ReplyMarkupFactory.lookingForDriverReplyMenu());
+    }
+
+    public static SendMessage searchingForDriversSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.REQUEST_PENDING_MESSAGE, ReplyMarkupFactory.lookingForDriverReplyMenu());
+    }
+
+    public static SendMessage driversGotYourMessageSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.DRIVERS_GOT_YOUR_MESSAGE, ReplyMarkupFactory.lookingForDriverReplyMenu());
+    }
+
+    public static SendMessage tripSearchStoppedSendMessage(long chatId, User user, String address, String details, String number) throws TelegramApiException {
+        return makeSendMessage(chatId, String.format(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
+                user.getLastName() == null ? "" : " " + user.getLastName(), address,
+                details, number), ReplyMarkupFactory.searchStoppedReplyMenu());
+    }
+
+    public static SendMessage addressApprovedSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.REQUEST_SENT_EXTENDED_MESSAGE, ReplyMarkupFactory.lookingForDriverReplyMenu());
     }
 
     public static SendMessage haveANiceTripSendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.haveANiceTripReplyMenu());
     }
 
-
     private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(messageText)
                 .build();
-    }
+}
 
     private static SendMessage makeSendMessage(long chatId, String messageText, ReplyKeyboardMarkup replyMarkup) throws TelegramApiException {
-            return SendMessage.builder()
-                    .chatId(String.valueOf(chatId))
-                    .parseMode(ParseMode.HTML)
-                    .text(messageText)
-                    .replyMarkup(replyMarkup)
-                    .build();
+        return SendMessage.builder()
+                .chatId(String.valueOf(chatId))
+                .parseMode(ParseMode.HTML)
+                .text(messageText)
+                .replyMarkup(replyMarkup)
+                .build();
     }
 }

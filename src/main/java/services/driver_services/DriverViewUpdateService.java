@@ -10,12 +10,6 @@ import java.util.stream.Collectors;
  * Service that contains drivers and their date/time of the next view (passenger trip application) update
  */
 public class DriverViewUpdateService {
-    // singleton
-    private static final DriverViewUpdateService INSTANCE = new DriverViewUpdateService();
-    public static DriverViewUpdateService getInstance() {
-        return INSTANCE;
-    }
-
     // no need of pq here :( all drivers are set +15 seconds,
     // and automatically moved to the end of the queue
     // cause others have then <=15 left
@@ -23,23 +17,26 @@ public class DriverViewUpdateService {
 //    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
     private final List<DriverUpdateDao> driverUpdateQueue;
 
-    private DriverViewUpdateService() {
+    public DriverViewUpdateService() {
         driverUpdateQueue = new LinkedList<>();
     }
-
 
     /**
      * Subscribe driver for view update
      * @param driverChatId driver chat id
      */
     public void addDriver(long driverChatId) {
+        if (driverUpdateQueue.isEmpty())
+            onDriverQueueNotEmptyEvent();
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
         driverUpdateQueue.add(new DriverUpdateDao(driverChatId, calendar.getTime()));
     }
 
     public void removeDriver(long driverChatId) {
-        driverUpdateQueue.remove(new DriverUpdateDao(driverChatId));
+        if (driverUpdateQueue.remove(new DriverUpdateDao(driverChatId)) && driverUpdateQueue.isEmpty()) {
+            onDriverQueueEmptyEvent();
+        }
     }
 
     public void removeAll() {
@@ -53,6 +50,10 @@ public class DriverViewUpdateService {
 
     public List<DriverUpdateDao> getAll() {
         return driverUpdateQueue.stream().map(DriverUpdateDao::clone).collect(Collectors.toList());
+    }
+
+    public List<Long> getAllDriversIds() {
+        return driverUpdateQueue.stream().map(DriverUpdateDao::getChatId).collect(Collectors.toList());
     }
 
     /**
@@ -102,4 +103,7 @@ public class DriverViewUpdateService {
     public String toString() {
         return driverUpdateQueue.toString();
     }
+
+    protected void onDriverQueueEmptyEvent() {}
+    protected void onDriverQueueNotEmptyEvent() {}
 }

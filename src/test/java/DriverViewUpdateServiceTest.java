@@ -12,7 +12,7 @@ public class DriverViewUpdateServiceTest {
 
     @BeforeAll
     static void setup() {
-        driverViewUpdateService = DriverViewUpdateService.getInstance();
+        driverViewUpdateService = new DriverViewUpdateService();
     }
 
     @BeforeEach

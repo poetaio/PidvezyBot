@@ -3,6 +3,8 @@ package services.trip_services;
 import models.QueueTrip;
 import models.TakenTrip;
 
+import java.util.List;
+
 /**
  * Common service to manage trips (delegation)
  * TODO: use
@@ -55,6 +57,14 @@ public class TripService {
 
     public void addTripToQueue(QueueTrip trip) {
         tripQueueService.add(trip);
+    }
+
+    public QueueTrip getTripFromQueueByDriver(long driverChatId) {
+        return tripQueueService.getPassengerDaoByDriver(driverChatId);
+    }
+
+    public QueueTrip findNextQueueTrip(long driverChatId) {
+        return tripQueueService.getNextFree(driverChatId);
     }
 
     public void removeTripFromQueueByPassengerId(long passengerChatId) {
@@ -149,5 +159,9 @@ public class TripService {
     public void finishTripByPassenger(long passengerChatId) {
         TakenTrip trip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
         finishedTripService.addFinishedTrip(trip);
+    }
+
+    public List<Long> getPassengersInQueue() {
+        return tripQueueService.getPassengersInQueue();
     }
 }

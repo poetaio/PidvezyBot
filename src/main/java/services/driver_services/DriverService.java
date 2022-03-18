@@ -8,22 +8,24 @@ import java.util.*;
  * Service to manage all users who have hit "Я волонтер"
  */
 public class DriverService {
-    // singleton
-//    private final static DriverService INSTANCE = new DriverService();
-//    public static DriverService getInstance() {
-//    return INSTANCE;
-//}
-
     private final List<Long> driverList;
 
     private final DriverViewUpdateService driverViewUpdateService;
 
     public DriverService() {
         driverList = new LinkedList<>();
-        driverViewUpdateService = DriverViewUpdateService.getInstance();
-//        driverUpdateMessageService = UpdateMessageService.getInstance();
-    }
+        driverViewUpdateService = new DriverViewUpdateService(){
+            @Override
+            protected void onDriverQueueEmptyEvent() {
+                DriverService.this.onDriverQueueEmptyEvent();
+            }
 
+            @Override
+            protected void onDriverQueueNotEmptyEvent() {
+                DriverService.this.onDriverQueueNotEmptyEvent();
+            }
+        };
+    }
 
     /**
      * Removes driver from list and unsubscribes him from updates
@@ -72,4 +74,11 @@ public class DriverService {
     public void unsubscribeDriverFromUpdate(long driverChatId) {
         driverViewUpdateService.removeDriver(driverChatId);
     }
+
+    public List<Long> getDrivers() {
+        return driverViewUpdateService.getAllDriversIds();
+    }
+
+    protected void onDriverQueueEmptyEvent() {}
+    protected void onDriverQueueNotEmptyEvent() {}
 }
