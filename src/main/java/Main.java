@@ -1,10 +1,14 @@
 import bots.PidvesyBot;
 import bots.ResponseHandler;
+import models.hibernate.Trip;
+import models.hibernate.User;
+import org.hibernate.Session;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import server.AdminServer;
 import services.admin_services.AdminService;
+import utils.HibernateUtil;
 
 import java.io.IOException;
 
@@ -26,5 +30,26 @@ public class Main {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+
+//        Session session = HibernateUtil.getSessionFactory().openSession();
+//        session.beginTransaction();
+//
+//        User user = new User(12341);
+//        user.setLastName("lastNaeklajfasdiljfasdiofjkasndklfjaslkf");
+//        session.saveOrUpdate(user);
+//
+//        Trip trip = new Trip(user);
+//        session.saveOrUpdate(trip);
+//
+//        trip.setTakenByDriver(user);
+//        session.saveOrUpdate(trip);
+//
+//        System.out.println(trip.getPassenger().getFirstName());
+//        System.out.println(user.getFirstName());
+////        List<Driver> driverList = session.createQuery
+////                ("SELECT D FROM Driver D", Driver.class).getResultList();
+//
+//        session.getTransaction().commit();
+//        HibernateUtil.shutdown();
     }
 }

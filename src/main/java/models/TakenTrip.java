@@ -14,7 +14,7 @@ public class TakenTrip {
     private String address;
     private String details;
     private TripStatus tripStatus;
-    private long driverChatId;
+    private Long driverChatId;
 
     public TakenTrip(QueueTrip driverTrip, long driverChatId) {
         passengerChatId = driverTrip.getPassengerChatId();

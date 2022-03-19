@@ -151,6 +151,7 @@ public class ResponseHandler {
 
         switch (currentState) {
             case CHOOSING_ROLE:
+                System.out.println(chatId + "\n" + AbilityUtils.getUser(upd).getId());
                 userService.putUserInfo(chatId, AbilityUtils.getUser(upd));
                 messageToSend = onChoosingRole(chatId, message);
                 break;

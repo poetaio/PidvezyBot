@@ -124,7 +124,7 @@ public class TripService {
      * @param driverChatId driver chat id
      */
     public void dismissDriverTrip(long driverChatId) {
-//        TakenTrip takenTrip = takenTripService.getAndRemoveTripByDriverChatId(driverChatId);
+        takenTripService.dismissDriverTrip(driverChatId);
 //        // if not already dismissed by user
 //        if (takenTrip != null)
 //            tripQueueService.add(new QueueTrip(takenTrip));
