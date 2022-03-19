@@ -39,7 +39,7 @@ public class CustomHttpHandler implements HttpHandler {
                     case FINISHED_TRIPS_RESOURCE:
                         getFinishedTrips(httpExchange);
                         break;
-                    case ACTIVE_DRIVERS:
+                    case ACTIVE_DRIVERS_RESOURCE:
                         getActiveDrivers(httpExchange);
                         break;
                     default:

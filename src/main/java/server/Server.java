@@ -18,7 +18,8 @@ public class Server {
     }
 
     public void start() {
-        server.createContext("/", new CustomHttpHandler(adminService));
+        server.createContext("/", new AdminHttpHandler(adminService));
+        server.createContext("/auth", new AuthHttpHandler());
         server.start();
         System.out.println("Server is running on port " + PORT + "...");
     }

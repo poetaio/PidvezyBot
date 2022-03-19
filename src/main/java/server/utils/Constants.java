@@ -8,6 +8,8 @@ public interface Constants {
     String INACTIVE_TRIPS_RESOURCE = "/inactiveTrips";
     String TAKEN_TRIPS_RESOURCE = "/takenTrips";
     String FINISHED_TRIPS_RESOURCE = "/finishedTrips";
-    String ACTIVE_DRIVERS = "/activeDrivers";
+    String ACTIVE_DRIVERS_RESOURCE = "/activeDrivers";
+
+    String LOGIN_RESOURCE = "/auth/login";
 
 }
