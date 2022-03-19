@@ -3,7 +3,6 @@ package services.trip_services;
 import models.QueueTrip;
 import models.TakenTrip;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -184,5 +183,9 @@ public class TripService {
 
     public List<TakenTrip> getFinishedTrips() {
         return finishedTripService.getAll();
+    }
+
+    public TripBuilderService getTripBuilderService() {
+        return tripBuilderService;
     }
 }

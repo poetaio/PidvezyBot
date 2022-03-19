@@ -9,11 +9,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
+import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
-
-import models.QueueTrip;
-
+import models.utils.UsersInitializer;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -23,7 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.*;
+import services.UserService;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.NumberService;
@@ -40,7 +39,7 @@ public class ResponseHandler {
     // TODO: REMOVE!!!
     private static ResponseHandler INSTANCE;
 
-    public static ResponseHandler getInstance(MessageSender sender) {
+    public static ResponseHandler getInstance(MessageSender sender) throws JsonProcessingException {
         if (INSTANCE == null)
             INSTANCE = new ResponseHandler(sender);
         return INSTANCE;
@@ -56,11 +55,11 @@ public class ResponseHandler {
 
     private final EmptyCallback emptyCallback;
 
-    public ResponseHandler(MessageSender sender) {
+    public ResponseHandler(MessageSender sender) throws JsonProcessingException {
         this.sender = sender;
 
         numberService = new NumberService();
-        driverService = new DriverService(){
+        driverService = new DriverService() {
             @SneakyThrows
             @Override
             protected void onDriverQueueEmptyEvent() {
@@ -87,6 +86,10 @@ public class ResponseHandler {
         tripService = new TripService();
 
         userService = new UserService(driverService, tripService);
+
+        UsersInitializer.parseDrivers(driverService, userService);
+        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
+
         emptyCallback = new EmptyCallback();
 
         setupDriverScheduler();
@@ -322,7 +325,7 @@ public class ResponseHandler {
                     @SneakyThrows
                     @Override
                     public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-                        sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
+                        sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()), emptyCallback);
                     }
                 });
 
@@ -334,7 +337,7 @@ public class ResponseHandler {
                         driverViewTrip.getDetails(),
                         numberService.getNumber(driverViewTrip.getPassengerChatId()));
 
-                // TODO: NULLPOINTER CHECK
+            // TODO: NULLPOINTER CHECK
 //                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
@@ -686,13 +689,13 @@ public class ResponseHandler {
         }
     }
 
-        /**
-         * Handles "Я знайшов транспорт" reply
-         *
-         * @param chatId chat id of the passenger
-         * @return Choosing role text & menu
-         * @throws TelegramApiException basic telegram exception
-         */
+    /**
+     * Handles "Я знайшов транспорт" reply
+     *
+     * @param chatId chat id of the passenger
+     * @return Choosing role text & menu
+     * @throws TelegramApiException basic telegram exception
+     */
     private SendMessage onFoundACar(long chatId, String message) throws TelegramApiException {
         switch (message) {
             case Constants.FOUND_TRIP:

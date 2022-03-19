@@ -1,5 +1,6 @@
 import bots.PidvesyBot;
 import bots.ResponseHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -23,7 +24,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }).start();
-        } catch (TelegramApiException e) {
+        } catch (TelegramApiException | JsonProcessingException e) {
             e.printStackTrace();
         }
     }
