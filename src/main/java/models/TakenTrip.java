@@ -21,7 +21,7 @@ public class TakenTrip {
         address = driverTrip.getAddress();
         details = driverTrip.getDetails();
         this.driverChatId = driverChatId;
-        tripStatus = TripStatus.BEING_APPROVED;
+        tripStatus = TripStatus.TAKEN;
     }
 
     @Override

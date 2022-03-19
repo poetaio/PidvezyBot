@@ -4,9 +4,9 @@ public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     int CREATOR_ID = 278171783;
-    int DRIVER_UPDATE_INTERVAL = 20;
-    int CURFEW_START_HOUR = 22;
-    int CURFEW_END_HOUR = 6;
+    int DRIVER_UPDATE_INTERVAL = Integer.parseInt(System.getenv("DRIVER_UPDATE_INTERVAL"));
+    int CURFEW_START_HOUR = Integer.parseInt(System.getenv("CURFEW_START_HOUR"));
+    int CURFEW_END_HOUR = Integer.parseInt(System.getenv("CURFEW_END_HOUR"));
 
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";

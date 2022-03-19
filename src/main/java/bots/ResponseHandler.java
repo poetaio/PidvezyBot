@@ -46,7 +46,6 @@ public class ResponseHandler {
         return INSTANCE;
     }
 
-    private static final String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     private final MessageSender sender;
 
     private final UserService userService;
@@ -225,20 +224,6 @@ public class ResponseHandler {
      * @throws TelegramApiException Classic telegram exception
      */
     private SendMessage onChoosingRole(long chatId, String message) throws TelegramApiException {
-        if (message.equals(ADMIN_SECRET)) {
-            AdminService as = createAdminService();
-            ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
-            try {
-                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Active Drivers:\n" + objectWriter.writeValueAsString(as.getActiveDrivers())), emptyCallback);
-                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Inactive Trips:\n" + objectWriter.writeValueAsString(as.getInactiveTrips())), emptyCallback);
-                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Queue Trips:\n" + objectWriter.writeValueAsString(as.getTripInQueue())), emptyCallback);
-                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Taken Trips:\n" + objectWriter.writeValueAsString(as.getTakenTrips())), emptyCallback);
-                sender.executeAsync(new SendMessage(String.valueOf(chatId), "Finished Trips:\n" + objectWriter.writeValueAsString(as.getFinishedTrips())), emptyCallback);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
         switch (message) {
             case Constants.CHOOSE_ROLE_DRIVER:
                 return replyToChooseRoleDriver(chatId);
@@ -858,30 +843,6 @@ public class ResponseHandler {
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
     }
-
-//    private String generateDriverTookTripMessage(long chatId, Trip queuePassengerDao) {
-//        return String.format("%s шукає транспорт з вокзалу на %s \n\n%s",
-//                userService.getUserInfo(chatId).getFirstName(), queuePassengerDao.getAddress(),
-//                queuePassengerDao.getDetails());
-//    }
-
-//    private void onToCancelTrip(long chatId, User user, String address) throws TelegramApiException {
-//    private SendMessage replyToCancelTrip(long chatId) throws TelegramApiException {
-//        userService.putState(chatId, State.ENTERING_ADDRESS);
-//      }
-
-//    private void deleteLastBotMessage(long chatId) throws TelegramApiException {
-//        Integer botMessageToUpdate = updateMessageService.getBotMessageToUpdate(chatId);
-//        if (botMessageToUpdate != null) {
-//            DeleteMessage deleteLastBotMessage = DeleteMessage.builder()
-//                    .messageId(botMessageToUpdate)
-//                    .chatId(String.valueOf(chatId))
-//                    .build();
-//            try {
-//                sender.execute(deleteLastBotMessage);
-//            } catch (Exception ignored) {}
-//        }
-//    }
 
     private SendMessage replyWithText(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()

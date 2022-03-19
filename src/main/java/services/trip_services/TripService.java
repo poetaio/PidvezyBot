@@ -12,10 +12,10 @@ import java.util.List;
  */
 public class TripService {
 
-    private final TripQueueService tripQueueService;
-    private final FinishedTripService finishedTripService;
-    private final TakenTripService takenTripService;
     private final TripBuilderService tripBuilderService;
+    private final TripQueueService tripQueueService;
+    private final TakenTripService takenTripService;
+    private final FinishedTripService finishedTripService;
 
     public TripService() {
         tripQueueService = TripQueueService.getInstance();

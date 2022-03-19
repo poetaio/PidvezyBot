@@ -12,8 +12,8 @@
         <property name="hibernate.connection.password">password</property>
         <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/pidvezy_pidvezu_db</property>
         <property name="hibernate.hbm2ddl.auto">update</property>
-        <mapping class="models.hibernate_not_being_used.Driver"/>
-        <mapping class="models.hibernate_not_being_used.Passenger"/>
-        <mapping class="models.hibernate_not_being_used.Trip"/>
+        <mapping class="models.hibernate.Driver"/>
+        <mapping class="models.hibernate.Passenger"/>
+        <mapping class="models.hibernate.Trip"/>
     </session-factory>
 </hibernate-configuration>

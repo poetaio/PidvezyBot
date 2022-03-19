@@ -30,12 +30,12 @@ public class AuthHttpHandler implements HttpHandler {
                         httpService.sendResponse(httpExchange, JwtUtils.generateToken(), 200);
                         return;
                     }
-                    httpService.sendResponse(httpExchange, "Access denied", 200);
+                    httpService.sendResponse(httpExchange, "Access denied", 401);
                     return;
                 }
                 httpService.sendErrorResponse(httpExchange);
             }
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             httpService.sendErrorResponse(httpExchange, e.getMessage());
         }

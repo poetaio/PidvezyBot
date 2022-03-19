@@ -46,7 +46,8 @@ public class AdminHttpHandler implements HttpHandler {
                 }
             }
         } catch (RuntimeException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            System.out.println("Auth error");
             httpService.sendErrorResponse(httpExchange, e.getMessage());
         }
     }

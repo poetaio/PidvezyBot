@@ -1,7 +1,6 @@
 package services.trip_services;
 
 import models.QueueTrip;
-import models.hibernate_not_being_used.Trip;
 
 import java.util.HashMap;
 import java.util.List;

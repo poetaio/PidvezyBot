@@ -28,8 +28,7 @@ public class HttpHandlingService {
             String token = headers.get("Authorization").get(0).replaceAll(".*\\s", "").trim();
             JwtUtils.validateJwtToken(token);
         } catch (RuntimeException e) {
-            System.out.println("Error during auth check");
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException("Cannot validate authorization token.");
         }
     }
 
