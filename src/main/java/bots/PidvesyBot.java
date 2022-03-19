@@ -1,6 +1,7 @@
 package bots;
 
 import bots.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -14,7 +15,7 @@ public class PidvesyBot extends AbilityBot {
         return Constants.CREATOR_ID;
     }
     
-    public PidvesyBot() {
+    public PidvesyBot() throws JsonProcessingException {
         super(System.getenv("PIDVEZY_BOT_TOKEN"), Constants.BOT_USERNAME);
         // TODO: REMOVE
         responseHandler = ResponseHandler.getInstance(sender);

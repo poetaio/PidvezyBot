@@ -1,5 +1,6 @@
 package services.driver_services;
 
+import models.dao.DriverUpdateDao;
 import services.trip_services.TripQueueService;
 
 import java.util.*;
@@ -77,6 +78,14 @@ public class DriverService {
 
     public List<Long> getDrivers() {
         return driverViewUpdateService.getAllActiveDriversIds();
+    }
+
+    public List<Long> getDriversList() {
+        return driverList;
+    }
+
+    public List<DriverUpdateDao> getDriverUpdateQueueList(){
+        return driverViewUpdateService.getDriverUpdateQueueList();
     }
 
     public List<Long> getDriversToUpdate() {

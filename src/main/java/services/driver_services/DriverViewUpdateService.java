@@ -106,4 +106,8 @@ public class DriverViewUpdateService {
 
     protected void onDriverQueueEmptyEvent() {}
     protected void onDriverQueueNotEmptyEvent() {}
+
+    public List<DriverUpdateDao> getDriverUpdateQueueList(){
+        return driverUpdateQueue;
+    }
 }
