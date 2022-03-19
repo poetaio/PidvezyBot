@@ -34,8 +34,8 @@ public class SendMessageFactory {
         return sendMessage;
     }
 
-    public static SendMessage noticingPassengerDriverTookTripSendMessage(long chatId, @NotNull User driver) throws TelegramApiException {
-        String message = String.format("%s відгукнувся на вашу заявку\n@%s", driver.getFirstName(), driver.getUserName());
+    public static SendMessage noticingPassengerDriverTookTripSendMessage(long chatId, @NotNull User driver, String number) throws TelegramApiException {
+        String message = String.format("%s відгукнувся на вашу заявку\n%s", driver.getFirstName(), driver.getUserName() != null ? "@" + driver.getUserName() : number);
         return makeSendMessage(chatId, message);
     }
 
@@ -76,7 +76,7 @@ public class SendMessageFactory {
         if (number != null && number.indexOf('+') != 0) {
             number = '+' + number;
         }
-        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName(),
+        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName() != null ? "@" + user.getUserName() : "",
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
     }
@@ -97,10 +97,10 @@ public class SendMessageFactory {
         }
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-                            user.getUserName(), number), ReplyMarkupFactory.approveAddressReplyKeyboard());
+                    user.getUserName() != null ? "@" + user.getUserName() : "", number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
         return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-                user.getUserName(), number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
+                user.getUserName() != null ? "@" + user.getUserName() : "", number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
     public static SendMessage enterDetailsSendMessage(long chatId) throws TelegramApiException {

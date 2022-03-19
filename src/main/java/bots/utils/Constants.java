@@ -4,8 +4,8 @@ public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     int CREATOR_ID = 278171783;
-    int DRIVER_UPDATE_INTERVAL = 20;
-    int CURFEW_START_HOUR = 22;
+    int DRIVER_UPDATE_INTERVAL = 18;
+    int CURFEW_START_HOUR = 18;
     int CURFEW_END_HOUR = 6;
 
     String DRIVER_STATES = "DRIVER_STATES";
@@ -31,7 +31,7 @@ public interface Constants {
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с)";
 
-    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
+    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n%s\n%s\n%s\n%s";
     String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність.";
 
     String DRIVER_PIDVEZY = "Підвезу";
@@ -45,7 +45,7 @@ public interface Constants {
     String ENTER_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
     String ENTER_NUMBER_MESSAGE = "Вкажіть ваш контактний номер телефону";
 
-    String ENTER_NUMBER = "Вказати номер телефону";
+    String SHARE_NUMBER = "Поділитися номером телефону";
 
     String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на <b>%s</b>";
     String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n<b>%s</b>";
@@ -63,8 +63,8 @@ public interface Constants {
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
 
-    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
-    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s";
+    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n%s\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
+    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n%s\n%s";
 
     String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_SENT_MESSAGE = "Запит надіслано.";
