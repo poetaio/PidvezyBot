@@ -35,13 +35,12 @@ public class SendMessageFactory {
     }
 
     public static SendMessage noticingPassengerDriverTookTripSendMessage(long chatId, @NotNull User driver, String number) throws TelegramApiException {
-        String message = String.format("%s відгукнувся на вашу заявку\n%s", driver.getFirstName(), driver.getUserName() != null ? "@" + driver.getUserName() : number);
+        String message = String.format(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), driver.getUserName() != null ? "@" + driver.getUserName() : "https://t.me/" + number, number != null ? number : "");
         return makeSendMessage(chatId, message);
     }
 
     public static SendMessage askingPassengerToInformAboutTripSendMessage(long chatId) throws TelegramApiException {
-        String message = "Повідомте нас про статус заявки";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
+        return makeSendMessage(chatId, Constants.INFORM_US_TRIP_STATUS, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
     }
 
     public static SendMessage askingDriverToInformAboutEndOfTripSendMessage(long chatId) throws TelegramApiException {
@@ -49,23 +48,15 @@ public class SendMessageFactory {
     }
 
     public static SendMessage goodBoySendMessage(long chatId) throws TelegramApiException {
-        String message = "Ви молодець!";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+        return makeSendMessage(chatId, Constants.GOOD_BOY, ReplyMarkupFactory.passengerThanksReplyKeyboard());
     }
 
     public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
-        String message = "Гарної дороги";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+        return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.passengerThanksReplyKeyboard());
     }
 
     public static SendMessage returnToSearchingSendMessage(long chatId) throws TelegramApiException {
-        String message = "Повертаємось до пошуків";
-        return makeSendMessage(chatId, message);
-    }
-
-    public static SendMessage returningToCh(long chatId) throws TelegramApiException {
-        String message = "Повертаємось до пошуків";
-        return makeSendMessage(chatId, message);
+        return makeSendMessage(chatId, Constants.START_SEARCHING_AGAIN);
     }
 
     public static SendMessage tripAlreadyTakenSendMessage(long chatId) throws TelegramApiException {
@@ -76,7 +67,7 @@ public class SendMessageFactory {
         if (number != null && number.indexOf('+') != 0) {
             number = '+' + number;
         }
-        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName() != null ? "@" + user.getUserName() : "",
+        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), user.getUserName() != null ? "@" + user.getUserName() : "https://t.me/" + number,
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
     }
@@ -97,10 +88,10 @@ public class SendMessageFactory {
         }
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-                    user.getUserName() != null ? "@" + user.getUserName() : "", number), ReplyMarkupFactory.approveAddressReplyKeyboard());
+                    user.getUserName() != null ? "@" + user.getUserName() : "https://t.me/" + number, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
         return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-                user.getUserName() != null ? "@" + user.getUserName() : "", number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
+                user.getUserName() != null ? "@" + user.getUserName() : "https://t.me/" + number, number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
     public static SendMessage enterDetailsSendMessage(long chatId) throws TelegramApiException {
