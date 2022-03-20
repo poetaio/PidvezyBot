@@ -1,5 +1,7 @@
 package bots.utils;
 
+import java.util.Locale;
+
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
@@ -37,6 +39,8 @@ public interface Constants {
     String DRIVER_PIDVEZY = "Підвезу";
     String DRIVER_DISMISS_TRIP = "Відмовитись";
 
+    String GOOD_BOY_MESSAGE = "Ви молодець!";
+
     String RESUME_BROADCAST = "Відновити розсилку";
 
     String CHOOSE_ROLE_PASSENGER = "Я потребую транспорт";
@@ -72,6 +76,9 @@ public interface Constants {
     String DRIVERS_GOT_YOUR_MESSAGE = "Волонтери отримали ваш запит. Очікуємо на підтвердження...";
 
     String CANCEL_TRIP = "Скасувати запит";
+
+    String DRIVER_TOOK_YOUR_TRIP_MESSAGE = "%s відгукнувся на вашу заявку\n@%s";
+    String LET_US_KNOW_ABOUT_TRIP_STATUS = "Повідомте нас про статус заявки";
 
     String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
     String FIND_AGAIN = "Шукати знову";

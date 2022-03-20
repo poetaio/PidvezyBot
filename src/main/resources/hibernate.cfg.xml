@@ -6,7 +6,7 @@
     <session-factory>
         <property name="hibernate.archive.autodetection">class,hbm</property>
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL10Dialect</property>
-        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.show_sql">false</property>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
         <mapping class="models.hibernate.Trip"/>
         <mapping class="models.hibernate.User"/>

@@ -35,13 +35,12 @@ public class SendMessageFactory {
     }
 
     public static SendMessage noticingPassengerDriverTookTripSendMessage(long chatId, @NotNull User driver) throws TelegramApiException {
-        String message = String.format("%s відгукнувся на вашу заявку\n@%s", driver.getFirstName(), driver.getUserName());
+        String message = String.format(Constants.DRIVER_TOOK_YOUR_TRIP_MESSAGE, driver.getFirstName(), driver.getUserName());
         return makeSendMessage(chatId, message);
     }
 
     public static SendMessage askingPassengerToInformAboutTripSendMessage(long chatId) throws TelegramApiException {
-        String message = "Повідомте нас про статус заявки";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
+        return makeSendMessage(chatId, Constants.LET_US_KNOW_ABOUT_TRIP_STATUS, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
     }
 
     public static SendMessage askingDriverToInformAboutEndOfTripSendMessage(long chatId) throws TelegramApiException {
@@ -49,21 +48,14 @@ public class SendMessageFactory {
     }
 
     public static SendMessage goodBoySendMessage(long chatId) throws TelegramApiException {
-        String message = "Ви молодець!";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+        return makeSendMessage(chatId, Constants.GOOD_BOY_MESSAGE, ReplyMarkupFactory.passengerThanksReplyKeyboard());
     }
 
     public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
-        String message = "Гарної дороги";
-        return makeSendMessage(chatId, message, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+        return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.passengerThanksReplyKeyboard());
     }
 
     public static SendMessage returnToSearchingSendMessage(long chatId) throws TelegramApiException {
-        String message = "Повертаємось до пошуків";
-        return makeSendMessage(chatId, message);
-    }
-
-    public static SendMessage returningToCh(long chatId) throws TelegramApiException {
         String message = "Повертаємось до пошуків";
         return makeSendMessage(chatId, message);
     }

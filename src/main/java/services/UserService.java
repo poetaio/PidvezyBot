@@ -3,10 +3,10 @@ package services;
 import models.utils.State;
 
 import org.telegram.telegrambots.meta.api.objects.User;
+import repositories.UserRepository;
 import services.driver_services.DriverService;
 import services.trip_services.TripService;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class UserService {
@@ -17,15 +17,18 @@ public class UserService {
 //    }
     private final DriverService driverService;
     private final TripService tripService;
+    private final UserRepository userRepository;
 
     // chat id - user
     private final Map<Long, User> userInfo;
     // chat id - state
-    private final Map<Long, State> userState;
+    private final Map<Long, State> userStateMap;
 
-    public UserService(DriverService driverService, TripService tripService) {
-        userInfo = TestDataService.getTestUserInfo();
-        userState = new HashMap<>();
+    public UserService(Map<Long, State> userStateMap, Map<Long, User> userInfo, DriverService driverService, TripService tripService) {
+        this.userInfo = userInfo;
+
+        userRepository = new UserRepository();
+        this.userStateMap = userStateMap;
 
         this.driverService = driverService;
         this.tripService = tripService;
@@ -48,6 +51,7 @@ public class UserService {
     public void putUserInfo(long chatId, User user) {
         // TODO: make copy
         userInfo.put(chatId, user);
+        userRepository.setUserInfo(chatId, user);
     }
 
     /**
@@ -56,8 +60,10 @@ public class UserService {
      */
     public void performCleanup(long chatId) {
         tripService.removeTripFromQueueByPassengerId(chatId);
-        tripService.removeTripDetails(chatId);
+        tripService.cancelTripOnSearchStopped(chatId);
         driverService.removeDriver(chatId);
+        // not deleting user, as info+trips stay in db
+//        userRepository.removeUser(chatId):
     }
 
     /**
@@ -66,7 +72,7 @@ public class UserService {
      * @return returns current state of the user chat
      */
     public State getState(long chatId) {
-        return userState.get(chatId);
+        return userStateMap.get(chatId);
     }
 
     /**
@@ -75,6 +81,7 @@ public class UserService {
      * @param state current state of the chat
      */
     public void putState(long chatId, State state) {
-        userState.put(chatId, state);
+        userStateMap.put(chatId, state);
+        userRepository.setUserState(chatId, state);
     }
 }

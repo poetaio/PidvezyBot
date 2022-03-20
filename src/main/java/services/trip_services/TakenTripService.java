@@ -1,11 +1,11 @@
 package services.trip_services;
 
 import models.TakenTrip;
-import models.utils.TripStatus;
+import repositories.TripRepository;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -13,9 +13,11 @@ import java.util.stream.Collectors;
  */
 public class TakenTripService {
     private List<TakenTrip> takenTrips;
+    private final TripRepository tripRepository;
 
-    public TakenTripService() {
-        takenTrips = new LinkedList<>();
+    public TakenTripService(List<TakenTrip> takenTrips) {
+        this.takenTrips = takenTrips;
+        tripRepository = new TripRepository();
     }
 
     /**
@@ -26,18 +28,12 @@ public class TakenTripService {
         takenTrips.add(0, takenTrip);
     }
 
-    /**
-     * When passenger approves trip after contacting with the driver
-//     * @param driverChatId driver chat id
-     */
-    public void approveTrip(long passengerChatId) {
-        TakenTrip trip = getTripByPassengerChatId(passengerChatId);
-        trip.setTripStatus(TripStatus.TAKEN);
-    }
-
     public void dismissDriverTrip(long driverChatId) {
         TakenTrip trip = getTripByDriverChatId(driverChatId);
-        if (trip != null) trip.setDriverChatId(null);
+        if (trip != null) {
+            trip.setDriverChatId(null);
+            CompletableFuture.runAsync(() -> tripRepository.unsetDriverTookTrip(trip.getTripId(), driverChatId));
+        }
     }
 
     public TakenTrip getTripByPassengerChatId(long passengerChatId) {
@@ -74,7 +70,9 @@ public class TakenTripService {
 
     public TakenTrip getAndRemoveTripByPassengerChatId(long passengerChatId) {
         TakenTrip trip = getTripByPassengerChatId(passengerChatId);
-        takenTrips = takenTrips.stream().filter(x -> x.getPassengerChatId() != passengerChatId).collect(Collectors.toList());
+        takenTrips = takenTrips.stream()
+                .filter(x -> x.getPassengerChatId() != passengerChatId)
+                .collect(Collectors.toList());
         return trip;
     }
 

@@ -17,8 +17,8 @@ public class DriverViewUpdateService {
 //    private final PriorityQueue<DriverUpdateDao> driverUpdateQueue;
     private final List<DriverUpdateDao> driverUpdateQueue;
 
-    public DriverViewUpdateService() {
-        driverUpdateQueue = new LinkedList<>();
+    public DriverViewUpdateService(List<DriverUpdateDao> driverUpdateDaos) {
+        driverUpdateQueue = driverUpdateDaos;
     }
 
     /**

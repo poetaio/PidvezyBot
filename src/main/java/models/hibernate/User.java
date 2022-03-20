@@ -20,9 +20,6 @@ public class User {
     @Id
     @Column(name = "user_id")
     private long userId;
-    @Unique
-    @Column(name = "chat_id")
-    private long chatId;
     private String username;
     @Column(name = "phone_number")
     private String phoneNumber;
@@ -47,9 +44,8 @@ public class User {
         this.userState = State.CHOOSING_ROLE;
     }
 
-    public User(long chatId, org.telegram.telegrambots.meta.api.objects.User user) {
+    public User(org.telegram.telegrambots.meta.api.objects.User user) {
         this(user.getId());
-        this.chatId = chatId;
         this.username = user.getUserName();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();

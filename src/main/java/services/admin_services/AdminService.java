@@ -20,7 +20,7 @@ public class AdminService {
     private final TripService tripService;
 
     public List<AdminInactiveTrip> getInactiveTrips() {
-        return tripService.getAllTrips()
+        return tripService.getAllNotFinishedTrips()
                 .stream()
                 .filter(x -> tripService.getTripFromQueueByPassenger(x.getPassengerChatId()) == null)
                 .map(this::toAdminInactiveTrip)
@@ -28,7 +28,7 @@ public class AdminService {
     }
 
     public List<AdminQueueTrip> getTripInQueue() {
-        return tripService.getAllTripsFromQueue()
+        return tripService.getAllQueueTrips()
                 .stream()
                 .map(this::toAdminQueueTrip)
                 .collect(Collectors.toList());

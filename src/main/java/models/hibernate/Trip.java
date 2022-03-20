@@ -8,6 +8,7 @@ import models.utils.TripStatus;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -16,9 +17,8 @@ import java.util.List;
 @Entity(name = "trips")
 public class Trip {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "trip_id")
-    private long tripId;
+    private UUID tripId;
     @ManyToOne
     @JoinColumn(name = "passenger_id", referencedColumnName = "user_id")
     private User passenger;
@@ -46,6 +46,17 @@ public class Trip {
 
     public Trip(User passenger) {
         this.passenger = passenger;
+        tripStatus = TripStatus.INACTIVE;
+    }
+
+    public Trip(UUID tripId, User passenger) {
+        this.tripId = tripId;
+        this.passenger = passenger;
+        tripStatus = TripStatus.INACTIVE;
+    }
+
+    public Trip(UUID tripId) {
+        this.tripId = tripId;
         tripStatus = TripStatus.INACTIVE;
     }
 }

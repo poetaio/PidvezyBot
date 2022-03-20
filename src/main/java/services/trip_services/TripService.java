@@ -2,9 +2,13 @@ package services.trip_services;
 
 import models.QueueTrip;
 import models.TakenTrip;
+import repositories.TripRepository;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Common service to manage trips (delegation)
@@ -16,52 +20,60 @@ public class TripService {
     private final TripQueueService tripQueueService;
     private final TakenTripService takenTripService;
     private final FinishedTripService finishedTripService;
+    private final TripRepository tripRepository;
 
-    public TripService() {
-        tripQueueService = TripQueueService.getInstance();
-        finishedTripService = new FinishedTripService();
-        takenTripService = new TakenTripService();
-        tripBuilderService = new TripBuilderService();
+    public TripService(Map<Long, QueueTrip> inactiveTrips, Queue<QueueTrip> queueTrips,
+                       List<TakenTrip> takenTrips, List<TakenTrip> finishedTrips) {
+        tripBuilderService = new TripBuilderService(inactiveTrips);
+        tripQueueService = new TripQueueService(queueTrips);
+        finishedTripService = new FinishedTripService(finishedTrips);
+        takenTripService = new TakenTripService(takenTrips);
+        tripRepository = new TripRepository();
     }
 
-    /**
-     * Finish making trip, approve it
-     * @param trip approved trip by driver
-     */
-    public void makeNewTrip(QueueTrip trip) {
-        tripQueueService.add(trip);
-    }
-
-    public void addAddressToTrip(long passengerChatId, String address) {
-        tripBuilderService.addAddress(passengerChatId, address);
+    // build trip methods
+    public void setTripAddress(long passengerChatId, String address) {
+        tripBuilderService.setTripAddress(passengerChatId, address);
     }
 
     public String getTripAddress(long passengerChatId) {
-        return tripBuilderService.getAddress(passengerChatId);
+        return tripBuilderService.getTripAddress(passengerChatId);
     }
 
-    public void addDetailsToTrip(long passengerChatId, String details) {
-        tripBuilderService.addDetails(passengerChatId, details);
-    }
-
-    public void addNewTrip(long chatId) {
-        tripQueueService.add(tripBuilderService.getTripInfo(chatId));
+    public void setTripDetails(long passengerChatId, String details) {
+        tripBuilderService.setTripDetails(passengerChatId, details);
     }
 
     public String getTripDetails(long passengerChatId) {
-        return tripBuilderService.getDetails(passengerChatId);
+        return tripBuilderService.getTripDetails(passengerChatId);
     }
 
-    public void removeTripDetails(long passengerChatId) {
+    // trip queue methods
+    public void addNewTripToQueue(long chatId) {
+        tripQueueService.add(tripBuilderService.getTripInfo(chatId));
+    }
+
+    public void cancelTripOnSearchStopped(long passengerChatId) {
+        QueueTrip trip = tripBuilderService.getTripInfo(passengerChatId);
         tripBuilderService.removeTripInfo(passengerChatId);
+        if (trip != null)
+            CompletableFuture.runAsync(() -> tripRepository.cancelTrip(trip.getTripId()));
     }
 
-    public List<QueueTrip> getAllTrips() {
+    public List<QueueTrip> getAllNotFinishedTrips() {
         return tripBuilderService.getAll();
     }
 
-    public void addTripToQueue(QueueTrip trip) {
-        tripQueueService.add(trip);
+    public List<QueueTrip> getAllQueueTrips() {
+        return tripQueueService.getAll();
+    }
+
+    public List<TakenTrip> getAllTakenTrips() {
+        return takenTripService.getAll();
+    }
+
+    public List<TakenTrip> getFinishedTrips() {
+        return finishedTripService.getAll();
     }
 
     public QueueTrip getTripFromQueueByDriver(long driverChatId) {
@@ -72,51 +84,46 @@ public class TripService {
         return tripQueueService.getPassengerDaoByPassenger(passengerChatId);
     }
 
-    public QueueTrip findNextQueueTrip(long driverChatId) {
+    public void removeTripFromQueueByPassengerId(long passengerChatId) {
+        tripQueueService.removeByPassengerId(passengerChatId);
+        QueueTrip trip = tripBuilderService.getTripInfo(passengerChatId);
+        if (trip != null) {
+            UUID tripId = trip.getTripId();
+            CompletableFuture.runAsync(() -> tripRepository.deactivateTrip(tripId));
+        }
+    }
+
+//    public void removeTripFromQueueByDriverId(long driverChatId) {
+//        tripQueueService.removeByDriverId(driverChatId);
+//    }
+
+    public QueueTrip findNextTripForDriver(long driverChatId) {
         return tripQueueService.getNextFree(driverChatId);
     }
 
-    public void removeTripFromQueueByPassengerId(long passengerChatId) {
-        tripQueueService.removeByPassengerId(passengerChatId);
-    }
-
-    public List<QueueTrip> getAllTripsFromQueue() {
-        return tripQueueService.getAll();
-    }
-
-    public void passengerFoundACar(long passengerChatId) {
+    public void removeTripOnPassengerFoundACar(long passengerChatId) {
+        TakenTrip trip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
+        if (trip != null)
+            finishedTripService.addFinishedTrip(trip);
+        // if driver takes trip, then refuses, passenger can still finish trip,
+        // but the trip will already be in INACTIVE status (after reload thus only in tripBuilderService)
+        else {
+            QueueTrip inactiveTrip = tripBuilderService.getTripInfo(passengerChatId);
+            if (inactiveTrip != null) {
+                finishedTripService.addFinishedTrip(inactiveTrip);
+            }
+        }
         tripQueueService.removeByPassengerId(passengerChatId);
         tripBuilderService.removeTripInfo(passengerChatId);
     }
 
-    public void removeTripFromQueueByDriverId(long driverChatId) {
-        tripQueueService.removeByDriverId(driverChatId);
-    }
-
-    /**
-     * Find next trip for driver to view, add to the list of "viewers"
-     * @param driverChatId driver chat id
-     * @return next trip for the driver to view
-     */
-    public QueueTrip findNewTripForDriver(long driverChatId) {
-        return tripQueueService.getPassengerDaoByDriver(driverChatId);
-    }
-
-    /**
-     * Assign the driver for the trip, that he's currently viewing.
-     * Create taken trip to block trip for other drivers to take
-//     * @param driverChatId driver chat id
-     */
-    public void takeTrip(long passengerId) {
-        QueueTrip trip = tripQueueService.getAndRemoveByPassengerId(passengerId);
-        TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
-        takenTripService.addTakenTrip(takenTrip);
-    }
-
     public void takeDriverTrip(long driverId) {
         QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverId);
-        TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));
+        if (!trip.getDriverList().contains(driverId))
+            throw new RuntimeException("Driver is not viewing trip");
+        TakenTrip takenTrip = new TakenTrip(trip, driverId);
         takenTripService.addTakenTrip(takenTrip);
+        CompletableFuture.runAsync(() -> tripRepository.setDriverTookTrip(trip.getTripId(), driverId));
     }
 
     /**
@@ -130,20 +137,11 @@ public class TripService {
 //            tripQueueService.add(new QueueTrip(takenTrip));
     }
 
-    // removes from taken when finishing trip by passenger
-    public void finishPassengerTrip(long passengerChatId) {
-        takenTripService.removePassengerTrip(passengerChatId);
-    }
-
     // when passenger does not like driver
     public void dismissPassengerTrip(long passengerChatId) {
         TakenTrip takenTrip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
         if (takenTrip != null)
             tripQueueService.add(new QueueTrip(takenTrip));
-    }
-
-    public void approveTrip(long driverChatId) {
-        takenTripService.approveTrip(driverChatId);
     }
 
     /**
@@ -164,10 +162,7 @@ public class TripService {
         return takenTripService.getTripByPassengerChatId(passengerChatId);
     }
 
-    public void finishTripByDriver(long driverChatId) {
-        TakenTrip trip = takenTripService.getAndRemoveTripByDriverChatId(driverChatId);
-        finishedTripService.addFinishedTrip(trip);
-    }
+//    public void finishTripByDriver(long driverChatId) {}
 
     public void finishTripByPassenger(long passengerChatId) {
         TakenTrip trip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
@@ -176,13 +171,5 @@ public class TripService {
 
     public List<Long> getPassengersInQueue() {
         return tripQueueService.getPassengersInQueue();
-    }
-
-    public List<TakenTrip> getAllTakenTrips() {
-        return takenTripService.getAll();
-    }
-
-    public List<TakenTrip> getFinishedTrips() {
-        return finishedTripService.getAll();
     }
 }

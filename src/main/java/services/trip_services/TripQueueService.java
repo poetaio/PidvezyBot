@@ -2,9 +2,10 @@ package services.trip_services;
 
 import models.QueueTrip;
 import models.utils.TripComparator;
-import services.TestDataService;
+import repositories.TripRepository;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 // TODO: rename to TripQueueService
@@ -17,18 +18,23 @@ import java.util.stream.Collectors;
  * or skipped - stays in queue, driver id -> null
  */
 public class TripQueueService {
-    private static final TripQueueService INSTANCE = new TripQueueService();
+    private static TripQueueService instance;
     // pq goes in here, yeah boiiii
     private Queue<QueueTrip> tripQueue;
     private Queue<QueueTrip> bufferedTrips;
 
-    private TripQueueService() {
-        tripQueue = TestDataService.getTestPassengerQueue();
+    private final TripRepository tripRepository;
+
+    public TripQueueService(Queue<QueueTrip> tripQueue) {
+        this.tripQueue = tripQueue;
+        if (instance == null)
+            instance = this;
         bufferedTrips = new PriorityQueue<>(TripComparator.TRIP_COMPARATOR);
+        tripRepository = new TripRepository();
     }
 
     public static TripQueueService getInstance() {
-        return INSTANCE;
+        return instance;
     }
 
     /**
@@ -47,6 +53,10 @@ public class TripQueueService {
         if (currentViewedTrip != null) {
             // remove driver from list
             currentViewedTrip.removeDriverChatId(driverChatId);
+            UUID currentTripId = currentViewedTrip.getTripId();
+            CompletableFuture.runAsync(() ->
+                    tripRepository.removeDriverViewFromTrip(currentTripId,
+                            driverChatId));
             // reinsert current trip
             tripQueue.remove(currentViewedTrip);
             tripQueue.add(currentViewedTrip);
@@ -63,6 +73,10 @@ public class TripQueueService {
         // add driver to list
         assert nextTripToView != null;
         nextTripToView.addDriverChatId(driverChatId);
+        UUID nextTripId = nextTripToView.getTripId();
+        CompletableFuture.runAsync(() ->
+                tripRepository.setDriverViewOnTrip(nextTripId,
+                        driverChatId));
 
         // add first to queue
         tripQueue.add(nextTripToView);
@@ -99,6 +113,7 @@ public class TripQueueService {
      */
     public void add(QueueTrip trip) {
         tripQueue.add(trip);
+        CompletableFuture.runAsync(() -> tripRepository.addTripToQueue(trip.getTripId()));
     }
 
     public void returnTripFromBuffer(long passengerChatId) {
@@ -155,11 +170,11 @@ public class TripQueueService {
         return resTrip;
     }
 
-    public QueueTrip getAndRemoveByPassengerId(long passengerChatId) {
-        QueueTrip resTrip = getPassengerDaoByPassenger(passengerChatId);
-        removeByPassengerId(passengerChatId);
-        return resTrip;
-    }
+//    public QueueTrip getAndRemoveByPassengerId(long passengerChatId) {
+//        QueueTrip resTrip = getPassengerDaoByPassenger(passengerChatId);
+//        removeByPassengerId(passengerChatId);
+//        return resTrip;
+//    }
 
     /**
      * Unsets driver id of trip on which it was set, when driver leaves
@@ -167,9 +182,12 @@ public class TripQueueService {
      */
     public void unsetView(long driverChatId) {
         tripQueue.stream()
-                .filter(x -> x.getDriverList() != null && x.getPassengerChatId() == driverChatId)
+                .filter(x -> x.getDriverList() != null && x.getDriverList().contains(driverChatId))
                 .findFirst()
-                .ifPresent(queuePassengerDao -> queuePassengerDao.removeDriverChatId(driverChatId));
+                .ifPresent(trip -> {
+                    trip.removeDriverChatId(driverChatId);
+                    CompletableFuture.runAsync(() -> tripRepository.unsetDriverTookTrip(trip.getTripId(), driverChatId));
+                });
     }
 
     public void removeAll() {

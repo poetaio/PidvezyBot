@@ -1,5 +1,7 @@
 package services.driver_services;
 
+import models.dao.DriverUpdateDao;
+import services.driver_services.utils.DriverUpdateEvents;
 import services.trip_services.TripQueueService;
 
 import java.util.*;
@@ -12,17 +14,18 @@ public class DriverService {
 
     private final DriverViewUpdateService driverViewUpdateService;
 
-    public DriverService() {
-        driverList = new LinkedList<>();
-        driverViewUpdateService = new DriverViewUpdateService(){
+    public DriverService(List<Long> driverList, List<DriverUpdateDao> driverToUpdateList,
+                         DriverUpdateEvents driverUpdateEvents) {
+        this.driverList = driverList;
+        driverViewUpdateService = new DriverViewUpdateService(driverToUpdateList){
             @Override
             protected void onDriverQueueEmptyEvent() {
-                DriverService.this.onDriverQueueEmptyEvent();
+                driverUpdateEvents.onDriverQueueEmptyEvent();
             }
 
             @Override
             protected void onDriverQueueNotEmptyEvent() {
-                DriverService.this.onDriverQueueNotEmptyEvent();
+                driverUpdateEvents.onDriverQueueNotEmptyEvent();;
             }
         };
     }
@@ -82,7 +85,4 @@ public class DriverService {
     public List<Long> getDriversToUpdate() {
         return driverViewUpdateService.getDriversToUpdate();
     }
-
-    protected void onDriverQueueEmptyEvent() {}
-    protected void onDriverQueueNotEmptyEvent() {}
 }

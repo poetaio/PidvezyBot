@@ -30,26 +30,5 @@ public class Main {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-
-//        Session session = HibernateUtil.getSessionFactory().openSession();
-//        session.beginTransaction();
-//
-//        User user = new User(12341);
-//        user.setLastName("lastNaeklajfasdiljfasdiofjkasndklfjaslkf");
-//        session.saveOrUpdate(user);
-//
-//        Trip trip = new Trip(user);
-//        session.saveOrUpdate(trip);
-//
-//        trip.setTakenByDriver(user);
-//        session.saveOrUpdate(trip);
-//
-//        System.out.println(trip.getPassenger().getFirstName());
-//        System.out.println(user.getFirstName());
-////        List<Driver> driverList = session.createQuery
-////                ("SELECT D FROM Driver D", Driver.class).getResultList();
-//
-//        session.getTransaction().commit();
-//        HibernateUtil.shutdown();
     }
 }

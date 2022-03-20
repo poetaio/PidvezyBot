@@ -5,6 +5,7 @@ import services.driver_services.DriverViewUpdateService;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DriverViewUpdateServiceTest {
@@ -12,7 +13,7 @@ public class DriverViewUpdateServiceTest {
 
     @BeforeAll
     static void setup() {
-        driverViewUpdateService = new DriverViewUpdateService();
+        driverViewUpdateService = new DriverViewUpdateService(new LinkedList<>());
     }
 
     @BeforeEach
