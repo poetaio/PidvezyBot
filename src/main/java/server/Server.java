@@ -10,7 +10,7 @@ public class Server {
 
     public static HttpServer server;
     private static final int PORT = Integer.parseInt(System.getenv("PORT"));
-    private AdminService adminService;
+    private final AdminService adminService;
 
     public Server(AdminService adminService) throws IOException {
         server = HttpServer.create(new InetSocketAddress(System.getenv("BASE_URL"), PORT), 0);

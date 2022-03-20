@@ -22,6 +22,13 @@ public class AuthHttpHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         try {
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            if (httpExchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+                httpExchange.sendResponseHeaders(204, -1);
+                return;
+            }
             if ("POST".equals(httpExchange.getRequestMethod())) {
                 if (httpExchange.getRequestURI().toString().equals(LOGIN_RESOURCE)) {
                     String body = httpService.getResponse(httpExchange);
