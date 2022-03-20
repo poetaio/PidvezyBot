@@ -112,6 +112,10 @@ public class TripService {
         takenTripService.addTakenTrip(takenTrip);
     }
 
+    public TakenTripService getTakenTripService() {
+        return takenTripService;
+    }
+
     public void takeDriverTrip(long driverId) {
         QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverId);
         TakenTrip takenTrip = new TakenTrip(trip, trip.getDriverList().get(0));

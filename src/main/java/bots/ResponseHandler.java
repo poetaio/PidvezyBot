@@ -89,6 +89,8 @@ public class ResponseHandler {
 
         UsersInitializer.parseDrivers(driverService, userService);
         UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
+        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
+        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
 
         emptyCallback = new EmptyCallback();
 

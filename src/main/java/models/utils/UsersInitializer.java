@@ -3,8 +3,7 @@ package models.utils;
 import bots.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import models.AdminInactiveTrip;
-import models.QueueTrip;
+import models.*;
 import models.dao.DriverUpdateDao;
 import models.dao.UserDao;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -64,8 +63,68 @@ public class UsersInitializer {
                 queueTrip.setDetails(tripDao.getDetails());
 
                 tripBuilderService.putPassengerInfo(userDao.getChatId(), queueTrip);
-                tripService.addNewTrip(user.getId());
+            }
+        }
+    }
 
+    public static void parseQueueTrip(TripService tripService, TripBuilderService tripBuilderService, UserService userService) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String tripsStringInput = System.getenv("QUEUE_TRIPS_TO_ADD");
+        if (tripsStringInput != null) {
+            AdminQueueTrip[] tripsDao = mapper.readValue(tripsStringInput, AdminQueueTrip[].class);
+            for (AdminQueueTrip tripDao : tripsDao) {
+                UserDao userDao = tripDao.getPassenger();
+
+                User user = new User();
+                user.setId(userDao.getUserId());
+                user.setFirstName(userDao.getFirstName());
+                user.setUserName(userDao.getUserName());
+                userService.putUserInfo(userDao.getChatId(), user);
+                userService.putState(userDao.getChatId(), userDao.getCurrentState());
+
+                QueueTrip queueTrip = new QueueTrip();
+                queueTrip.setPassengerChatId(userDao.getChatId());
+                queueTrip.setAddress(tripDao.getAddress());
+                queueTrip.setDetails(tripDao.getDetails());
+
+                tripBuilderService.putPassengerInfo(userDao.getChatId(), queueTrip);
+                tripService.addNewTrip(user.getId());
+            }
+        }
+    }
+
+    public static void parseTakenTrips(TripService tripService, TripBuilderService tripBuilderService, UserService userService) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String tripsStringInput = System.getenv("TAKEN_TRIPS_TO_ADD");
+        if (tripsStringInput != null) {
+            AdminTakenTrip[] tripsDao = mapper.readValue(tripsStringInput, AdminTakenTrip[].class);
+            for (AdminTakenTrip tripDao : tripsDao) {
+                UserDao userDao = tripDao.getPassenger();
+                UserDao driverDao = tripDao.getDriver();
+
+                User passenger = new User();
+                passenger.setId(userDao.getUserId());
+                passenger.setFirstName(userDao.getFirstName());
+                passenger.setUserName(userDao.getUserName());
+                userService.putUserInfo(userDao.getChatId(), passenger);
+                userService.putState(userDao.getChatId(), userDao.getCurrentState());
+
+                User driver = new User();
+                driver.setId(driverDao.getUserId());
+                driver.setFirstName(driverDao.getFirstName());
+                driver.setUserName(driverDao.getUserName());
+                userService.putUserInfo(driverDao.getChatId(), driver);
+                userService.putState(driverDao.getChatId(), userDao.getCurrentState());
+
+                QueueTrip queueTrip = new QueueTrip();
+                queueTrip.setPassengerChatId(userDao.getChatId());
+                queueTrip.setAddress(tripDao.getAddress());
+                queueTrip.setDetails(tripDao.getDetails());
+
+                tripBuilderService.putPassengerInfo(userDao.getChatId(), queueTrip);
+                tripService.getTakenTripService().addTakenTrip(new TakenTrip(driverDao.getChatId(), tripDao.getAddress(), tripDao.getDetails(), TripStatus.BEING_APPROVED, driverDao.getChatId()));
             }
         }
     }
