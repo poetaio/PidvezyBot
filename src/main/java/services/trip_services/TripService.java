@@ -172,4 +172,12 @@ public class TripService {
     public List<Long> getPassengersInQueue() {
         return tripQueueService.getPassengersInQueue();
     }
+
+    public TripBuilderService getTripBuilderService() {
+        return tripBuilderService;
+    }
+
+    public TakenTripService getTakenTripService() {
+        return takenTripService;
+    }
 }

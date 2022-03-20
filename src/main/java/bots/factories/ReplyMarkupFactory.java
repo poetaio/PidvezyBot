@@ -68,7 +68,7 @@ public class ReplyMarkupFactory {
 
     public static ReplyKeyboardMarkup enterNumberReplyKeyboard() {
         return makeOneColumnMenu(KeyboardButton.builder()
-                .text(Constants.ENTER_NUMBER)
+                .text(Constants.SHARE_NUMBER)
                 .requestContact(true)
                 .build(), new KeyboardButton(Constants.BACK));
     }

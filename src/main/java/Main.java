@@ -1,14 +1,10 @@
 import bots.PidvesyBot;
 import bots.ResponseHandler;
-import models.hibernate.Trip;
-import models.hibernate.User;
-import org.hibernate.Session;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import server.AdminServer;
 import services.admin_services.AdminService;
-import utils.HibernateUtil;
 
 import java.io.IOException;
 
@@ -27,7 +23,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }).start();
-        } catch (TelegramApiException e) {
+//        } catch (TelegramApiException | JsonProcessingException e) {
             e.printStackTrace();
         }
     }

@@ -6,7 +6,7 @@ import models.dao.UserDao;
 import org.telegram.telegrambots.meta.api.objects.User;
 import services.UserService;
 import services.driver_services.DriverService;
-import services.passenger_services.PassengerService;
+import services.passenger_services.NumberService;
 import services.trip_services.TripService;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class AdminService {
     private final UserService userService;
     private final DriverService driverService;
-    private final PassengerService passengerService;
+    private final NumberService numberService;
     private final TripService tripService;
 
     public List<AdminInactiveTrip> getInactiveTrips() {

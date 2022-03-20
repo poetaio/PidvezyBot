@@ -1,7 +1,5 @@
 package bots.utils;
 
-import java.util.Locale;
-
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
     String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
@@ -13,10 +11,10 @@ public interface Constants {
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
 
-    String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
+    String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String START_REPLY = "З якою ціллю ви тут?";
-    String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням біженців із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
+    String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String ROLE_DRIVER = "Підвезу";
 //    String ROLE_PASSENGER = "Підвезіть";
@@ -33,7 +31,11 @@ public interface Constants {
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с)";
 
-    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n@%s\n%s\n%s\n%s";
+    String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s";
+
+    String INFORM_US_TRIP_STATUS = "Повідомте нас про статус заявки";
+
+    String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n%s\n%s\n\n%s\n%s";
     String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність.";
 
     String DRIVER_PIDVEZY = "Підвезу";
@@ -49,7 +51,7 @@ public interface Constants {
     String ENTER_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
     String ENTER_NUMBER_MESSAGE = "Вкажіть ваш контактний номер телефону";
 
-    String ENTER_NUMBER = "Вказати номер телефону";
+    String SHARE_NUMBER = "Поділитися номером телефону";
 
     String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на <b>%s</b>";
     String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n<b>%s</b>";
@@ -67,8 +69,8 @@ public interface Constants {
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
 
-    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
-    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n@%s\n%s";
+    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
+    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n\n%s\n%s";
 
     String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
     String REQUEST_SENT_MESSAGE = "Запит надіслано.";
@@ -96,8 +98,12 @@ public interface Constants {
 
     String HAVE_A_NICE_TRIP = "Гарної дороги!";
 
-    String BACK = "Назад";;
+    String START_SEARCHING_AGAIN = "Повертаємось до пошуків";
+
+    String BACK = "Назад";
+
+    String GOOD_BOY = "Ви молодець!";
 
     String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
-    String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s.\n%s\n%s";
+    String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s.\n%s\n\n%s";
 }

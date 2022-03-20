@@ -82,6 +82,14 @@ public class DriverService {
         return driverViewUpdateService.getAllActiveDriversIds();
     }
 
+    public List<Long> getDriversList() {
+        return driverList;
+    }
+
+    public List<DriverUpdateDao> getDriverUpdateQueueList(){
+        return driverViewUpdateService.getDriverUpdateQueueList();
+    }
+
     public List<Long> getDriversToUpdate() {
         return driverViewUpdateService.getDriversToUpdate();
     }

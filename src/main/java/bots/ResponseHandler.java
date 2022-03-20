@@ -5,12 +5,14 @@ import bots.factories.SendMessageFactory;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
+import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
-
-import models.QueueTrip;
-
+import models.utils.UsersInitializer;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -20,9 +22,10 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.*;
+import services.UserService;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
+import services.passenger_services.NumberService;
 import services.driver_services.utils.DriverUpdateEvents;
 import services.passenger_services.PassengerService;
 import services.trip_services.TripService;
@@ -38,7 +41,7 @@ public class ResponseHandler {
     // TODO: REMOVE!!!
     private static ResponseHandler INSTANCE;
 
-    public static ResponseHandler getInstance(MessageSender sender) {
+    public static ResponseHandler getInstance(MessageSender sender) throws JsonProcessingException {
         if (INSTANCE == null)
             INSTANCE = new ResponseHandler(sender);
         return INSTANCE;
@@ -47,16 +50,18 @@ public class ResponseHandler {
     private final MessageSender sender;
 
     private final UserService userService;
-    private final PassengerService passengerService;
+    private final NumberService numberService;
     private final DriverService driverService;
     private final TripService tripService;
 
     private final EmptyCallback emptyCallback;
 
-    public ResponseHandler(MessageSender sender) {
+    public ResponseHandler(MessageSender sender) throws JsonProcessingException {
         this.sender = sender;
 
         driverService = PersistenceService.initServices(new DriverUpdateEvents() {
+//        numberService = new NumberService();
+//        driverService = new DriverService() {
             @Override
             @SneakyThrows
             public void onDriverQueueEmptyEvent() {
@@ -85,6 +90,13 @@ public class ResponseHandler {
         tripService = PersistenceService.getTripService();
 
         userService = PersistenceService.getUserService();
+//        userService = new UserService(driverService, tripService);
+
+        UsersInitializer.parseDrivers(driverService, userService);
+        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
+        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
+        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
+
         emptyCallback = new EmptyCallback();
 
         setupDriverScheduler();
@@ -157,6 +169,9 @@ public class ResponseHandler {
             // Driver states
             case DRIVER_ACTIVE:
                 messageToSend = onDriverActive(chatId, message);
+                break;
+            case DRIVER_ENTERING_NUMBER:
+                messageToSend = onDriverEnteringNumber(chatId, message, upd);
                 break;
             case DRIVER_TOOK_TRIP:
                 messageToSend = onDriverTookTrip(chatId, message);
@@ -233,6 +248,21 @@ public class ResponseHandler {
         }
     }
 
+    private SendMessage onDriverEnteringNumber(long chatId, String message, Update upd) throws TelegramApiException {
+        Contact contact = upd.getMessage().getContact();
+        if (contact != null) {
+            return replyToDriverEnterNumber(chatId, contact.getPhoneNumber(), upd);
+        }
+
+        switch (message) {
+            case Constants.BACK:
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.enterNumberSendMessage(chatId);
+        }
+    }
+
     /**
      * Driver role chosen handler, subscribe to getting trip applications
      *
@@ -283,11 +313,11 @@ public class ResponseHandler {
 //                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
 //                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
 
-                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver), new ResultCallback() {
+                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver, numberService.getNumber(chatId)), new ResultCallback() {
                     @SneakyThrows
                     @Override
                     public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-                        sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
+                        sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()), emptyCallback);
                     }
                 });
 
@@ -298,7 +328,10 @@ public class ResponseHandler {
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
                         driverViewTrip.getAddress(),
                         driverViewTrip.getDetails(),
-                        passengerService.getNumber(driverViewTrip.getPassengerChatId()));
+                        numberService.getNumber(driverViewTrip.getPassengerChatId()));
+//                        passengerService.getNumber(driverViewTrip.getPassengerChatId()));
+
+            // TODO: NULLPOINTER CHECK
                 // TODO: NULLPOINTER CHECK
 //                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
             case Constants.BACK:
@@ -382,7 +415,7 @@ public class ResponseHandler {
                                 tripService.getTakenTripByDriver(chatId).getPassengerChatId()),
                         driverPassenger.getAddress(),
                         driverPassenger.getDetails(),
-                        passengerService.getNumber(driverPassenger.getPassengerChatId()));
+                        numberService.getNumber(driverPassenger.getPassengerChatId()));
         }
     }
 
@@ -576,7 +609,7 @@ public class ResponseHandler {
                 return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
+                        tripService.getTripDetails(chatId), numberService.getNumber(chatId), upd);
         }
     }
 
@@ -587,7 +620,7 @@ public class ResponseHandler {
                 currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
                 if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                            tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
+                            tripService.getTripDetails(chatId), numberService.getNumber(chatId), upd);
                 }
                 return replyToApproveTrip(chatId);
             case Constants.CHANGE_TRIP_INFO:
@@ -602,7 +635,7 @@ public class ResponseHandler {
                     userService.putState(chatId, State.APPROVING_TRIP);
                 }
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), passengerService.getNumber(chatId), upd);
+                        tripService.getTripDetails(chatId), numberService.getNumber(chatId), upd);
 
         }
     }
@@ -652,13 +685,13 @@ public class ResponseHandler {
         }
     }
 
-        /**
-         * Handles "Я знайшов транспорт" reply
-         *
-         * @param chatId chat id of the passenger
-         * @return Choosing role text & menu
-         * @throws TelegramApiException basic telegram exception
-         */
+    /**
+     * Handles "Я знайшов транспорт" reply
+     *
+     * @param chatId chat id of the passenger
+     * @return Choosing role text & menu
+     * @throws TelegramApiException basic telegram exception
+     */
     private SendMessage onFoundACar(long chatId, String message) throws TelegramApiException {
         switch (message) {
             case Constants.FOUND_TRIP:
@@ -749,7 +782,7 @@ public class ResponseHandler {
 
     private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
         tripService.setTripDetails(chatId, details);
-        String number = passengerService.getNumber(chatId);
+        String number = numberService.getNumber(chatId);
         if (number != null) {
             userService.putState(chatId, State.APPROVING_TRIP);
             return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
@@ -760,8 +793,13 @@ public class ResponseHandler {
         }
     }
 
+    private SendMessage replyToDriverEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
+        numberService.addNumber(chatId, number);
+        return replyToChooseRoleDriver(chatId);
+    }
+
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
-        passengerService.addNumber(chatId, number);
+        numberService.addNumber(chatId, number);
         int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             userService.putState(chatId, State.APPROVING_TRIP);
@@ -805,7 +843,7 @@ public class ResponseHandler {
         User user = userService.getUserInfo(chatId);
         return SendMessageFactory.tripSearchStoppedSendMessage(chatId, user,
                 tripService.getTripAddress(chatId), tripService.getTripDetails(chatId),
-                passengerService.getNumber(chatId));
+                numberService.getNumber(chatId));
     }
 
     /**
@@ -899,6 +937,6 @@ public class ResponseHandler {
     }
 
     public AdminService createAdminService() {
-        return new AdminService(userService, driverService, passengerService, tripService);
+        return new AdminService(userService, driverService, numberService, tripService);
     }
 }
