@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * Combines messages and corresponding menus from ReplyMarkupFactory
@@ -113,7 +114,7 @@ public class SendMessageFactory {
 
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, Update upd) throws TelegramApiException {
         User user = AbilityUtils.getUser(upd);
-        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
         if (number == null) {
             number = "";
         } else if (number.indexOf('+') != 0 && number.length() > 0) {
@@ -210,5 +211,9 @@ public class SendMessageFactory {
                 .text(messageText)
                 .replyMarkup(replyMarkup)
                 .build();
+    }
+
+    public static SendMessage approveOrDismissTrip(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.approveOrDismissTrip, ReplyMarkupFactory.driverTookTrip());
     }
 }

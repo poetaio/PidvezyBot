@@ -106,4 +106,5 @@ public interface Constants {
 
     String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :\\( Зверніться в тех підтримку";
     String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s\\.\n%s\n\n%s";
+    String approveOrDismissTrip = "Оберіть, будь ласка, один з пунктів меню";
 }

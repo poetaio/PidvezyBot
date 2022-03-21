@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -31,6 +32,7 @@ import services.trip_services.TripService;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Main class to handle all responses
@@ -382,39 +384,41 @@ public class ResponseHandler {
 //                if (currentTrip == null) {
 //                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), emptyCallback);
 //                    return replyToChooseRoleDriver(chatId);
-                TakenTrip currentTrip = tripService.getTakenTripByDriver(chatId);
-                if (currentTrip == null) {
-                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
-                        @SneakyThrows
-                        @Override
-                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-                            sender.executeAsync(replyToChooseRoleDriver(chatId), emptyCallback);
-                        }
-                    });
-                    return null;
-                }
+//                TakenTrip currentTrip = tripService.getTakenTripByDriver(chatId);
+//                TakenTrip finishedTrip = tripService.getFinishedTripByDriver(chatId);
+//                if (currentTrip == null) {
+//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
+//                        @SneakyThrows
+//                        @Override
+//                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
+//                            sender.executeAsync(replyToChooseRoleDriver(chatId), emptyCallback);
+//                        }
+//                    });
+//                    return null;
+//                }
                 userService.putState(chatId, State.DRIVER_IN_TRIP);
                 return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
             default:
                 TakenTrip driverPassenger = tripService.getTakenTripByDriver(chatId);
-                if (driverPassenger == null) {
-                    driverService.subscribeDriverOnUpdate(chatId);
-                    QueueTrip nextTrip1 = tripService.findNextTripForDriver(chatId);
-                    if (nextTrip1 == null) {
-                        userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-                        return SendMessageFactory.driverActiveSendMessage(chatId,
-                                Constants.NO_TRIPS_MESSAGE);
-                    }
-                    userService.putState(chatId, State.DRIVER_ACTIVE);
-                    return SendMessageFactory.driverActiveSendMessage(chatId,
-                            generateDriverOfferTripMessage(chatId, nextTrip1));
-                }
+//                if (driverPassenger == null) {
+//                    driverService.subscribeDriverOnUpdate(chatId);
+//                    QueueTrip nextTrip1 = tripService.findNextTripForDriver(chatId);
+//                    if (nextTrip1 == null) {
+//                        userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
+//                        return SendMessageFactory.driverActiveSendMessage(chatId,
+//                                Constants.NO_TRIPS_MESSAGE);
+//                    }
+//                    userService.putState(chatId, State.DRIVER_ACTIVE);
+//                    return SendMessageFactory.driverActiveSendMessage(chatId,
+//                            generateDriverOfferTripMessage(chatId, nextTrip1));
+//                }
                 // TODO: NULLPOINTER CHECK userInfo.get and passengerQueueService.getByDriver
-                return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
-                                tripService.getTakenTripByDriver(chatId).getPassengerChatId()),
-                        driverPassenger.getAddress(),
-                        driverPassenger.getDetails(),
-                        numberService.getNumber(driverPassenger.getPassengerChatId()));
+//                return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
+//                                tripService.getTakenTripByDriver(chatId).getPassengerChatId()),
+//                        driverPassenger.getAddress(),
+//                        driverPassenger.getDetails(),
+//                        numberService.getNumber(driverPassenger.getPassengerChatId()));
+                return SendMessageFactory.approveOrDismissTrip(chatId);
         }
     }
 
@@ -616,7 +620,7 @@ public class ResponseHandler {
         int currentHour;
         switch (message) {
             case Constants.TRY_AGAIN:
-                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
                 if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                             tripService.getTripDetails(chatId), numberService.getNumber(chatId), upd);
@@ -629,7 +633,7 @@ public class ResponseHandler {
                 userService.putState(chatId, State.EDITING_DETAILS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+                currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
                 if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
                     userService.putState(chatId, State.APPROVING_TRIP);
                 }
@@ -775,7 +779,8 @@ public class ResponseHandler {
         tripService.setTripDetails(chatId, details);
         String number = numberService.getNumber(chatId);
         if (number != null) {
-            int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+            int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
+            System.out.println(currentHour);
             if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
                 userService.putState(chatId, State.APPROVING_TRIP);
             } else {
@@ -796,7 +801,7 @@ public class ResponseHandler {
 
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
         numberService.addNumber(chatId, number);
-        int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
             userService.putState(chatId, State.APPROVING_TRIP);
         } else {

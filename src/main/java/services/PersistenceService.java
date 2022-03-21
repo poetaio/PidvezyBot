@@ -106,6 +106,8 @@ public class PersistenceService {
     }
 
     private static org.telegram.telegrambots.meta.api.objects.User toTelegramUser(User user) {
+        if (user.getFirstName() == null)
+            return null;
         return new org.telegram.telegrambots.meta.api.objects.User(user.getUserId(), user.getFirstName(),
                 false, user.getLastName(), user.getUsername(), "", false, false,
                 false);
