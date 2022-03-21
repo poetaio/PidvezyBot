@@ -112,8 +112,8 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.ENTER_ADDRESS, ReplyMarkupFactory.enterAddressReplyKeyboard());
     }
 
-    public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, Update upd) throws TelegramApiException {
-        User user = AbilityUtils.getUser(upd);
+    public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, User user) throws TelegramApiException {
+//        User user = AbilityUtils.getUser(upd);
         int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
         if (number == null) {
             number = "";
@@ -215,5 +215,9 @@ public class SendMessageFactory {
 
     public static SendMessage approveOrDismissTrip(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.approveOrDismissTrip, ReplyMarkupFactory.driverTookTrip());
+    }
+
+    public static SendMessage curfewIsOverSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.CURFEW_IS_OVER_MESSAGE, ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 }

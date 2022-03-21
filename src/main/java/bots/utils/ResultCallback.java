@@ -8,12 +8,12 @@ import org.telegram.telegrambots.meta.updateshandlers.SentCallback;
 /**
  * Do nothing callback
  */
-public abstract class ResultCallback implements SentCallback<Message> {
-    public abstract void onResult(BotApiMethod<Message> botApiMethod, Message message);
+public interface ResultCallback extends SentCallback<Message> {
+    void onResult(BotApiMethod<Message> botApiMethod, Message message);
 
     @Override
-    public void onError(BotApiMethod<Message> botApiMethod, TelegramApiRequestException e) {}
+    default void onError(BotApiMethod<Message> botApiMethod, TelegramApiRequestException e) {}
 
     @Override
-    public void onException(BotApiMethod<Message> botApiMethod, Exception e) {}
+    default void onException(BotApiMethod<Message> botApiMethod, Exception e) {}
 }
