@@ -1,6 +1,6 @@
 package bots.factories;
 
-import bots.EscapeMessageService;
+import services.EscapeMessageService;
 import bots.utils.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.util.AbilityUtils;
@@ -25,7 +25,7 @@ public class SendMessageFactory {
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(message)
-                .parseMode(ParseMode.MARKDOWN)
+                .parseMode(ParseMode.MARKDOWNV2)
                 .build();
 
         if (message.equals(Constants.NO_TRIPS_MESSAGE))
@@ -130,13 +130,9 @@ public class SendMessageFactory {
             username = "@" + username;
         }
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
-//            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-//                    username, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
             return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                     username, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
-//        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
-//                username, number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
         return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                 username, number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
@@ -202,7 +198,7 @@ public class SendMessageFactory {
     private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()
                 .chatId(String.valueOf(chatId))
-                .parseMode(ParseMode.MARKDOWN)
+                .parseMode(ParseMode.MARKDOWNV2)
                 .text(messageText)
                 .build();
     }

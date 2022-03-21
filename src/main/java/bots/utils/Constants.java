@@ -22,33 +22,33 @@ public interface Constants {
     String CHOOSE_ROLE_DRIVER = "Я волонтер";
 
     String TAKE_TRIP = "Відгукнутися";
-    String TRIP_TAKEN_MESSAGE = "Поїздка уже неактуальна :\\(";
+    String TRIP_TAKEN_MESSAGE = "Поїздка вже неактуальна :\\(";
 
     String NEXT_TRIP = "Наступний запит";
 
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
-//    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
-    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
+//    String NO_TRIPS_MESSAGE = "На даний момент немає запитів\\. Очікуйте на оновлення\\.";
+    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*\\.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
 
     String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s";
 
     String INFORM_US_TRIP_STATUS = "Повідомте нас про статус заявки";
 
     String IS_WAITING_FOR_A_CALL_MESSAGE = "%s чекає на ваше повідомлення або дзвінок\n%s\n%s\n\n%s\n%s";
-    String NO_TRIPS_MESSAGE = "Наразі запитів немає. Ми вам повідомимо про їхню наявність.";
+    String NO_TRIPS_MESSAGE = "Наразі запитів немає\\. Ми вам повідомимо про їхню наявність\\.";
 
     String DRIVER_PIDVEZY = "Підвезу";
     String DRIVER_DISMISS_TRIP = "Відмовитись";
 
-    String GOOD_BOY_MESSAGE = "Ви молодець!";
+    String GOOD_BOY_MESSAGE = "Ви молодець\\!";
 
     String RESUME_BROADCAST = "Відновити розсилку";
 
     String CHOOSE_ROLE_PASSENGER = "Я потребую транспорт";
 
-    String ENTER_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на ...";
-    String ENTER_DETAILS = "Вкажіть інформацію про пасажирів. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
+    String ENTER_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на \\.\\.\\.";
+    String ENTER_DETAILS = "Вкажіть інформацію про пасажирів\\. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
     String ENTER_NUMBER_MESSAGE = "Вкажіть ваш контактний номер телефону";
 
     String SHARE_NUMBER = "Поділитися номером телефону";
@@ -63,19 +63,19 @@ public interface Constants {
     String ON_STATION_YES = "Так";
 
     String I_AM_ON_STATION = "Я прибув на вокзал";
-    String CHECKING_OUT_ON_STATION_MESSAGE = "Волонтери завчасно отримують інформацію про прибуття потягу, щоб чекати вас на місці.";
+    String CHECKING_OUT_ON_STATION_MESSAGE = "Волонтери завчасно отримують інформацію про прибуття потягу, щоб чекати вас на місці\\.";
 
     String CHANGE_TRIP_INFO = "Змінити запит";
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
 
-    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
-    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s.\n%s\n\n%s\n%s";
+    String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години\\. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
+    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n\n%s\n%s";
 
-    String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано.\nЧекайте на сповіщення.\nПовідомте нам, коли знайдете транспорт.";
-    String REQUEST_SENT_MESSAGE = "Запит надіслано.";
+    String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано\\.\nЧекайте на сповіщення\\.\nПовідомте нам, коли знайдете транспорт\\.";
+    String REQUEST_SENT_MESSAGE = "Запит надіслано\\.";
     String REQUEST_PENDING_MESSAGE = "В пошуках волонтерів\uD83D\uDD0E";
-    String DRIVERS_GOT_YOUR_MESSAGE = "Волонтери отримали ваш запит. Очікуємо на підтвердження...";
+    String DRIVERS_GOT_YOUR_MESSAGE = "Волонтери отримали ваш запит\\. Очікуємо на підтвердження\\.\\.\\.";
 
     String CANCEL_TRIP = "Скасувати запит";
 
@@ -96,14 +96,14 @@ public interface Constants {
     String STOP_LOOKING_FOR_A_CAR = "Зупинити пошук";
     String RESUME_SEARCH = "Відновити пошук";
 
-    String HAVE_A_NICE_TRIP = "Гарної дороги!";
+    String HAVE_A_NICE_TRIP = "Гарної дороги\\!";
 
     String START_SEARCHING_AGAIN = "Повертаємось до пошуків";
 
     String BACK = "Назад";
 
-    String GOOD_BOY = "Ви молодець!";
+    String GOOD_BOY = "Ви молодець\\!";
 
     String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :\\( Зверніться в тех підтримку";
-    String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s.\n%s\n\n%s";
+    String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s\\.\n%s\n\n%s";
 }

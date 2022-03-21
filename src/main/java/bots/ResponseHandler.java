@@ -2,17 +2,15 @@ package bots;
 
 import bots.factories.ReplyMarkupFactory;
 import bots.factories.SendMessageFactory;
+import bots.tasks.DriverViewUpdateTask;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.SneakyThrows;
 import models.QueueTrip;
 import models.TakenTrip;
 import models.utils.State;
-import models.utils.UsersInitializer;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -22,13 +20,13 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import services.EscapeMessageService;
 import services.PersistenceService;
 import services.UserService;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.NumberService;
 import services.driver_services.utils.DriverUpdateEvents;
-import services.passenger_services.PassengerService;
 import services.trip_services.TripService;
 
 import java.util.Calendar;
@@ -654,20 +652,10 @@ public class ResponseHandler {
             case Constants.EDIT_TRIP:
                 return replyToEditTrip(chatId);
             case Constants.STOP_LOOKING_FOR_A_CAR:
-//                tripService.passengerFoundACar(chatId);
-//                userService.putState(chatId, State.THANKS);
-//                return SendMessageFactory.wishAGoodTripSendMessage(chatId);
                 return replyToStopLookingForACar(chatId);
             default:
                 return replyWithText(chatId, Constants.REQUEST_PENDING_MESSAGE);
         }
-//        if (message.equals(Constants.EDIT_TRIP)) {
-//            // INACTIVE_TODO: track trip request recipients to delete it from every chat
-////            return replyToCancelTrip(chatId);
-//            return replyToEditTrip(chatId);
-//        } else {
-//
-//        }
     }
 
     private SendMessage onTripSearchStopped(long chatId, String message) throws TelegramApiException {
@@ -700,9 +688,11 @@ public class ResponseHandler {
                 userService.putState(chatId, State.THANKS);
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
+                // todo: check for curfew
+                // removing from taken and adding to queue
+                // checking if driver still views this trip (to send him message that it's already unavailable)
                 TakenTrip currentTrip = tripService.getTakenTripByPassenger(chatId);
                 tripService.dismissPassengerTrip(chatId);
-                userService.putState(chatId, State.LOOKING_FOR_DRIVER);
                 Long driverId = currentTrip.getDriverChatId();
                 if (driverId != null) {
                     State driverState = userService.getState(driverId);
@@ -716,6 +706,8 @@ public class ResponseHandler {
                         });
                     }
                 }
+                // sending a message as on trip_approved depending on number of active drivers
+                userService.putState(chatId, State.LOOKING_FOR_DRIVER);
                 if (driverService.getDrivers().isEmpty()) {
                     sender.executeAsync(SendMessageFactory.requestSentSendMessage(chatId), new ResultCallback() {
                         @SneakyThrows
@@ -737,12 +729,18 @@ public class ResponseHandler {
         return SendMessageFactory.chooseRoleSendMessage(chatId);
     }
 
-    // replyTo... - handlers to every message in every state
+    // replyTo... - handlers to almost every message in every state
     public SendMessage replyToChooseRoleDriver(long chatId) throws TelegramApiException {
+        if (userService.getUserInfo(chatId).getUserName() == null && numberService.getNumber(chatId) == null) {
+            userService.putState(chatId, State.DRIVER_ENTERING_NUMBER);
+            return SendMessageFactory.enterNumberSendMessage(chatId);
+        }
+
         // adding driver to both drivers list and update queue
         driverService.addDriver(chatId);
-//        sendNotificationToDrivers(chatId, false);
+
         QueueTrip tripInfo = tripService.findNextTripForDriver(chatId);
+
         if (tripInfo == null) {
             userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
             return SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE);
@@ -751,12 +749,6 @@ public class ResponseHandler {
         userService.putState(chatId, State.DRIVER_ACTIVE);
         // todo: merge with generateDriverOfferTrip
         User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        System.out.println(EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
-                tripInfo.getAddress(), tripInfo.getDetails()));
-//        String message = String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-//                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
-//                tripInfo.getAddress(), tripInfo.getDetails());
         String message = EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
                 tripInfo.getAddress(), tripInfo.getDetails());
@@ -773,14 +765,6 @@ public class ResponseHandler {
         return SendMessageFactory.enterAddressSendMessage(chatId);
     }
 
-    public SendMessage replyToStopBroadcast(long chatId) throws TelegramApiException {
-//        userService.putState(chatId, State.DRIVER_INACTIVE);
-        userService.putState(chatId, State.CHOOSING_ROLE);
-        driverService.removeDriver(chatId);
-//        SendMessageFactory.sendDriverInactiveMenu(chatId);
-        return SendMessageFactory.chooseRoleSendMessage(chatId);
-    }
-
     private SendMessage replyToEnterAddress(long chatId, String address) throws TelegramApiException {
         tripService.setTripAddress(chatId, address);
         userService.putState(chatId, State.ENTERING_DETAILS);
@@ -791,7 +775,12 @@ public class ResponseHandler {
         tripService.setTripDetails(chatId, details);
         String number = numberService.getNumber(chatId);
         if (number != null) {
-            userService.putState(chatId, State.APPROVING_TRIP);
+            int currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+            if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+                userService.putState(chatId, State.APPROVING_TRIP);
+            } else {
+                userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+            }
             return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                     tripService.getTripDetails(chatId), number, upd);
         } else {
@@ -872,30 +861,21 @@ public class ResponseHandler {
      * @return Message & menu "Have a nice trip"
      */
     private SendMessage replyToFoundACar(long chatId) throws TelegramApiException {
-        // todo: handle if driver views trip
         userService.putState(chatId, State.FOUND_A_CAR);
         tripService.removeTripOnPassengerFoundACar(chatId);
         return SendMessageFactory.haveANiceTripSendMessage(chatId);
     }
 
-    private String generateDriverOfferTripMessage(long chatId, QueueTrip queuePassengerDao) {
-        if (queuePassengerDao == null) {
+    private String generateDriverOfferTripMessage(long chatId, QueueTrip queueTrip) {
+        if (queueTrip == null) {
             return Constants.NO_TRIPS_MESSAGE;
         }
 
-        User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-//        return String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-//                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
-//                // todo: exception
-//                queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
-        System.out.println(EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
-                // todo: exception
-                queuePassengerDao.getAddress(), queuePassengerDao.getDetails()));
+        User user = userService.getUserInfo(queueTrip.getPassengerChatId());
         return EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
                 // todo: exception
-                queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
+                queueTrip.getAddress(), queueTrip.getDetails());
     }
 
     private SendMessage replyWithText(long chatId, String messageText) throws TelegramApiException {
@@ -909,15 +889,15 @@ public class ResponseHandler {
     private String currentScheduleTime;
 //    private final Map<Long, Integer> currentScheduleMessageId = new HashMap<>();
 
-    public void sendNotificationToDrivers(long chatId, String currentScheduleMessage, String currentScheduleTime) throws TelegramApiException {
-        this.currentScheduleMessage = currentScheduleMessage;
-        this.currentScheduleTime = currentScheduleTime;
-        sendNotificationToDrivers(chatId, true);
-    }
-
-    private void sendNotificationToDrivers(long chatId) throws TelegramApiException {
-        sendNotificationToDrivers(chatId, false);
-    }
+//    public void sendNotificationToDrivers(long chatId, String currentScheduleMessage, String currentScheduleTime) throws TelegramApiException {
+//        this.currentScheduleMessage = currentScheduleMessage;
+//        this.currentScheduleTime = currentScheduleTime;
+//        sendNotificationToDrivers(chatId, true);
+//    }
+//
+//    private void sendNotificationToDrivers(long chatId) throws TelegramApiException {
+//        sendNotificationToDrivers(chatId, false);
+//    }
 
     private void sendNotificationToDrivers(long chatId, boolean mailing) throws TelegramApiException {
         if (currentScheduleMessage == null)
@@ -935,20 +915,6 @@ public class ResponseHandler {
         } else return;
 
         sender.executeAsync(builder.build(), emptyCallback);
-    }
-
-//    private void removeScheduleMessage(long chatId) {
-//        try {
-//            if (currentScheduleMessageId.get(chatId) != null)
-//                sender.execute(DeleteMessage.builder()
-//                        .chatId(String.valueOf(chatId))
-//                        .messageId(currentScheduleMessageId.get(chatId))
-//                        .build());
-//        } catch (Exception ignored) {}
-//    }
-
-    public String getCurrentScheduleMessage() {
-        return currentScheduleMessage;
     }
 
     public AdminService createAdminService() {

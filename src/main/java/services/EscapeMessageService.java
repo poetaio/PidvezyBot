@@ -1,4 +1,4 @@
-package bots;
+package services;
 
 import org.telegram.abilitybots.api.util.AbilityUtils;
 
@@ -16,8 +16,7 @@ public class EscapeMessageService {
     }
 
     private static String escapeString(String s) {
-        return s.replace("/", "\\/")
-                .replace("\\", "\\\\")
+        return s.replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("-", "\\-")
                 .replace("=", "\\=")

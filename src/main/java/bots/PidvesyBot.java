@@ -17,33 +17,8 @@ public class PidvesyBot extends AbilityBot {
     
     public PidvesyBot() throws JsonProcessingException {
         super(System.getenv("PIDVEZY_BOT_TOKEN"), Constants.BOT_USERNAME);
-        // TODO: REMOVE
         responseHandler = ResponseHandler.getInstance(sender);
-
-//        setupTrainSchedule();
     }
-
-//    private void setupTrainSchedule() {
-//        String date_string3 = "2022-03-14-13:00";
-//        String date_string4 = "2022-03-14-15:30";
-//        String date_string5 = "2022-03-14-16:00";
-//        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-hh:mm");
-//        Date date3 = null;
-//        Date date4 = null;
-//        Date date5 = null;
-//        try {
-//            date3 = formatter.parse(date_string3);
-//            date4 = formatter.parse(date_string4);
-//            date5 = formatter.parse(date_string5);
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//
-//        String trainMessage = "Потяг має прибути о 16:00";
-//        new Thread(new BroadcastScheduler(trainMessage, trainMessage, date3)).start();
-//        new Thread(new BroadcastScheduler("Потяг прибуває через 30 хвилин", trainMessage, date4)).start();
-//        new Thread(new BroadcastScheduler("Потяг прибув!", "Потяг прибув!", date5)).start();
-//    }
 
     public Ability start() {
         return Ability

@@ -1,4 +1,4 @@
-package bots;
+package bots.tasks;
 
 import models.dao.DriverUpdateDao;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
