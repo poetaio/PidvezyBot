@@ -1,5 +1,6 @@
 package bots.factories;
 
+import bots.EscapeMessageService;
 import bots.utils.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.util.AbilityUtils;
@@ -24,7 +25,7 @@ public class SendMessageFactory {
         SendMessage sendMessage = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(message)
-                .parseMode(ParseMode.HTML)
+                .parseMode(ParseMode.MARKDOWN)
                 .build();
 
         if (message.equals(Constants.NO_TRIPS_MESSAGE))
@@ -50,7 +51,8 @@ public class SendMessageFactory {
         } else {
             username = "@" + username;
         }
-        String message = String.format(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), username, number);
+//        String message = String.format(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), username, number);
+        String message = EscapeMessageService.escapeMessage(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), username, number);
         return makeSendMessage(chatId, message);
     }
 
@@ -94,7 +96,9 @@ public class SendMessageFactory {
         } else {
             username = "@" + username;
         }
-        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
+//        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
+//                number, address, details);
+        String userWaitsForYourCallMessage = EscapeMessageService.escapeMessage(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
     }
@@ -126,10 +130,14 @@ public class SendMessageFactory {
             username = "@" + username;
         }
         if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
-            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+//            return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+//                    username, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
+            return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                     username, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
-        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+//        return makeSendMessage(chatId, String.format(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
+//                username, number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.APPROVE_MESSAGE_CURFEW, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                 username, number), ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
@@ -142,11 +150,13 @@ public class SendMessageFactory {
     }
 
     public static SendMessage editAddressSendMessage(long chatId, String oldAddress) throws TelegramApiException {
-        return makeSendMessage(chatId, String.format(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
+//        return makeSendMessage(chatId, String.format(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
     }
 
     public static SendMessage editDetailsSendMessage(long chatId, String oldDetails) throws TelegramApiException {
-        return makeSendMessage(chatId, String.format(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
+//        return makeSendMessage(chatId, String.format(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
     }
 
     public static SendMessage checkingOutOnStationSendMessage(long chatId) throws TelegramApiException {
@@ -173,7 +183,10 @@ public class SendMessageFactory {
         if (number != null && number.indexOf('+') != 0) {
             number = '+' + number;
         }
-        return makeSendMessage(chatId, String.format(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
+//        return makeSendMessage(chatId, String.format(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
+//                user.getLastName() == null ? "" : " " + user.getLastName(), address,
+//                details, number), ReplyMarkupFactory.searchStoppedReplyMenu());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
                 user.getLastName() == null ? "" : " " + user.getLastName(), address,
                 details, number), ReplyMarkupFactory.searchStoppedReplyMenu());
     }
@@ -189,6 +202,7 @@ public class SendMessageFactory {
     private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()
                 .chatId(String.valueOf(chatId))
+                .parseMode(ParseMode.MARKDOWN)
                 .text(messageText)
                 .build();
     }
@@ -196,7 +210,7 @@ public class SendMessageFactory {
     private static SendMessage makeSendMessage(long chatId, String messageText, ReplyKeyboardMarkup replyMarkup) throws TelegramApiException {
         return SendMessage.builder()
                 .chatId(String.valueOf(chatId))
-                .parseMode(ParseMode.HTML)
+                .parseMode(ParseMode.MARKDOWNV2)
                 .text(messageText)
                 .replyMarkup(replyMarkup)
                 .build();

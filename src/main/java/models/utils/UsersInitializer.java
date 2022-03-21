@@ -89,7 +89,7 @@ public class UsersInitializer {
                 queueTrip.setDetails(tripDao.getDetails());
 
                 tripBuilderService.putPassengerInfo(userDao.getChatId(), queueTrip);
-                tripService.addNewTrip(user.getId());
+                tripService.addNewTripToQueue(user.getId());
             }
         }
     }
@@ -124,7 +124,7 @@ public class UsersInitializer {
                 queueTrip.setDetails(tripDao.getDetails());
 
                 tripBuilderService.putPassengerInfo(userDao.getChatId(), queueTrip);
-                tripService.getTakenTripService().addTakenTrip(new TakenTrip(driverDao.getChatId(), tripDao.getAddress(), tripDao.getDetails(), TripStatus.BEING_APPROVED, driverDao.getChatId()));
+//                tripService.getTakenTripService().addTakenTrip(new TakenTrip(driverDao.getChatId(), tripDao.getAddress(), tripDao.getDetails(), TripStatus.INACTIVE, driverDao.getChatId()));
             }
         }
     }

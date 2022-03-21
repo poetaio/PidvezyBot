@@ -22,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import services.PersistenceService;
 import services.UserService;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
@@ -86,16 +87,16 @@ public class ResponseHandler {
             }
         });
 
-        passengerService = PersistenceService.getPassengerService();
+        numberService = PersistenceService.getNumberService();
         tripService = PersistenceService.getTripService();
 
         userService = PersistenceService.getUserService();
 //        userService = new UserService(driverService, tripService);
 
-        UsersInitializer.parseDrivers(driverService, userService);
-        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
-        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
-        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
+//        UsersInitializer.parseDrivers(driverService, userService);
+//        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
+//        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
+//        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
 
         emptyCallback = new EmptyCallback();
 
@@ -750,7 +751,13 @@ public class ResponseHandler {
         userService.putState(chatId, State.DRIVER_ACTIVE);
         // todo: merge with generateDriverOfferTrip
         User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        String message = String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+        System.out.println(EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
+                tripInfo.getAddress(), tripInfo.getDetails()));
+//        String message = String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+//                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
+//                tripInfo.getAddress(), tripInfo.getDetails());
+        String message = EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
                 tripInfo.getAddress(), tripInfo.getDetails());
         return SendMessageFactory.driverActiveSendMessage(chatId, message);
@@ -877,7 +884,15 @@ public class ResponseHandler {
         }
 
         User user = userService.getUserInfo(queuePassengerDao.getPassengerChatId());
-        return String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+//        return String.format(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+//                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
+//                // todo: exception
+//                queuePassengerDao.getAddress(), queuePassengerDao.getDetails());
+        System.out.println(EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
+                // todo: exception
+                queuePassengerDao.getAddress(), queuePassengerDao.getDetails()));
+        return EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
                 // todo: exception
                 queuePassengerDao.getAddress(), queuePassengerDao.getDetails());

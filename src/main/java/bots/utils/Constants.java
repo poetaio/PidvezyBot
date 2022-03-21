@@ -11,10 +11,10 @@ public interface Constants {
     String DRIVER_STATES = "DRIVER_STATES";
     String PASSENGER_STATES = "PASSENGER_STATES";
 
-    String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
+    String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години \\(%s:00 \\- %s:00\\)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String START_REPLY = "З якою ціллю ви тут?";
-    String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години (%s:00 - %s:00)", CURFEW_START_HOUR, CURFEW_END_HOUR);
+    String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години \\(%s:00 \\- %s:00\\)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
 //    String ROLE_DRIVER = "Підвезу";
 //    String ROLE_PASSENGER = "Підвезіть";
@@ -22,14 +22,14 @@ public interface Constants {
     String CHOOSE_ROLE_DRIVER = "Я волонтер";
 
     String TAKE_TRIP = "Відгукнутися";
-    String TRIP_TAKEN_MESSAGE = "Поїздка уже неактуальна :(";
+    String TRIP_TAKEN_MESSAGE = "Поїздка уже неактуальна :\\(";
 
     String NEXT_TRIP = "Наступний запит";
 
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів. Очікуйте на оновлення.";
-    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на <b>%s</b>.\n\n<b>%s</b>\n\n(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с)";
+    String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
 
     String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s";
 
@@ -53,8 +53,8 @@ public interface Constants {
 
     String SHARE_NUMBER = "Поділитися номером телефону";
 
-    String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на <b>%s</b>";
-    String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n<b>%s</b>";
+    String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на *%s*";
+    String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n*%s*";
 
     String DO_NOT_CHANGE = "Лишити без змін";
 
@@ -104,6 +104,6 @@ public interface Constants {
 
     String GOOD_BOY = "Ви молодець!";
 
-    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :( Зверніться в тех підтримку";
+    String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :\\( Зверніться в тех підтримку";
     String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s.\n%s\n\n%s";
 }

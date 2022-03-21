@@ -6,8 +6,8 @@ import java.util.Map;
 public class NumberService {
     private final Map<Long, String> usersNumbers;
 
-    public NumberService() {
-        usersNumbers = new HashMap<>();
+    public NumberService(Map<Long, String> usersNumbers) {
+        this.usersNumbers = usersNumbers;
     }
 
     public void addNumber(long chatId, String number) {

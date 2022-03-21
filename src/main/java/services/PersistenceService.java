@@ -11,6 +11,7 @@ import models.utils.TripComparator;
 import org.hibernate.Session;
 import services.driver_services.DriverService;
 import services.driver_services.utils.DriverUpdateEvents;
+import services.passenger_services.NumberService;
 import services.passenger_services.PassengerService;
 import services.trip_services.TripService;
 import utils.HibernateUtil;
@@ -20,7 +21,7 @@ import java.util.*;
 // make me persistent baby
 public class PersistenceService {
     private static DriverService driverService;
-    private static PassengerService passengerService;
+    private static NumberService numberService;
     private static UserService userService;
     private static TripService tripService;
 
@@ -94,7 +95,7 @@ public class PersistenceService {
         }
 
         PersistenceService.driverService = new DriverService(driverList, driverUpdateDaos, driverUpdateEvents);
-        passengerService = new PassengerService(userNumbers);
+        numberService = new NumberService(userNumbers);
         tripService = new TripService(builtTrips, queueTrips, takenTrips, finishedTrips);
         userService = new UserService(userStatesMap, userInfo, PersistenceService.driverService, tripService);
 
@@ -114,8 +115,8 @@ public class PersistenceService {
         return driverService;
     }
 
-    public static PassengerService getPassengerService() {
-        return passengerService;
+    public static NumberService getNumberService() {
+        return numberService;
     }
 
     public static UserService getUserService() {
