@@ -68,7 +68,7 @@ public interface Constants {
     String CHANGE_TRIP_INFO = "Змінити запит";
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
-    String CURFEW_IS_OVER_MESSAGE = "Комендантський час завершений\\. Спробуйте пізніше\\.";
+    String CURFEW_IS_OVER_MESSAGE = "Комендантська година завершена\\. Спробуйте пізніше\\.";
 
     String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години\\. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
     String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n\n%s\n%s";

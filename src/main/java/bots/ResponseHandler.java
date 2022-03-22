@@ -217,7 +217,7 @@ public class ResponseHandler {
                 messageToSend = onLookingForDriver(chatId, message);
                 break;
             case TRIP_SEARCH_STOPPED:
-                messageToSend = onTripSearchStopped(chatId, message);
+                messageToSend = onTripSearchStopped(chatId, message, upd);
                 break;
             case FOUND_A_CAR:
                 messageToSend = onFoundACar(chatId, message, upd);
@@ -607,7 +607,7 @@ public class ResponseHandler {
     private SendMessage onApprovingTrip(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.APPROVE_TRIP:
-                return replyToApproveTrip(chatId);
+                return replyToApproveTrip(chatId, upd);
             case Constants.CHANGE_TRIP_INFO:
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
@@ -624,12 +624,7 @@ public class ResponseHandler {
         int currentHour;
         switch (message) {
             case Constants.TRY_AGAIN:
-                currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
-                    return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                            tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
-                }
-                return replyToApproveTrip(chatId);
+                return replyToApproveTrip(chatId, upd);
             case Constants.CHANGE_TRIP_INFO:
                 userService.putState(chatId, State.EDITING_ADDRESS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
@@ -638,7 +633,7 @@ public class ResponseHandler {
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+                if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
                     userService.putState(chatId, State.APPROVING_TRIP);
                 }
                 return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
@@ -666,10 +661,10 @@ public class ResponseHandler {
         }
     }
 
-    private SendMessage onTripSearchStopped(long chatId, String message) throws TelegramApiException {
+    private SendMessage onTripSearchStopped(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.RESUME_SEARCH:
-                return replyToApproveTrip(chatId);
+                return replyToApproveTrip(chatId, upd);
             case Constants.CANCEL_TRIP:
                 tripService.cancelTripOnSearchStopped(chatId);
                 userService.putState(chatId, State.CHOOSING_ROLE);
@@ -696,7 +691,6 @@ public class ResponseHandler {
                 userService.putState(chatId, State.THANKS);
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
-                // todo: check for curfew
                 // removing from taken and adding to queue
                 // checking if driver still views this trip (to send him message that it's already unavailable)
                 TakenTrip currentTrip = tripService.getTakenTripByPassenger(chatId);
@@ -714,8 +708,9 @@ public class ResponseHandler {
                         });
                     }
                 }
+                // checking for curfew
                 int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                if (currentHour < Constants.CURFEW_START_HOUR && currentHour > Constants.CURFEW_END_HOUR) {
+                if (currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR) {
                     userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                             tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
@@ -791,7 +786,7 @@ public class ResponseHandler {
         String number = numberService.getNumber(chatId);
         if (number != null) {
             int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-            if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+            if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
                 userService.putState(chatId, State.APPROVING_TRIP);
             } else {
                 userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
@@ -812,7 +807,7 @@ public class ResponseHandler {
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
         numberService.addNumber(chatId, number);
         int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
             userService.putState(chatId, State.APPROVING_TRIP);
         } else {
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
@@ -832,7 +827,14 @@ public class ResponseHandler {
         return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
     }
 
-    public SendMessage replyToApproveTrip(long chatId) throws TelegramApiException {
+    public SendMessage replyToApproveTrip(long chatId, Update upd) throws TelegramApiException {
+        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
+        if (currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR) {
+            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+            return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                    tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+        }
+
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
         tripService.addNewTripToQueue(chatId);
         if (driverService.getDrivers().isEmpty()) {
@@ -945,6 +947,7 @@ public class ResponseHandler {
 
         for (long chatId : passengersInQueue) {
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+            tripService.removeTripFromQueueByPassengerId(chatId);
             sender.executeAsync(SendMessageFactory.curfewIsOverSendMessage(chatId),
                 (ResultCallback) (botApiMethod, message) ->
                         sendApprovingTripMessage(chatId));

@@ -130,7 +130,7 @@ public class SendMessageFactory {
         } else {
             username = "@" + username;
         }
-        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour <= Constants.CURFEW_END_HOUR) {
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
             return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.APPROVE_MESSAGE, user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "", address, details,
                     username, number), ReplyMarkupFactory.approveAddressReplyKeyboard());
         }
