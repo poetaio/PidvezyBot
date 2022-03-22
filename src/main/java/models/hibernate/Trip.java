@@ -5,8 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import models.utils.TripStatus;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +45,16 @@ public class Trip {
     @ManyToOne
     @JoinColumn(name = "finished_by_driver_id", referencedColumnName = "user_id")
     private User finishedByDriver;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Date createdAt;
+
+    @Column(name = "taken_at")
+    private Date takenAt;
+
+    @Column(name = "finished_at")
+    private Date finishedAt;
 
     public Trip(User passenger) {
         this.passenger = passenger;

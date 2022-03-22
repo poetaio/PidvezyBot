@@ -7,7 +7,9 @@ import models.utils.TripStatus;
 import org.hibernate.Session;
 import utils.HibernateUtil;
 
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -114,6 +116,7 @@ public class TripRepository {
             trip.getListOfViewDriver().clear();
         trip.setTripStatus(TripStatus.TAKEN);
         trip.setTakenByDriver(userRepository.getWithDefault(session, userId));
+        trip.setTakenAt(Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).getTime());
 
         session.getTransaction().commit();
     }
@@ -127,6 +130,7 @@ public class TripRepository {
         if (trip.getTakenByDriver() != null && trip.getTakenByDriver().getUserId() == userId) {
             trip.setTakenByDriver(null);
             trip.setTripStatus(TripStatus.INACTIVE);
+            trip.setTakenAt(null);
         }
 
         session.getTransaction().commit();
@@ -137,6 +141,7 @@ public class TripRepository {
         session.beginTransaction();
 
         getTripWithDefault(session, tripId).setTripStatus(TripStatus.INACTIVE);
+        getTripWithDefault(session, tripId).setTakenAt(null);
 
         session.getTransaction().commit();
     }
@@ -159,6 +164,7 @@ public class TripRepository {
         trip.setTripStatus(TripStatus.FINISHED);
         trip.setFinishedByDriver(trip.getTakenByDriver());
         trip.setTakenByDriver(null);
+        trip.setFinishedAt(Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).getTime());
 
         session.getTransaction().commit();
     }
