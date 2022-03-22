@@ -691,13 +691,21 @@ public class ResponseHandler {
                 userService.putState(chatId, State.THANKS);
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
+                int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
+                boolean notCurfew = currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR;
                 // removing from taken and adding to queue
                 // checking if driver still views this trip (to send him message that it's already unavailable)
                 TakenTrip currentTrip = tripService.getTakenTripByPassenger(chatId);
                 tripService.dismissPassengerTrip(chatId);
+                // firstly removing trip from queue then sending a driver a new trip
+                if (notCurfew) {
+                    userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+                    tripService.removeTripFromQueueByPassengerId(chatId);
+                }
                 Long driverId = currentTrip.getDriverChatId();
                 if (driverId != null) {
                     State driverState = userService.getState(driverId);
+                    tripService.dismissDriverTrip(driverId);
                     if (driverState == State.DRIVER_IN_TRIP || driverState == State.DRIVER_TOOK_TRIP) {
                         sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(driverId), new ResultCallback() {
                             @SneakyThrows
@@ -708,14 +716,11 @@ public class ResponseHandler {
                         });
                     }
                 }
-                // checking for curfew
-                int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                if (currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR) {
-                    userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+                // if driver was active, he got message that no trips available, instead of this one once again
+                if (notCurfew) {
                     return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
                             tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
                 }
-
                 // sending a message as on trip_approved depending on number of active drivers
                 userService.putState(chatId, State.LOOKING_FOR_DRIVER);
                 if (driverService.getDrivers().isEmpty()) {

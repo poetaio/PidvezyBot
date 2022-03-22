@@ -73,6 +73,11 @@ public class TakenTripService {
         takenTrips = takenTrips.stream()
                 .filter(x -> x.getPassengerChatId() != passengerChatId)
                 .collect(Collectors.toList());
+        if (trip != null) {
+            if (trip.getDriverChatId() != null)
+                CompletableFuture.runAsync(() -> tripRepository.unsetDriverTookTrip(trip.getTripId(), trip.getDriverChatId()));
+            CompletableFuture.runAsync(() -> tripRepository.deactivateTrip(trip.getTripId()));
+        }
         return trip;
     }
 
