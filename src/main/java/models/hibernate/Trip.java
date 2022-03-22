@@ -35,7 +35,7 @@ public class Trip {
     private List<User> listOfViewDriver;
 
     // add constraint when status=TAKEN
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "taken_by_driver_id", referencedColumnName = "user_id")
     private User takenByDriver;
 

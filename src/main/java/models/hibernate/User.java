@@ -34,8 +34,8 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "view_trip_id")
     private Trip viewTrip;
-    @OneToOne(mappedBy = "takenByDriver")
-    private Trip takenTrip;
+    @OneToMany(mappedBy = "takenByDriver", fetch = FetchType.LAZY)
+    private List<Trip> takenTrips;
     @OneToMany(mappedBy = "finishedByDriver")
     private List<Trip> finishedTrips;
 
