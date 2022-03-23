@@ -4,7 +4,6 @@ import bots.factories.ReplyMarkupFactory;
 import bots.factories.SendMessageFactory;
 import bots.tasks.ClearTripsAfterCurfewTask;
 import bots.tasks.DriverViewUpdateTask;
-import bots.tasks.utils.ClearCallback;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
@@ -23,7 +22,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import repositories.LogRepository;
 import services.EscapeMessageService;
 import services.LogService;
 import services.PersistenceService;
@@ -278,7 +276,7 @@ public class ResponseHandler {
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
-                return SendMessageFactory.enterNumberSendMessage(chatId);
+                return SendMessageFactory.driverEnterNumberSendMessage(chatId);
         }
     }
 
@@ -329,9 +327,6 @@ public class ResponseHandler {
 
                 userService.putState(driverViewTrip.getPassengerChatId(), State.FOUND_A_CAR);
 
-//                sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver),  emptyCallback);
-//                sender.executeAsync(SendMessageFactory.askingPassengerToInformAboutTripSendMessage(driverViewTrip.getPassengerChatId()),  emptyCallback);
-
                 sender.executeAsync(SendMessageFactory.noticingPassengerDriverTookTripSendMessage(driverViewTrip.getPassengerChatId(), driver, numberService.getNumber(chatId)), new ResultCallback() {
                     @SneakyThrows
                     @Override
@@ -344,16 +339,19 @@ public class ResponseHandler {
                 driverService.unsubscribeDriverFromUpdate(chatId);
                 logDaoBuilder.putLogInfo("tripId", driverViewTrip.getTripId());
 
-                return SendMessageFactory.driverTookTripSendMessage(chatId,
-                        userService.getUserInfo(driverViewTrip.getPassengerChatId()),
-                        driverViewTrip.getAddress(),
-                        driverViewTrip.getDetails(),
-                        numberService.getNumber(driverViewTrip.getPassengerChatId()));
-//                        passengerService.getNumber(driverViewTrip.getPassengerChatId()));
-
-            // TODO: NULLPOINTER CHECK
-                // TODO: NULLPOINTER CHECK
-//                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
+                sender.executeAsync(SendMessageFactory.driverTookTripSendMessage(chatId,
+                                userService.getUserInfo(driverViewTrip.getPassengerChatId()),
+                                driverViewTrip.getAddress(),
+                                driverViewTrip.getDetails(),
+                                numberService.getNumber(driverViewTrip.getPassengerChatId())),
+                        new ResultCallback() {
+                            @SneakyThrows
+                            @Override
+                            public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
+                                sender.executeAsync(SendMessageFactory.driverTookTripInformUsSendMessage(chatId), emptyCallback);
+                            }
+                        });
+                return null;
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 driverService.removeDriver(chatId);
@@ -402,7 +400,7 @@ public class ResponseHandler {
                 userService.putState(chatId, State.DRIVER_ACTIVE);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         generateDriverOfferTripMessage(chatId, nextTrip));
-            case Constants.DRIVER_PIDVEZY:
+            case Constants.FINISH_TRIP:
 //                if (currentTrip == null) {
 //                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), emptyCallback);
 //                    return replyToChooseRoleDriver(chatId);
@@ -418,8 +416,10 @@ public class ResponseHandler {
 //                    });
 //                    return null;
 //                }
-                userService.putState(chatId, State.DRIVER_IN_TRIP);
-                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
+//                userService.putState(chatId, State.DRIVER_IN_TRIP);
+//                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
+                userService.putState(chatId, State.AM_GOOD_BOY);
+                return SendMessageFactory.goodBoySendMessage(chatId);
             default:
 //                TakenTrip driverPassenger = tripService.getTakenTripByDriver(chatId);
 //                if (driverPassenger == null) {
@@ -569,7 +569,7 @@ public class ResponseHandler {
                 userService.putState(chatId, State.EDITING_DETAILS);
                 return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                return SendMessageFactory.enterNumberSendMessage(chatId);
+                return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
         }
     }
 
@@ -706,11 +706,11 @@ public class ResponseHandler {
         switch (message) {
             case Constants.FOUND_TRIP:
                 tripService.removeTripOnPassengerFoundACar(chatId);
-                userService.putState(chatId, State.THANKS);
+                userService.putState(chatId, State.CHOOSING_ROLE);
                 TakenTrip trip = tripService.getTakenTripByPassenger(chatId);
                 if (trip != null)
                     logDaoBuilder.putLogInfo("tripId", trip.getTripId());
-                return SendMessageFactory.wishAGoodTripSendMessage(chatId);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
             case Constants.FIND_AGAIN:
                 int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
                 boolean notCurfew = currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR;
@@ -769,7 +769,7 @@ public class ResponseHandler {
     public SendMessage replyToChooseRoleDriver(long chatId) throws TelegramApiException {
         if (userService.getUserInfo(chatId).getUserName() == null && numberService.getNumber(chatId) == null) {
             userService.putState(chatId, State.DRIVER_ENTERING_NUMBER);
-            return SendMessageFactory.enterNumberSendMessage(chatId);
+            return SendMessageFactory.driverEnterNumberSendMessage(chatId);
         }
 
         // adding driver to both drivers list and update queue
@@ -816,19 +816,18 @@ public class ResponseHandler {
         logDaoBuilder.putLogInfo("newDetails", details);
         tripService.setTripDetails(chatId, details);
         String number = numberService.getNumber(chatId);
-        if (number != null) {
-            int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-            if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
-                userService.putState(chatId, State.APPROVING_TRIP);
-            } else {
-                userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
-            }
-            return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                    tripService.getTripDetails(chatId), number, AbilityUtils.getUser(upd));
-        } else {
+        if (AbilityUtils.getUser(upd).getUserName() == null && number == null) {
             userService.putState(chatId, State.ENTERING_NUMBER);
-            return SendMessageFactory.enterNumberSendMessage(chatId);
+            return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
         }
+        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
+        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
+            userService.putState(chatId, State.APPROVING_TRIP);
+        } else {
+            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+        }
+        return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                tripService.getTripDetails(chatId), number, AbilityUtils.getUser(upd));
     }
 
     private SendMessage replyToDriverEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {

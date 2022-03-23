@@ -31,7 +31,7 @@ public interface Constants {
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів\\. Очікуйте на оновлення\\.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*\\.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
 
-    String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s";
+    String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s\\.\nДомовтеся з волонтером про зустріч\\.";
 
     String INFORM_US_TRIP_STATUS = "Повідомте нас про статус заявки";
 
@@ -39,7 +39,7 @@ public interface Constants {
     String NO_TRIPS_MESSAGE = "Наразі запитів немає\\. Ми вам повідомимо про їхню наявність\\.";
 
     String DRIVER_PIDVEZY = "Підвезу";
-    String DRIVER_DISMISS_TRIP = "Відмовитись";
+    String DRIVER_DISMISS_TRIP = "Скасувати поїздку";
 
     String GOOD_BOY_MESSAGE = "Ви молодець\\!";
 
@@ -49,7 +49,8 @@ public interface Constants {
 
     String ENTER_ADDRESS = "Введіть кінцеву адресу прибуття:\nЗ вокзалу на \\.\\.\\.";
     String ENTER_DETAILS = "Вкажіть інформацію про пасажирів\\. Наприклад, \"троє людей і два коти\" або \"одна людина з великою валізою\"";
-    String ENTER_NUMBER_MESSAGE = "Вкажіть ваш контактний номер телефону";
+    String PASSENGER_ENTER_NUMBER_MESSAGE = "Автоволонтерам потрібні ваші контакти\\. Будь ласка, вкажіть ваш номер телефону";
+    String DRIVER_ENTER_NUMBER_MESSAGE = "Пасажирам потрібні ваші контакти\\. Будь ласка, вкажіть ваш номер телефону";
 
     String SHARE_NUMBER = "Поділитися номером телефону";
 
@@ -83,13 +84,15 @@ public interface Constants {
     String DRIVER_TOOK_YOUR_TRIP_MESSAGE = "%s відгукнувся на вашу заявку\n@%s";
     String LET_US_KNOW_ABOUT_TRIP_STATUS = "Повідомте нас про статус заявки";
 
-    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
+//    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
+    String FOUND_TRIP = "Завершити";
     String FIND_AGAIN = "Шукати знову";
 
     String THANKS = "Дякую";
 
-    String APPROVING_FINISH_TRIP = "Повідомте нас про завершення поїздки";
+    String LET_US_KNOW_WHEN_TRIP_IS_OVER = "Повідомте нас про завершення поїздки";
     String FINISH_TRIP = "Поїздка завершена";
+    String AM_GOOD_BOY = "Я молодець!";
 
     String EDIT_TRIP = "Змінити поїздку";
     //    String TRIP_CANCELED_SUCCESS_MESSAGE = "Поїздку успішно скасовано";

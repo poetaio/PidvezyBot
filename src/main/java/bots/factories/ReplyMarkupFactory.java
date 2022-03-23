@@ -4,6 +4,7 @@ import bots.utils.Constants;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,10 +43,14 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup driverTookTrip() {
-        return makeOneColumnMenu(Constants.DRIVER_PIDVEZY, Constants.DRIVER_DISMISS_TRIP);
+        return makeOneColumnMenu(Constants.FINISH_TRIP, Constants.DRIVER_DISMISS_TRIP);
     }
 
+    public static ReplyKeyboardMarkup goodBoyReplyKeyboard() throws TelegramApiException {
+        return makeOneColumnMenu(Constants.AM_GOOD_BOY);
+    }
     // passenger menus
+
     public static ReplyKeyboardMarkup enterAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
     }

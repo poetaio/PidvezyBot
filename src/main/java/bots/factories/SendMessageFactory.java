@@ -3,10 +3,8 @@ package bots.factories;
 import services.EscapeMessageService;
 import bots.utils.Constants;
 import org.jetbrains.annotations.NotNull;
-import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -52,7 +50,7 @@ public class SendMessageFactory {
         } else {
             username = "@" + username;
         }
-//        String message = String.format(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), username, number);
+
         String message = EscapeMessageService.escapeMessage(Constants.PASSENGER_TRIP_WAS_TAKEN, driver.getFirstName(), username, number);
         return makeSendMessage(chatId, message);
     }
@@ -62,11 +60,11 @@ public class SendMessageFactory {
     }
 
     public static SendMessage askingDriverToInformAboutEndOfTripSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.APPROVING_FINISH_TRIP, ReplyMarkupFactory.driverConfirmingFinishingTripReplyKeyboard());
+        return makeSendMessage(chatId, Constants.LET_US_KNOW_WHEN_TRIP_IS_OVER, ReplyMarkupFactory.driverConfirmingFinishingTripReplyKeyboard());
     }
 
     public static SendMessage goodBoySendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.GOOD_BOY, ReplyMarkupFactory.passengerThanksReplyKeyboard());
+        return makeSendMessage(chatId, Constants.THANKS, ReplyMarkupFactory.goodBoyReplyKeyboard());
     }
 
     public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
@@ -102,6 +100,10 @@ public class SendMessageFactory {
         String userWaitsForYourCallMessage = EscapeMessageService.escapeMessage(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
+    }
+
+    public static SendMessage driverTookTripInformUsSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.LET_US_KNOW_WHEN_TRIP_IS_OVER, ReplyMarkupFactory.driverTookTrip());
     }
 
     public static SendMessage driverInactiveSendMessage(long chatId) throws TelegramApiException {
@@ -142,8 +144,12 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.ENTER_DETAILS, ReplyMarkupFactory.enterDetailsReplyKeyboard());
     }
 
-    public static SendMessage enterNumberSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.ENTER_NUMBER_MESSAGE, ReplyMarkupFactory.enterNumberReplyKeyboard());
+    public static SendMessage passengerEnterNumberSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.PASSENGER_ENTER_NUMBER_MESSAGE, ReplyMarkupFactory.enterNumberReplyKeyboard());
+    }
+
+    public static SendMessage driverEnterNumberSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.DRIVER_ENTER_NUMBER_MESSAGE, ReplyMarkupFactory.enterNumberReplyKeyboard());
     }
 
     public static SendMessage editAddressSendMessage(long chatId, String oldAddress) throws TelegramApiException {
