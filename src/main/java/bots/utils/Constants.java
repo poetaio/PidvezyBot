@@ -54,8 +54,8 @@ public interface Constants {
 
     String SHARE_NUMBER = "Поділитися номером телефону";
 
-    String EDIT_ADDRESS = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на *%s*";
-    String EDIT_DETAILS = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n*%s*";
+    String EDIT_ADDRESS_MESSAGE = "Введіть нову адресу прибуття\nАбо залиште минулу адресу без змін:\nЗ вокзалу на *%s*";
+    String EDIT_DETAILS_MESSAGE = "Введіть нову інформацію про пасажирів\nАбо залиште минулі дані без змін:\n*%s*";
 
     String DO_NOT_CHANGE = "Лишити без змін";
 
@@ -67,12 +67,14 @@ public interface Constants {
     String CHECKING_OUT_ON_STATION_MESSAGE = "Волонтери завчасно отримують інформацію про прибуття потягу, щоб чекати вас на місці\\.";
 
     String CHANGE_TRIP_INFO = "Змінити запит";
+    String EDIT_ADDRESS = "Змінити адресу";
+    String EDIT_DETAILS = "Змінити інформацію про пасажирів";
     String APPROVE_TRIP = "Підтвердити";
     String TRY_AGAIN = "Спробувати ще раз";
     String CURFEW_IS_OVER_MESSAGE = "Комендантська година завершена\\. Спробуйте пізніше\\.";
 
     String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години\\. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
-    String APPROVE_MESSAGE = "Підтвердіть запит:\n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n\n%s\n%s";
+    String APPROVE_MESSAGE = "Перевірте запит і натисніть \"Відправити запит\", щоб волонтери його отримали:\n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n\n%s\n%s";
 
     String REQUEST_SENT_EXTENDED_MESSAGE = "Запит надіслано\\.\nЧекайте на сповіщення\\.\nПовідомте нам, коли знайдете транспорт\\.";
     String REQUEST_SENT_MESSAGE = "Запит надіслано\\.";

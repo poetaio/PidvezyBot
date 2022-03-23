@@ -59,20 +59,8 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.INFORM_US_TRIP_STATUS, ReplyMarkupFactory.passengerConfirmingTakingHimReplyKeyboard());
     }
 
-    public static SendMessage askingDriverToInformAboutEndOfTripSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.LET_US_KNOW_WHEN_TRIP_IS_OVER, ReplyMarkupFactory.driverConfirmingFinishingTripReplyKeyboard());
-    }
-
     public static SendMessage goodBoySendMessage(long chatId) throws TelegramApiException {
         return makeSendMessage(chatId, Constants.THANKS, ReplyMarkupFactory.goodBoyReplyKeyboard());
-    }
-
-    public static SendMessage wishAGoodTripSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.passengerThanksReplyKeyboard());
-    }
-
-    public static SendMessage returnToSearchingSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.START_SEARCHING_AGAIN);
     }
 
     public static SendMessage tripAlreadyTakenSendMessage(long chatId) throws TelegramApiException {
@@ -95,8 +83,6 @@ public class SendMessageFactory {
         } else {
             username = "@" + username;
         }
-//        String userWaitsForYourCallMessage = String.format(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
-//                number, address, details);
         String userWaitsForYourCallMessage = EscapeMessageService.escapeMessage(Constants.IS_WAITING_FOR_A_CALL_MESSAGE, user.getFirstName(), username,
                 number, address, details);
         return makeSendMessage(chatId, userWaitsForYourCallMessage, ReplyMarkupFactory.driverTookTrip());
@@ -115,7 +101,6 @@ public class SendMessageFactory {
     }
 
     public static SendMessage approvingTripSendMessage(long chatId, String address, String details, String number, User user) throws TelegramApiException {
-//        User user = AbilityUtils.getUser(upd);
         int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
         if (number == null) {
             number = "";
@@ -152,14 +137,16 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.DRIVER_ENTER_NUMBER_MESSAGE, ReplyMarkupFactory.enterNumberReplyKeyboard());
     }
 
+    public static SendMessage requestPendingMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.REQUEST_PENDING_MESSAGE);
+    }
+
     public static SendMessage editAddressSendMessage(long chatId, String oldAddress) throws TelegramApiException {
-//        return makeSendMessage(chatId, String.format(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
-        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_ADDRESS, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_ADDRESS_MESSAGE, oldAddress), ReplyMarkupFactory.editAddressReplyKeyboard());
     }
 
     public static SendMessage editDetailsSendMessage(long chatId, String oldDetails) throws TelegramApiException {
-//        return makeSendMessage(chatId, String.format(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
-        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_DETAILS, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
+        return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.EDIT_DETAILS_MESSAGE, oldDetails), ReplyMarkupFactory.editDetailsReplyKeyboard());
     }
 
     public static SendMessage checkingOutOnStationSendMessage(long chatId) throws TelegramApiException {
@@ -185,21 +172,12 @@ public class SendMessageFactory {
     public static SendMessage tripSearchStoppedSendMessage(long chatId, User user, String address, String details, String number) throws TelegramApiException {
         if (number != null && number.indexOf('+') != 0) {
             number = '+' + number;
+        } else if (number == null) {
+            number = "";
         }
-//        return makeSendMessage(chatId, String.format(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
-//                user.getLastName() == null ? "" : " " + user.getLastName(), address,
-//                details, number), ReplyMarkupFactory.searchStoppedReplyMenu());
         return makeSendMessage(chatId, EscapeMessageService.escapeMessage(Constants.SEARCH_STOPPED_MESSAGE, user.getFirstName(),
                 user.getLastName() == null ? "" : " " + user.getLastName(), address,
                 details, number), ReplyMarkupFactory.searchStoppedReplyMenu());
-    }
-
-    public static SendMessage addressApprovedSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.REQUEST_SENT_EXTENDED_MESSAGE, ReplyMarkupFactory.lookingForDriverReplyMenu());
-    }
-
-    public static SendMessage haveANiceTripSendMessage(long chatId) throws TelegramApiException {
-        return makeSendMessage(chatId, Constants.HAVE_A_NICE_TRIP, ReplyMarkupFactory.haveANiceTripReplyMenu());
     }
 
     private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {

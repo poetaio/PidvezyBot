@@ -7,7 +7,6 @@ public enum State {
     DRIVER_ENTERING_NUMBER,
     NO_TRIPS_AVAILABLE,
     DRIVER_TOOK_TRIP,
-    DRIVER_IN_TRIP,
     AM_GOOD_BOY,
 
     DRIVER_INACTIVE,
@@ -24,7 +23,5 @@ public enum State {
 
     LOOKING_FOR_DRIVER,
     TRIP_SEARCH_STOPPED,
-    FOUND_A_CAR,
-    HAVE_A_NICE_TRIP,
-    THANKS
+    FOUND_A_CAR
 }

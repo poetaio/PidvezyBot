@@ -83,11 +83,11 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup approveAddressReplyKeyboard() {
-        return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.CHANGE_TRIP_INFO, Constants.BACK);
+        return makeOneColumnMenu(Constants.APPROVE_TRIP, Constants.EDIT_ADDRESS, Constants.EDIT_DETAILS, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup tryAgainDuringCurfewReplyKeyboard() {
-        return makeOneColumnMenu(Constants.TRY_AGAIN, Constants.CHANGE_TRIP_INFO, Constants.BACK);
+        return makeOneColumnMenu(Constants.TRY_AGAIN, Constants.EDIT_ADDRESS, Constants.EDIT_DETAILS, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {

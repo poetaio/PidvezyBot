@@ -1,6 +1,5 @@
 package bots;
 
-import bots.factories.ReplyMarkupFactory;
 import bots.factories.SendMessageFactory;
 import bots.tasks.ClearTripsAfterCurfewTask;
 import bots.tasks.DriverViewUpdateTask;
@@ -63,17 +62,12 @@ public class ResponseHandler {
     private final EmptyCallback emptyCallback;
     private LogDao.LogDaoBuilder logDaoBuilder;
 
-    public ResponseHandler(MessageSender sender) throws JsonProcessingException {
+    public ResponseHandler(MessageSender sender) {
         this.sender = sender;
 
         setupServices();
         setupTasks();
         emptyCallback = new EmptyCallback();
-
-//        UsersInitializer.parseDrivers(driverService, userService);
-//        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
-//        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
-//        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
     }
 
     private void setupServices() {
@@ -84,13 +78,6 @@ public class ResponseHandler {
             @SneakyThrows
             public void onDriverQueueEmptyEvent() {
                 for (Long passengerChatId : tripService.getPassengersInQueue()) {
-//                    sender.executeAsync(SendMessageFactory.requestSentSendMessage(passengerChatId), new ResultCallback() {
-//                        @SneakyThrows
-//                        @Override
-//                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-//                            sender.executeAsync(SendMessageFactory.searchingForDriversSendMessage(passengerChatId), emptyCallback);
-//                        }
-//                    });
                     sender.executeAsync(SendMessageFactory.searchingForDriversSendMessage(passengerChatId), emptyCallback);
                 }
             }
@@ -123,7 +110,7 @@ public class ResponseHandler {
             @Override
             protected void sendTripOffer(long chatId, QueueTrip passengerDao) throws TelegramApiException {
                 userService.putState(chatId, State.DRIVER_ACTIVE);
-                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, generateDriverOfferTripMessage(chatId, passengerDao)), emptyCallback);
+                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, generateDriverOfferTripMessage(passengerDao)), emptyCallback);
             }
 
             @Override
@@ -169,11 +156,6 @@ public class ResponseHandler {
             return;
         }
 
-        logDaoBuilder = LogDao.builder();
-        logDaoBuilder.stateFrom(currentState);
-        logDaoBuilder.userId(chatId);
-        logDaoBuilder.message(message);
-
         switch (currentState) {
             case CHOOSING_ROLE:
                 userService.putUserInfo(chatId, AbilityUtils.getUser(upd));
@@ -192,9 +174,6 @@ public class ResponseHandler {
                 break;
             case NO_TRIPS_AVAILABLE:
                 messageToSend = onNoTripsAvailable(chatId, message);
-                break;
-            case DRIVER_IN_TRIP:
-                messageToSend = onDriverInTrip(chatId, message);
                 break;
             case AM_GOOD_BOY:
                 messageToSend = onAmGoodBoy(chatId);
@@ -231,18 +210,17 @@ public class ResponseHandler {
             case FOUND_A_CAR:
                 messageToSend = onFoundACar(chatId, message, upd);
                 break;
-            case THANKS:
-                messageToSend = onThanks(chatId);
-                break;
             default:
                 messageToSend = SendMessage.builder().chatId(String.valueOf(chatId)).text(Constants.UNKNOWN_STATE_ERROR_MESSAGE).build();
         }
 
-//        sender.executeAsync(messageToSend, emptyCallback);
-        // to see errors in logs
         if (messageToSend != null)
             sender.execute(messageToSend);
 
+        logDaoBuilder = LogDao.builder();
+        logDaoBuilder.stateFrom(currentState);
+        logDaoBuilder.userId(chatId);
+        logDaoBuilder.message(message);
         logDaoBuilder.stateTo(userService.getState(chatId));
         CompletableFuture.runAsync(() -> logService.createLog(logDaoBuilder.build()));
     }
@@ -283,7 +261,7 @@ public class ResponseHandler {
     /**
      * Driver role chosen handler, subscribe to getting trip applications
      *
-     * @param chatId  user chat Id
+     * @param chatId  user chat id
      * @param message message sent by user
      * @return Message to send to user
      * @throws TelegramApiException Classic telegram exception
@@ -296,7 +274,7 @@ public class ResponseHandler {
                 driverService.resetDriverTime(chatId);
                 QueueTrip nextPassenger = tripService.findNextTripForDriver(chatId);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(chatId, nextPassenger));
+                        generateDriverOfferTripMessage(nextPassenger));
             case Constants.TAKE_TRIP:
                 QueueTrip driverViewTrip = tripService.getTripFromQueueByDriver(chatId);
                 if (driverViewTrip == null) {
@@ -315,7 +293,7 @@ public class ResponseHandler {
                                         Constants.NO_TRIPS_MESSAGE), emptyCallback);
                             } else {
                                 sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId,
-                                        generateDriverOfferTripMessage(chatId, nextPassenger1)), emptyCallback);
+                                        generateDriverOfferTripMessage(nextPassenger1)), emptyCallback);
                             }
                         }
                     });
@@ -358,7 +336,7 @@ public class ResponseHandler {
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
                 return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(chatId, tripService.getTripFromQueueByDriver(chatId)));
+                        generateDriverOfferTripMessage(tripService.getTripFromQueueByDriver(chatId)));
         }
     }
 
@@ -385,7 +363,6 @@ public class ResponseHandler {
         switch (message) {
             case Constants.BACK:
             case Constants.DRIVER_DISMISS_TRIP:
-//                sendNotificationToDrivers(chatId, false);
                 TakenTrip takenTrip = tripService.getTakenTripByDriver(chatId);
                 if (takenTrip != null)
                     logDaoBuilder.putLogInfo("takenTripId", takenTrip.getTripId());
@@ -399,101 +376,12 @@ public class ResponseHandler {
                 }
                 userService.putState(chatId, State.DRIVER_ACTIVE);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(chatId, nextTrip));
+                        generateDriverOfferTripMessage(nextTrip));
             case Constants.FINISH_TRIP:
-//                if (currentTrip == null) {
-//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), emptyCallback);
-//                    return replyToChooseRoleDriver(chatId);
-//                TakenTrip currentTrip = tripService.getTakenTripByDriver(chatId);
-//                TakenTrip finishedTrip = tripService.getFinishedTripByDriver(chatId);
-//                if (currentTrip == null) {
-//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
-//                        @SneakyThrows
-//                        @Override
-//                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-//                            sender.executeAsync(replyToChooseRoleDriver(chatId), emptyCallback);
-//                        }
-//                    });
-//                    return null;
-//                }
-//                userService.putState(chatId, State.DRIVER_IN_TRIP);
-//                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
                 userService.putState(chatId, State.AM_GOOD_BOY);
                 return SendMessageFactory.goodBoySendMessage(chatId);
             default:
-//                TakenTrip driverPassenger = tripService.getTakenTripByDriver(chatId);
-//                if (driverPassenger == null) {
-//                    driverService.subscribeDriverOnUpdate(chatId);
-//                    QueueTrip nextTrip1 = tripService.findNextTripForDriver(chatId);
-//                    if (nextTrip1 == null) {
-//                        userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-//                        return SendMessageFactory.driverActiveSendMessage(chatId,
-//                                Constants.NO_TRIPS_MESSAGE);
-//                    }
-//                    userService.putState(chatId, State.DRIVER_ACTIVE);
-//                    return SendMessageFactory.driverActiveSendMessage(chatId,
-//                            generateDriverOfferTripMessage(chatId, nextTrip1));
-//                }
-                // TODO: NULLPOINTER CHECK userInfo.get and passengerQueueService.getByDriver
-//                return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
-//                                tripService.getTakenTripByDriver(chatId).getPassengerChatId()),
-//                        driverPassenger.getAddress(),
-//                        driverPassenger.getDetails(),
-//                        numberService.getNumber(driverPassenger.getPassengerChatId()));
                 return SendMessageFactory.approveOrDismissTrip(chatId);
-        }
-    }
-
-    private SendMessage onDriverInTrip(long chatId, String message) throws TelegramApiException {
-        switch (message) {
-            case Constants.FINISH_TRIP:
-//                TakenTrip currentTrip2 = tripService.getTakenTripByDriver(chatId);
-//                if (currentTrip2 == null) {
-//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
-//                        @SneakyThrows
-//                        @Override
-//                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-//                            sender.executeAsync(replyToChooseRoleDriver(chatId), emptyCallback);
-//                        }
-//                    });
-//                    return null;
-//                }
-                userService.putState(chatId, State.AM_GOOD_BOY);
-                return SendMessageFactory.goodBoySendMessage(chatId);
-//            case Constants.BACK:
-//                QueueTrip driverPassenger = tripService.getQueueTripByDriver(chatId);
-//                if (driverPassenger == null) {
-//                    driverService.subscribeDriverOnUpdate(chatId);
-//                    QueueTrip nextTrip1 = tripService.findNextQueueTrip(chatId);
-//                    if (nextTrip1 == null) {
-//                        userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-//                        return SendMessageFactory.driverActiveSendMessage(chatId,
-//                                Constants.NO_TRIPS_MESSAGE);
-//                    }
-//                    userService.putState(chatId, State.DRIVER_ACTIVE);
-//                    return SendMessageFactory.driverActiveSendMessage(chatId,
-//                            generateDriverOfferTripMessage(chatId, nextTrip1));
-//                }
-//                // TODO: NULLPOINTER CHECK userInfo.get and passengerQueueService.getByDriver
-//                return SendMessageFactory.driverTookTripSendMessage(chatId, userService.getUserInfo(
-//                                tripService.getQueueTripByDriver(chatId).getPassengerChatId()),
-//                        driverPassenger.getAddress(),
-//                        driverPassenger.getDetails(),
-//                        passengerService.getNumber(driverPassenger.getPassengerChatId()));
-            default:
-//                TakenTrip currentTrip1 = tripService.getTakenTripByDriver(chatId);
-//                TakenTrip finishedTrip = tripService.getFinishedTripByDriver(chatId);
-//                if (currentTrip1 == null) {
-//                    sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(chatId), new ResultCallback() {
-//                        @SneakyThrows
-//                        @Override
-//                        public void onResult(BotApiMethod<Message> botApiMethod, Message message) {
-//                            sender.executeAsync(replyToChooseRoleDriver(chatId), emptyCallback);
-//                        }
-//                    });
-//                    return null;
-//                }
-                return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
         }
     }
 
@@ -579,7 +467,6 @@ public class ResponseHandler {
                 // todo: refactor
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
-//                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
             case Constants.DO_NOT_CHANGE:
                 String currentDetails = tripService.getTripDetails(chatId);
                 if (currentDetails == null) {
@@ -626,9 +513,15 @@ public class ResponseHandler {
         switch (message) {
             case Constants.APPROVE_TRIP:
                 return replyToApproveTrip(chatId, upd);
-            case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.EDITING_ADDRESS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+//            case Constants.CHANGE_TRIP_INFO:
+//                userService.putState(chatId, State.EDITING_ADDRESS);
+//                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            case Constants.EDIT_ADDRESS:
+                // todo: check onTryAgainDuringCurfew
+                break;
+            case Constants.EDIT_DETAILS:
+                // todo: check onTryAgainDuringCurfew
+                break;
             case Constants.BACK:
                 userService.putState(chatId, State.EDITING_DETAILS);
                 return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
@@ -643,9 +536,15 @@ public class ResponseHandler {
         switch (message) {
             case Constants.TRY_AGAIN:
                 return replyToApproveTrip(chatId, upd);
-            case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.EDITING_ADDRESS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+//            case Constants.CHANGE_TRIP_INFO:
+//                userService.putState(chatId, State.EDITING_ADDRESS);
+//                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            case Constants.EDIT_ADDRESS:
+                //todo: onApprovingTrip
+                break;
+            case Constants.EDIT_DETAILS:
+                // todo: onApprovingTrip
+                break;
             case Constants.BACK:
                 userService.putState(chatId, State.EDITING_DETAILS);
                 return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
@@ -670,12 +569,12 @@ public class ResponseHandler {
      */
     private SendMessage onLookingForDriver(long chatId, String message) throws TelegramApiException {
         switch (message) {
-            case Constants.EDIT_TRIP:
-                return replyToEditTrip(chatId);
+//            case Constants.EDIT_TRIP:
+//                return replyToEditTrip(chatId);
             case Constants.STOP_LOOKING_FOR_A_CAR:
                 return replyToStopLookingForACar(chatId);
             default:
-                return replyWithText(chatId, Constants.REQUEST_PENDING_MESSAGE);
+                return SendMessageFactory.requestPendingMessage(chatId);
         }
     }
 
@@ -718,7 +617,8 @@ public class ResponseHandler {
                 // checking if driver still views this trip (to send him message that it's already unavailable)
                 TakenTrip currentTrip = tripService.getTakenTripByPassenger(chatId);
                 tripService.dismissPassengerTrip(chatId);
-                // firstly removing trip from queue then sending a driver a new trip
+                // firstly removing trip from queue then sending a driver a new trip,
+                // so that driver does not see the same trip, when in should've been deleted
                 if (notCurfew) {
                     userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
                     tripService.removeTripFromQueueByPassengerId(chatId);
@@ -727,7 +627,7 @@ public class ResponseHandler {
                 if (driverId != null) {
                     State driverState = userService.getState(driverId);
                     tripService.dismissDriverTrip(driverId);
-                    if (driverState == State.DRIVER_IN_TRIP || driverState == State.DRIVER_TOOK_TRIP) {
+                    if (driverState == State.DRIVER_TOOK_TRIP) {
                         sender.executeAsync(SendMessageFactory.tripAlreadyTakenSendMessage(driverId), new ResultCallback() {
                             @SneakyThrows
                             @Override
@@ -758,11 +658,6 @@ public class ResponseHandler {
             default:
                 return SendMessageFactory.askingPassengerToInformAboutTripSendMessage(chatId);
         }
-    }
-
-    private SendMessage onThanks(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.CHOOSING_ROLE);
-        return SendMessageFactory.chooseRoleSendMessage(chatId);
     }
 
     // replyTo... - handlers to almost every message in every state
@@ -912,19 +807,7 @@ public class ResponseHandler {
         return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
     }
 
-    /**
-     * Removes trip from passengers' trips queue
-     *
-     * @param chatId chat id of the passenger
-     * @return Message & menu "Have a nice trip"
-     */
-    private SendMessage replyToFoundACar(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.FOUND_A_CAR);
-        tripService.removeTripOnPassengerFoundACar(chatId);
-        return SendMessageFactory.haveANiceTripSendMessage(chatId);
-    }
-
-    private String generateDriverOfferTripMessage(long chatId, QueueTrip queueTrip) {
+    private String generateDriverOfferTripMessage(QueueTrip queueTrip) {
         if (queueTrip == null) {
             return Constants.NO_TRIPS_MESSAGE;
         }
@@ -932,47 +815,7 @@ public class ResponseHandler {
         User user = userService.getUserInfo(queueTrip.getPassengerChatId());
         return EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
-                // todo: exception
                 queueTrip.getAddress(), queueTrip.getDetails());
-    }
-
-    private SendMessage replyWithText(long chatId, String messageText) throws TelegramApiException {
-        return SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text(messageText)
-                .build();
-    }
-
-    private String currentScheduleMessage;
-    private String currentScheduleTime;
-//    private final Map<Long, Integer> currentScheduleMessageId = new HashMap<>();
-
-//    public void sendNotificationToDrivers(long chatId, String currentScheduleMessage, String currentScheduleTime) throws TelegramApiException {
-//        this.currentScheduleMessage = currentScheduleMessage;
-//        this.currentScheduleTime = currentScheduleTime;
-//        sendNotificationToDrivers(chatId, true);
-//    }
-//
-//    private void sendNotificationToDrivers(long chatId) throws TelegramApiException {
-//        sendNotificationToDrivers(chatId, false);
-//    }
-
-    private void sendNotificationToDrivers(long chatId, boolean mailing) throws TelegramApiException {
-        if (currentScheduleMessage == null)
-            return;
-
-        SendMessage.SendMessageBuilder builder = SendMessage.builder()
-                .text(mailing ? currentScheduleMessage : currentScheduleTime)
-                .chatId(String.valueOf(chatId));
-
-        if (userService.getState(chatId) == State.DRIVER_ACTIVE) {
-            if (tripService.getTripFromQueueByDriver(chatId) == null)
-                builder.replyMarkup(ReplyMarkupFactory.noTripsReplyMarkup());
-            else
-                builder.replyMarkup(ReplyMarkupFactory.driverActiveReplyMarkup());
-        } else return;
-
-        sender.executeAsync(builder.build(), emptyCallback);
     }
 
     public AdminService createAdminService() {
