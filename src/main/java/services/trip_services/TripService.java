@@ -31,6 +31,10 @@ public class TripService {
         tripRepository = new TripRepository();
     }
 
+    public UUID getTripId(long passengerChatId) {
+        return tripBuilderService.getTripId(passengerChatId);
+    }
+
     // build trip methods
     public void setTripAddress(long passengerChatId, String address) {
         tripBuilderService.setTripAddress(passengerChatId, address);

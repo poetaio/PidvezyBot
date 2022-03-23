@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
 import models.QueueTrip;
 import models.TakenTrip;
+import models.dao.LogDao;
 import models.utils.State;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
@@ -22,7 +23,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import repositories.LogRepository;
 import services.EscapeMessageService;
+import services.LogService;
 import services.PersistenceService;
 import services.UserService;
 import services.admin_services.AdminService;
@@ -34,6 +37,7 @@ import services.trip_services.TripService;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +47,7 @@ public class ResponseHandler {
 
     // TODO: REMOVE!!!
     private static ResponseHandler INSTANCE;
+    private LogService logService;
 
     public static ResponseHandler getInstance(MessageSender sender) throws JsonProcessingException {
         if (INSTANCE == null)
@@ -52,19 +57,31 @@ public class ResponseHandler {
 
     private final MessageSender sender;
 
-    private final UserService userService;
-    private final NumberService numberService;
-    private final DriverService driverService;
-    private final TripService tripService;
+    private UserService userService;
+    private NumberService numberService;
+    private DriverService driverService;
+    private TripService tripService;
 
     private final EmptyCallback emptyCallback;
+    private LogDao.LogDaoBuilder logDaoBuilder;
 
     public ResponseHandler(MessageSender sender) throws JsonProcessingException {
         this.sender = sender;
 
+        setupServices();
+        setupTasks();
+        emptyCallback = new EmptyCallback();
+
+//        UsersInitializer.parseDrivers(driverService, userService);
+//        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
+//        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
+//        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
+    }
+
+    private void setupServices() {
+        logService = new LogService();
+
         driverService = PersistenceService.initServices(new DriverUpdateEvents() {
-//        numberService = new NumberService();
-//        driverService = new DriverService() {
             @Override
             @SneakyThrows
             public void onDriverQueueEmptyEvent() {
@@ -91,18 +108,7 @@ public class ResponseHandler {
 
         numberService = PersistenceService.getNumberService();
         tripService = PersistenceService.getTripService();
-
         userService = PersistenceService.getUserService();
-//        userService = new UserService(driverService, tripService);
-
-//        UsersInitializer.parseDrivers(driverService, userService);
-//        UsersInitializer.parseInactiveTrips(tripService, tripService.getTripBuilderService(), userService);
-//        UsersInitializer.parseQueueTrip(tripService, tripService.getTripBuilderService(), userService);
-//        UsersInitializer.parseTakenTrips(tripService, tripService.getTripBuilderService(), userService);
-
-        emptyCallback = new EmptyCallback();
-
-        setupTasks();
     }
 
     /**
@@ -164,6 +170,11 @@ public class ResponseHandler {
             replyToStart(chatId);
             return;
         }
+
+        logDaoBuilder = LogDao.builder();
+        logDaoBuilder.stateFrom(currentState);
+        logDaoBuilder.userId(chatId);
+        logDaoBuilder.message(message);
 
         switch (currentState) {
             case CHOOSING_ROLE:
@@ -233,6 +244,9 @@ public class ResponseHandler {
         // to see errors in logs
         if (messageToSend != null)
             sender.execute(messageToSend);
+
+        logDaoBuilder.stateTo(userService.getState(chatId));
+        CompletableFuture.runAsync(() -> logService.createLog(logDaoBuilder.build()));
     }
 
     /**
@@ -328,6 +342,7 @@ public class ResponseHandler {
 
                 tripService.takeDriverTrip(chatId);
                 driverService.unsubscribeDriverFromUpdate(chatId);
+                logDaoBuilder.putLogInfo("tripId", driverViewTrip.getTripId());
 
                 return SendMessageFactory.driverTookTripSendMessage(chatId,
                         userService.getUserInfo(driverViewTrip.getPassengerChatId()),
@@ -373,6 +388,9 @@ public class ResponseHandler {
             case Constants.BACK:
             case Constants.DRIVER_DISMISS_TRIP:
 //                sendNotificationToDrivers(chatId, false);
+                TakenTrip takenTrip = tripService.getTakenTripByDriver(chatId);
+                if (takenTrip != null)
+                    logDaoBuilder.putLogInfo("takenTripId", takenTrip.getTripId());
                 tripService.dismissDriverTrip(chatId);
                 driverService.subscribeDriverOnUpdate(chatId);
                 QueueTrip nextTrip = tripService.findNextTripForDriver(chatId);
@@ -403,7 +421,7 @@ public class ResponseHandler {
                 userService.putState(chatId, State.DRIVER_IN_TRIP);
                 return SendMessageFactory.askingDriverToInformAboutEndOfTripSendMessage(chatId);
             default:
-                TakenTrip driverPassenger = tripService.getTakenTripByDriver(chatId);
+//                TakenTrip driverPassenger = tripService.getTakenTripByDriver(chatId);
 //                if (driverPassenger == null) {
 //                    driverService.subscribeDriverOnUpdate(chatId);
 //                    QueueTrip nextTrip1 = tripService.findNextTripForDriver(chatId);
@@ -689,6 +707,9 @@ public class ResponseHandler {
             case Constants.FOUND_TRIP:
                 tripService.removeTripOnPassengerFoundACar(chatId);
                 userService.putState(chatId, State.THANKS);
+                TakenTrip trip = tripService.getTakenTripByPassenger(chatId);
+                if (trip != null)
+                    logDaoBuilder.putLogInfo("tripId", trip.getTripId());
                 return SendMessageFactory.wishAGoodTripSendMessage(chatId);
             case Constants.FIND_AGAIN:
                 int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
@@ -781,12 +802,18 @@ public class ResponseHandler {
     }
 
     private SendMessage replyToEnterAddress(long chatId, String address) throws TelegramApiException {
+        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
+        logDaoBuilder.putLogInfo("newAddress", address);
+        logDaoBuilder.putLogInfo("oldAddress", tripService.getTripAddress(chatId));
         tripService.setTripAddress(chatId, address);
         userService.putState(chatId, State.ENTERING_DETAILS);
         return SendMessageFactory.enterDetailsSendMessage(chatId);
     }
 
     private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
+        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
+        logDaoBuilder.putLogInfo("oldDetails", tripService.getTripDetails(chatId));
+        logDaoBuilder.putLogInfo("newDetails", details);
         tripService.setTripDetails(chatId, details);
         String number = numberService.getNumber(chatId);
         if (number != null) {
@@ -821,8 +848,11 @@ public class ResponseHandler {
                 tripService.getTripDetails(chatId), number, AbilityUtils.getUser(upd));
     }
 
-    private SendMessage replyToEditAddress(long chatId, String message) throws TelegramApiException {
-        tripService.setTripAddress(chatId, message);
+    private SendMessage replyToEditAddress(long chatId, String address) throws TelegramApiException {
+        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
+        logDaoBuilder.putLogInfo("newAddress", address);
+        logDaoBuilder.putLogInfo("oldAddress", tripService.getTripAddress(chatId));
+        tripService.setTripAddress(chatId, address);
         String currentDetails = tripService.getTripDetails(chatId);
         if (currentDetails == null) {
             userService.putState(chatId, State.EDITING_DETAILS);
@@ -842,6 +872,10 @@ public class ResponseHandler {
 
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
         tripService.addNewTripToQueue(chatId);
+        QueueTrip trip = tripService.getTripFromQueueByPassenger(chatId);
+        logDaoBuilder.putLogInfo("tripId", trip.getTripId());
+        logDaoBuilder.putLogInfo("address", trip.getAddress());
+        logDaoBuilder.putLogInfo("details", trip.getDetails());
         if (driverService.getDrivers().isEmpty()) {
             sender.executeAsync(SendMessageFactory.requestSentSendMessage(chatId), new ResultCallback() {
                 @SneakyThrows
@@ -858,6 +892,9 @@ public class ResponseHandler {
     public SendMessage replyToStopLookingForACar(long chatId) throws TelegramApiException {
         userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
         tripService.removeTripFromQueueByPassengerId(chatId);
+        TakenTrip trip = tripService.getTakenTripByPassenger(chatId);
+        if (trip != null)
+            logDaoBuilder.putLogInfo("tripId", trip.getTripId());
         User user = userService.getUserInfo(chatId);
         return SendMessageFactory.tripSearchStoppedSendMessage(chatId, user,
                 tripService.getTripAddress(chatId), tripService.getTripDetails(chatId),

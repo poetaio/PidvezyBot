@@ -10,5 +10,6 @@
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
         <mapping class="models.hibernate.Trip"/>
         <mapping class="models.hibernate.User"/>
+        <mapping class="models.hibernate.Log"/>
     </session-factory>
 </hibernate-configuration>

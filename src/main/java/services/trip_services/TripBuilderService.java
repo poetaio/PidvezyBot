@@ -38,6 +38,10 @@ public class TripBuilderService {
         return null;
     }
 
+    public UUID getTripId(long passengerUserId) {
+        return getTripInfoWithDefault(passengerUserId).getTripId();
+    }
+
     /**
      * Creating an active trip by saving passenger address
      * @param passengerUserId User account id
