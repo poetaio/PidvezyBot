@@ -12,7 +12,6 @@ import org.hibernate.Session;
 import services.driver_services.DriverService;
 import services.driver_services.utils.DriverUpdateEvents;
 import services.passenger_services.NumberService;
-import services.passenger_services.PassengerService;
 import services.trip_services.TripService;
 import utils.HibernateUtil;
 
