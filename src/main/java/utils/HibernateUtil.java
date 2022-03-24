@@ -16,7 +16,7 @@ public class HibernateUtil {
     private static SessionFactory buildSessionFactory() {
         try {
             Configuration cfg = new Configuration().configure("/hibernate.cfg.xml");
-            cfg.setProperty("hibernate.connection.url", System.getenv("DATABASE_URL"));
+            cfg.setProperty("hibernate.connection.url", System.getenv("DATABASE_URLL"));
             cfg.setProperty("hibernate.connection.username", System.getenv("DATABASE_USER"));
             cfg.setProperty("hibernate.connection.password", System.getenv("DATABASE_PASSWORD"));
             cfg.setProperty("hibernate.hbm2ddl.auto", System.getenv("DATABASE_UPDATE"));
