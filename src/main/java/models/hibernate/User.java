@@ -20,13 +20,19 @@ public class User {
     @Id
     @Column(name = "user_id")
     private long userId;
+
+    @Column(name = "username")
     private String username;
+
     @Column(name = "phone_number")
     private String phoneNumber;
+
     @Column(name = "first_name")
     private String firstName;
+
     @Column(name = "last_name")
     private String lastName;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "user_state")
     private State userState;
@@ -34,8 +40,10 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "view_trip_id")
     private Trip viewTrip;
+
     @OneToMany(mappedBy = "takenByDriver", fetch = FetchType.LAZY)
     private List<Trip> takenTrips;
+
     @OneToMany(mappedBy = "finishedByDriver")
     private List<Trip> finishedTrips;
 
