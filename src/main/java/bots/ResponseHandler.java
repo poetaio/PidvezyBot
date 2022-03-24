@@ -22,10 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.EscapeMessageService;
-import services.LogService;
-import services.PersistenceService;
-import services.UserService;
+import services.*;
 import services.admin_services.AdminService;
 import services.driver_services.DriverService;
 import services.passenger_services.NumberService;
@@ -671,8 +668,7 @@ public class ResponseHandler {
                     logDaoBuilder.putLogInfo("tripId", trip.getTripId());
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             case Constants.FIND_AGAIN:
-                int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                boolean notCurfew = currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR;
+                boolean notCurfew = !CurfewService.isNowCurfew();
                 // removing from taken and adding to queue
                 // checking if driver still views this trip (to send him message that it's already unavailable)
                 TakenTrip currentTrip = tripService.getTakenTripByPassenger(chatId);
@@ -893,7 +889,7 @@ public class ResponseHandler {
     }
 
     private SendMessage checkIfCurfewAndSendApproveMenu(long chatId, Update upd) throws TelegramApiException {
-        if (!isNowCurfew()) {
+        if (!CurfewService.isNowCurfew()) {
             // changing state and "saving" trip application to send again during curfew
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
             return createCurfewMessage(chatId, upd);
@@ -903,7 +899,7 @@ public class ResponseHandler {
     }
 
     private SendMessage replyToApproveTrip(long chatId, Update upd) throws TelegramApiException {
-        if (!isNowCurfew()) {
+        if (!CurfewService.isNowCurfew()) {
             // changing state and "saving" trip application to send again during curfew
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
             return createCurfewMessage(chatId, upd);
@@ -1014,17 +1010,5 @@ public class ResponseHandler {
     @SneakyThrows
     private void sendTryAgainDuringCurfewMessage(long chatId) {
         sender.executeAsync(createCurfewMessage(chatId), emptyCallback);
-    }
-
-    private boolean isNowCurfew() {
-        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        if (Constants.CURFEW_START_HOUR > Constants.CURFEW_END_HOUR) {
-            // if curfew starts today and ends tomorrow (22:00 - 6:00)
-            return currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR;
-        } else {
-            // if curfew starts today and ends today (18:00 - 23:00)
-            return currentHour >= Constants.CURFEW_START_HOUR && currentHour < Constants.CURFEW_END_HOUR;
-        }
-
     }
 }

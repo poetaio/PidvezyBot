@@ -2,6 +2,7 @@ package bots.tasks;
 
 import bots.tasks.utils.ClearCallback;
 import bots.utils.Constants;
+import services.CurfewService;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -19,17 +20,12 @@ public class ClearTripsAfterCurfewTask implements Runnable {
         wasCurfew = true;
     }
 
-    private boolean isNowCurfew() {
-        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        return currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR;
-    }
-
     @Override
     public void run() {
-        boolean nowCurfew = isNowCurfew();
+        boolean nowCurfew = CurfewService.isNowCurfew();
         int interval = nowCurfew ? INTERVAL_5_MIN : INTERVAL_10_MIN;
         while (true) {
-            nowCurfew = isNowCurfew();
+            nowCurfew = CurfewService.isNowCurfew();
             if (wasCurfew && !nowCurfew) {
                 // if passenger is looking for a trip
                 // set try_again_during_curfew
