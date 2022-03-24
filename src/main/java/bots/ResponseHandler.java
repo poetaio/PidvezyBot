@@ -12,6 +12,7 @@ import models.QueueTrip;
 import models.TakenTrip;
 import models.dao.LogDao;
 import models.utils.State;
+import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -34,6 +35,7 @@ import services.trip_services.TripService;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -104,13 +106,13 @@ public class ResponseHandler {
             @Override
             protected void sendNoTripsAvailable(long chatId) throws TelegramApiException {
                 userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE), emptyCallback);
+                sender.executeAsync(SendMessageFactory.noTripsAvailableSendMessage(chatId), emptyCallback);
             }
 
             @Override
             protected void sendTripOffer(long chatId, QueueTrip passengerDao) throws TelegramApiException {
                 userService.putState(chatId, State.DRIVER_ACTIVE);
-                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, generateDriverOfferTripMessage(passengerDao)), emptyCallback);
+                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId, createDriverOfferTripMessage(passengerDao)), emptyCallback);
             }
 
             @Override
@@ -162,6 +164,10 @@ public class ResponseHandler {
                 messageToSend = onChoosingRole(chatId, message);
                 break;
 
+            case FAQ:
+                messageToSend = onFaq(chatId, message);
+                break;
+
             // Driver states
             case DRIVER_ACTIVE:
                 messageToSend = onDriverActive(chatId, message);
@@ -189,11 +195,23 @@ public class ResponseHandler {
             case ENTERING_NUMBER:
                 messageToSend = onEnteringNumber(chatId, message, upd);
                 break;
-            case EDITING_ADDRESS:
-                messageToSend = onEditingAddress(chatId, message, upd);
+            case EDITING_ADDRESS_REGULAR:
+                messageToSend = onEditingAddressRegular(chatId, message, upd);
                 break;
-            case EDITING_DETAILS:
-                messageToSend = onEditingDetails(chatId, message, upd);
+            case EDITING_ADDRESS_APPROVE:
+                messageToSend = onEditingAddressApprove(chatId, message, upd);
+                break;
+            case EDITING_ADDRESS_SEARCH_STOP:
+                messageToSend = onEditingAddressSearchStop(chatId, message, upd);
+                break;
+            case EDITING_DETAILS_REGULAR:
+                messageToSend = onEditingDetailsRegular(chatId, message, upd);
+                break;
+            case EDITING_DETAILS_APPROVE:
+                messageToSend = onEditingDetailsApprove(chatId, message, upd);
+                break;
+            case EDITING_DETAILS_SEARCH_STOP:
+                messageToSend = onEditingDetailsSearchStop(chatId, message, upd);
                 break;
             case APPROVING_TRIP:
                 messageToSend = onApprovingTrip(chatId, message, upd);
@@ -202,7 +220,7 @@ public class ResponseHandler {
                 messageToSend = onTryAgainDuringCurfew(chatId, message, upd);
                 break;
             case LOOKING_FOR_DRIVER:
-                messageToSend = onLookingForDriver(chatId, message);
+                messageToSend = onLookingForDriver(chatId, message, upd);
                 break;
             case TRIP_SEARCH_STOPPED:
                 messageToSend = onTripSearchStopped(chatId, message, upd);
@@ -238,8 +256,20 @@ public class ResponseHandler {
                 return replyToChooseRoleDriver(chatId);
             case Constants.CHOOSE_ROLE_PASSENGER:
                 return replyToChooseRolePassenger(chatId);
+            case Constants.FAQ:
+                return replyToFaq(chatId);
             default:
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
+        }
+    }
+
+    private SendMessage onFaq(long chatId, String message) throws TelegramApiException {
+        switch (message) {
+            case Constants.BACK:
+                userService.putState(chatId, State.CHOOSING_ROLE);
+                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.faqSendMessage(chatId);
         }
     }
 
@@ -269,12 +299,7 @@ public class ResponseHandler {
     private SendMessage onDriverActive(long chatId, String message) throws TelegramApiException {
         switch (message) {
             case Constants.NEXT_TRIP:
-                // TODO: move to driver service, make one method getNextTrip(chatId)
-                // move logic to services as max as possible
-                driverService.resetDriverTime(chatId);
-                QueueTrip nextPassenger = tripService.findNextTripForDriver(chatId);
-                return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(nextPassenger));
+                return replyToNextTrip(chatId);
             case Constants.TAKE_TRIP:
                 QueueTrip driverViewTrip = tripService.getTripFromQueueByDriver(chatId);
                 if (driverViewTrip == null) {
@@ -286,15 +311,14 @@ public class ResponseHandler {
                             // TODO: move to driver service, make one method getNextTrip(chatId)
                             // move logic to services as max as possible
                             driverService.resetDriverTime(chatId);
-                            QueueTrip nextPassenger1 = tripService.findNextTripForDriver(chatId);
-                            if (nextPassenger1 == null) {
+                            QueueTrip nextTripOffer = tripService.findNextTripForDriver(chatId);
+                            if (nextTripOffer == null) {
                                 userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-                                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId,
-                                        Constants.NO_TRIPS_MESSAGE), emptyCallback);
-                            } else {
-                                sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId,
-                                        generateDriverOfferTripMessage(nextPassenger1)), emptyCallback);
+                                sender.executeAsync(SendMessageFactory.noTripsAvailableSendMessage(chatId), emptyCallback);
+                                return;
                             }
+                            sender.executeAsync(SendMessageFactory.driverActiveSendMessage(chatId,
+                                    createDriverOfferTripMessage(nextTripOffer)), emptyCallback);
                         }
                     });
                     return null;
@@ -336,7 +360,7 @@ public class ResponseHandler {
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
                 return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(tripService.getTripFromQueueByDriver(chatId)));
+                        createDriverOfferTripMessage(tripService.getTripFromQueueByDriver(chatId)));
         }
     }
 
@@ -347,7 +371,7 @@ public class ResponseHandler {
                 driverService.removeDriver(chatId);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
             default:
-                return SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE);
+                return SendMessageFactory.noTripsAvailableSendMessage(chatId);
         }
     }
 
@@ -371,12 +395,11 @@ public class ResponseHandler {
                 QueueTrip nextTrip = tripService.findNextTripForDriver(chatId);
                 if (nextTrip == null) {
                     userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-                    return SendMessageFactory.driverActiveSendMessage(chatId,
-                            Constants.NO_TRIPS_MESSAGE);
+                    return SendMessageFactory.noTripsAvailableSendMessage(chatId);
                 }
                 userService.putState(chatId, State.DRIVER_ACTIVE);
                 return SendMessageFactory.driverActiveSendMessage(chatId,
-                        generateDriverOfferTripMessage(nextTrip));
+                        createDriverOfferTripMessage(nextTrip));
             case Constants.FINISH_TRIP:
                 userService.putState(chatId, State.AM_GOOD_BOY);
                 return SendMessageFactory.goodBoySendMessage(chatId);
@@ -437,8 +460,8 @@ public class ResponseHandler {
      */
     private SendMessage onEnteringDetails(long chatId, String message, Update upd) throws TelegramApiException {
         if (message.equals(Constants.BACK)) {
-            userService.putState(chatId, State.EDITING_ADDRESS);
-            return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            userService.putState(chatId, State.EDITING_ADDRESS_REGULAR);
+            return SendMessageFactory.editAddressRegularSendMessage(chatId, tripService.getTripAddress(chatId));
         } else if (!message.isEmpty() && !message.isBlank()) {
             return replyToEnterDetails(chatId, message, upd);
         } else {
@@ -454,49 +477,97 @@ public class ResponseHandler {
 
         switch (message) {
             case Constants.BACK:
-                userService.putState(chatId, State.EDITING_DETAILS);
-                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                userService.putState(chatId, State.EDITING_DETAILS_REGULAR);
+                return SendMessageFactory.editDetailsRegularSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
                 return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
         }
     }
 
-    private SendMessage onEditingAddress(long chatId, String message, Update upd) throws TelegramApiException {
+    // is active when user hits "Back" after entering details
+    private SendMessage onEditingAddressRegular(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
-            case Constants.BACK:
-                // todo: refactor
-                userService.putState(chatId, State.CHOOSING_ROLE);
-                return SendMessageFactory.chooseRoleSendMessage(chatId);
             case Constants.DO_NOT_CHANGE:
-                String currentDetails = tripService.getTripDetails(chatId);
-                if (currentDetails == null) {
-                    userService.putState(chatId, State.EDITING_DETAILS);
-                    return SendMessageFactory.enterDetailsSendMessage(chatId);
-                }
-                userService.putState(chatId, State.EDITING_DETAILS);
-                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                // moving to entering/editing details
+                return replyToEditAddressRegularNoChange(chatId);
+            case Constants.BACK:
+                // returning to choosing role
+                return replyToEditAddressRegularBack(chatId);
             default:
+                // if the message is not empty and not blank, consider it as the new address
                 if (!message.isEmpty() && !message.isBlank()) {
-                    return replyToEditAddress(chatId, message);
-                } else {
-                    return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+                    return replyToEditAddressRegularNewAddress(chatId, message);
                 }
+                return SendMessageFactory.editAddressRegularSendMessage(chatId, tripService.getTripAddress(chatId));
         }
     }
 
-    private SendMessage onEditingDetails(long chatId, String message, Update upd) throws TelegramApiException {
+    private SendMessage onEditingAddressApprove(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.DO_NOT_CHANGE:
-                return replyToEnterDetails(chatId, tripService.getTripDetails(chatId), upd);
-            case Constants.BACK:
-                userService.putState(chatId, State.EDITING_ADDRESS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+                // returning to approving trip (if it's curfew time)
+                return replyToEditAddressApproveNoChange(chatId, upd);
+            default:
+                // edit address and move back approving trip (if it's curfew time)
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditAddressApproveNewAddress(chatId, message, upd);
+                }
+                // resending the same message
+                return SendMessageFactory.editAddressApproveSendMessage(chatId, tripService.getTripAddress(chatId));
+
+        }
+    }
+
+    private SendMessage onEditingAddressSearchStop(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.DO_NOT_CHANGE:
+                // move back to "search stop" menu
+                return replyToEditAddressSearchStopNoChange(chatId, upd);
             default:
                 if (!message.isEmpty() && !message.isBlank()) {
-                    return replyToEnterDetails(chatId, message, upd);
-                } else {
-                    return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                    return replyToEditAddressSearchStopNewAddress(chatId, message, upd);
                 }
+                return SendMessageFactory.editAddressSearchStopSendMessage(chatId, tripService.getTripAddress(chatId));
+        }
+    }
+
+    private SendMessage onEditingDetailsRegular(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.DO_NOT_CHANGE:
+                // move to trip approving
+                return replyToEditDetailsRegularNoChange(chatId, upd);
+            case Constants.BACK:
+                // move to editing address
+                return replyToEditDetailsRegularBack(chatId);
+            default:
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditDetailsRegularNewDetails(chatId, message, upd);
+                }
+                return SendMessageFactory.editDetailsRegularSendMessage(chatId, tripService.getTripDetails(chatId));
+        }
+    }
+
+    private SendMessage onEditingDetailsApprove(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.DO_NOT_CHANGE:
+                return replyToEditDetailsApproveNoChange(chatId, upd);
+            default:
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditDetailsApproveNewDetails(chatId, message, upd);
+                }
+                return SendMessageFactory.editDetailsApproveSendMessage(chatId, tripService.getTripDetails(chatId));
+        }
+    }
+
+    private SendMessage onEditingDetailsSearchStop(long chatId, String message, Update upd) throws TelegramApiException {
+        switch (message) {
+            case Constants.DO_NOT_CHANGE:
+                return replyToEditDetailsSearchStopNoChange(chatId, upd);
+            default:
+                if (!message.isEmpty() && !message.isBlank()) {
+                    return replyToEditDetailsSearchStopNewDetails(chatId, message, upd);
+                }
+                return SendMessageFactory.editDetailsSearchStopSendMessage(chatId, tripService.getTripDetails(chatId));
         }
     }
 
@@ -513,49 +584,35 @@ public class ResponseHandler {
         switch (message) {
             case Constants.APPROVE_TRIP:
                 return replyToApproveTrip(chatId, upd);
-//            case Constants.CHANGE_TRIP_INFO:
-//                userService.putState(chatId, State.EDITING_ADDRESS);
-//                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.EDIT_ADDRESS:
-                // todo: check onTryAgainDuringCurfew
-                break;
+                userService.putState(chatId, State.EDITING_ADDRESS_APPROVE);
+                return SendMessageFactory.editAddressApproveSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.EDIT_DETAILS:
-                // todo: check onTryAgainDuringCurfew
-                break;
+                userService.putState(chatId, State.EDITING_DETAILS_APPROVE);
+                return SendMessageFactory.editDetailsApproveSendMessage(chatId, tripService.getTripDetails(chatId));
             case Constants.BACK:
-                userService.putState(chatId, State.EDITING_DETAILS);
-                return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+                userService.putState(chatId, State.EDITING_DETAILS_REGULAR);
+                return SendMessageFactory.editDetailsRegularSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+                return createApprovingMenuMessage(chatId, upd);
         }
     }
 
     private SendMessage onTryAgainDuringCurfew(long chatId, String message, Update upd) throws TelegramApiException {
-        int currentHour;
         switch (message) {
             case Constants.TRY_AGAIN:
                 return replyToApproveTrip(chatId, upd);
-//            case Constants.CHANGE_TRIP_INFO:
-//                userService.putState(chatId, State.EDITING_ADDRESS);
-//                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.EDIT_ADDRESS:
-                //todo: onApprovingTrip
-                break;
+                userService.putState(chatId, State.EDITING_ADDRESS_APPROVE);
+                return SendMessageFactory.editAddressApproveSendMessage(chatId, tripService.getTripAddress(chatId));
             case Constants.EDIT_DETAILS:
-                // todo: onApprovingTrip
-                break;
+                userService.putState(chatId, State.EDITING_DETAILS_APPROVE);
+                return SendMessageFactory.editDetailsApproveSendMessage(chatId, tripService.getTripDetails(chatId));
             case Constants.BACK:
-                userService.putState(chatId, State.EDITING_DETAILS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripDetails(chatId));
+                userService.putState(chatId, State.EDITING_DETAILS_REGULAR);
+                return SendMessageFactory.editDetailsRegularSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-                if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
-                    userService.putState(chatId, State.APPROVING_TRIP);
-                }
-                return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                        tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
-
+                return createCurfewMessage(chatId, upd);
         }
     }
 
@@ -567,12 +624,10 @@ public class ResponseHandler {
      * @return message to reply with
      * @throws TelegramApiException basic exc
      */
-    private SendMessage onLookingForDriver(long chatId, String message) throws TelegramApiException {
+    private SendMessage onLookingForDriver(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
-//            case Constants.EDIT_TRIP:
-//                return replyToEditTrip(chatId);
             case Constants.STOP_LOOKING_FOR_A_CAR:
-                return replyToStopLookingForACar(chatId);
+                return replyToStopLookingForACar(chatId, upd);
             default:
                 return SendMessageFactory.requestPendingMessage(chatId);
         }
@@ -586,11 +641,14 @@ public class ResponseHandler {
                 tripService.cancelTripOnSearchStopped(chatId);
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 return SendMessageFactory.chooseRoleSendMessage(chatId);
-            case Constants.CHANGE_TRIP_INFO:
-                userService.putState(chatId, State.EDITING_ADDRESS);
-                return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+            case Constants.EDIT_ADDRESS:
+                userService.putState(chatId, State.EDITING_ADDRESS_SEARCH_STOP);
+                return SendMessageFactory.editAddressSearchStopSendMessage(chatId, tripService.getTripAddress(chatId));
+            case Constants.EDIT_DETAILS:
+                userService.putState(chatId, State.EDITING_DETAILS_SEARCH_STOP);
+                return SendMessageFactory.editDetailsSearchStopSendMessage(chatId, tripService.getTripDetails(chatId));
             default:
-                return replyToStopLookingForACar(chatId);
+                return createSearchStopMessage(chatId, upd);
         }
     }
 
@@ -639,8 +697,7 @@ public class ResponseHandler {
                 }
                 // if driver was active, he got message that no trips available, instead of this one once again
                 if (notCurfew) {
-                    return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                            tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+                    return createCurfewMessage(chatId, upd);
                 }
                 // sending a message as on trip_approved depending on number of active drivers
                 userService.putState(chatId, State.LOOKING_FOR_DRIVER);
@@ -661,6 +718,11 @@ public class ResponseHandler {
     }
 
     // replyTo... - handlers to almost every message in every state
+    private SendMessage replyToFaq(long chatId) throws TelegramApiException {
+        userService.putState(chatId, State.FAQ);
+        return SendMessageFactory.faqSendMessage(chatId);
+    }
+
     public SendMessage replyToChooseRoleDriver(long chatId) throws TelegramApiException {
         if (userService.getUserInfo(chatId).getUserName() == null && numberService.getNumber(chatId) == null) {
             userService.putState(chatId, State.DRIVER_ENTERING_NUMBER);
@@ -672,96 +734,177 @@ public class ResponseHandler {
 
         QueueTrip tripInfo = tripService.findNextTripForDriver(chatId);
 
+        // if no trips in queue sending corresponding message and setting corresponding state
         if (tripInfo == null) {
             userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
-            return SendMessageFactory.driverActiveSendMessage(chatId, Constants.NO_TRIPS_MESSAGE);
+            return SendMessageFactory.noTripsAvailableSendMessage(chatId);
         }
 
         userService.putState(chatId, State.DRIVER_ACTIVE);
-        // todo: merge with generateDriverOfferTrip
-        User passengerUserInfo = userService.getUserInfo(tripInfo.getPassengerChatId());
-        String message = EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-                passengerUserInfo.getFirstName(), passengerUserInfo.getLastName() != null ? " " + passengerUserInfo.getLastName() : "",
-                tripInfo.getAddress(), tripInfo.getDetails());
-        return SendMessageFactory.driverActiveSendMessage(chatId, message);
+        return SendMessageFactory.driverActiveSendMessage(chatId, createDriverOfferTripMessage(tripInfo));
+    }
+
+    private SendMessage replyToNextTrip(long chatId) throws TelegramApiException {
+        // todo: merge "reset time" with find next trip
+        driverService.resetDriverTime(chatId);
+        QueueTrip nextTripOffer = tripService.findNextTripForDriver(chatId);
+        if (nextTripOffer == null) {
+            userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
+            return SendMessageFactory.noTripsAvailableSendMessage(chatId);
+        }
+        return SendMessageFactory.driverActiveSendMessage(chatId,
+                createDriverOfferTripMessage(nextTripOffer));
     }
 
     public SendMessage replyToChooseRolePassenger(long chatId) throws TelegramApiException {
         String currentAddress = tripService.getTripAddress(chatId);
         if (currentAddress != null) {
-            userService.putState(chatId, State.EDITING_ADDRESS);
-            return SendMessageFactory.editAddressSendMessage(chatId, currentAddress);
+            userService.putState(chatId, State.EDITING_ADDRESS_REGULAR);
+            return SendMessageFactory.editAddressRegularSendMessage(chatId, currentAddress);
         }
         userService.putState(chatId, State.ENTERING_ADDRESS);
         return SendMessageFactory.enterAddressSendMessage(chatId);
     }
 
-    private SendMessage replyToEnterAddress(long chatId, String address) throws TelegramApiException {
-        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
-        logDaoBuilder.putLogInfo("newAddress", address);
-        logDaoBuilder.putLogInfo("oldAddress", tripService.getTripAddress(chatId));
-        tripService.setTripAddress(chatId, address);
+    private SendMessage replyToEnterAddress(long chatId, String newAddress) throws TelegramApiException {
+        logOutAddressChange(tripService.getTripId(chatId), newAddress, tripService.getTripAddress(chatId));
+        tripService.setTripAddress(chatId, newAddress);
         userService.putState(chatId, State.ENTERING_DETAILS);
         return SendMessageFactory.enterDetailsSendMessage(chatId);
     }
 
-    private SendMessage replyToEnterDetails(long chatId, String details, Update upd) throws TelegramApiException {
-        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
-        logDaoBuilder.putLogInfo("oldDetails", tripService.getTripDetails(chatId));
-        logDaoBuilder.putLogInfo("newDetails", details);
-        tripService.setTripDetails(chatId, details);
+    private SendMessage replyToEnterDetails(long chatId, String newDetails, Update upd) throws TelegramApiException {
+        logOutDetailsChange(tripService.getTripId(chatId), newDetails, tripService.getTripDetails(chatId));
+        tripService.setTripDetails(chatId, newDetails);
         String number = numberService.getNumber(chatId);
         if (AbilityUtils.getUser(upd).getUserName() == null && number == null) {
             userService.putState(chatId, State.ENTERING_NUMBER);
             return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
         }
-        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
-            userService.putState(chatId, State.APPROVING_TRIP);
-        } else {
-            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
-        }
-        return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                tripService.getTripDetails(chatId), number, AbilityUtils.getUser(upd));
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
     }
 
     private SendMessage replyToDriverEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
         numberService.addNumber(chatId, number);
+        // todo: move the same logic to separate method
+        // todo: and call newly created method from replyToChooseRoleDriver and replyToDriverEnterNumber(this method)
         return replyToChooseRoleDriver(chatId);
     }
 
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
         numberService.addNumber(chatId, number);
-        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        if (currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR) {
-            userService.putState(chatId, State.APPROVING_TRIP);
-        } else {
-            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
-        }
-        return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                tripService.getTripDetails(chatId), number, AbilityUtils.getUser(upd));
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
     }
 
-    private SendMessage replyToEditAddress(long chatId, String address) throws TelegramApiException {
-        logDaoBuilder.putLogInfo("tripId", tripService.getTripId(chatId));
-        logDaoBuilder.putLogInfo("newAddress", address);
-        logDaoBuilder.putLogInfo("oldAddress", tripService.getTripAddress(chatId));
-        tripService.setTripAddress(chatId, address);
+    // editing address regular (after hitting "Back" on regular details, or after choosing role menu)
+    private SendMessage replyToEditAddressRegularNewAddress(long chatId, String newAddress) throws TelegramApiException {
+        logOutAddressChange(tripService.getTripId(chatId), tripService.getTripAddress(chatId), newAddress);
+        tripService.setTripAddress(chatId, newAddress);
+        return checkIfDetailsPresentSendDetailsMenu(chatId);
+    }
+
+    private SendMessage replyToEditAddressRegularNoChange(long chatId) throws TelegramApiException {
+        return checkIfDetailsPresentSendDetailsMenu(chatId);
+    }
+
+    private SendMessage replyToEditAddressRegularBack(long chatId) throws TelegramApiException {
+        userService.putState(chatId, State.CHOOSING_ROLE);
+        return SendMessageFactory.chooseRoleSendMessage(chatId);
+    }
+
+    private SendMessage checkIfDetailsPresentSendDetailsMenu(long chatId) throws TelegramApiException {
+        // if details were already entered, they can be edited
         String currentDetails = tripService.getTripDetails(chatId);
         if (currentDetails == null) {
-            userService.putState(chatId, State.EDITING_DETAILS);
+            userService.putState(chatId, State.ENTERING_DETAILS);
             return SendMessageFactory.enterDetailsSendMessage(chatId);
         }
-        userService.putState(chatId, State.EDITING_DETAILS);
-        return SendMessageFactory.editDetailsSendMessage(chatId, tripService.getTripDetails(chatId));
+        userService.putState(chatId, State.EDITING_DETAILS_REGULAR);
+        return SendMessageFactory.editDetailsRegularSendMessage(chatId, currentDetails);
     }
 
-    public SendMessage replyToApproveTrip(long chatId, Update upd) throws TelegramApiException {
-        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
-        if (currentHour < Constants.CURFEW_START_HOUR && currentHour >= Constants.CURFEW_END_HOUR) {
+    // editing address on approve menu replies
+    private SendMessage replyToEditAddressApproveNewAddress(long chatId, String newAddress, Update upd) throws TelegramApiException {
+        logOutAddressChange(tripService.getTripId(chatId), tripService.getTripAddress(chatId), newAddress);
+        // set new address, check if no curfew, and return to approving trip
+        tripService.setTripAddress(chatId, newAddress);
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+    private SendMessage replyToEditAddressApproveNoChange(long chatId, Update upd) throws TelegramApiException {
+        // check if no curfew and return to approving trip
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+    // editing address on "Stop trip search" menu
+
+    private SendMessage replyToEditAddressSearchStopNewAddress(long chatId, String newAddress, Update upd) throws TelegramApiException {
+        logOutAddressChange(tripService.getTripId(chatId), tripService.getTripAddress(chatId), newAddress);
+        tripService.setTripAddress(chatId, newAddress);
+        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+        return createSearchStopMessage(chatId, upd);
+    }
+    private SendMessage replyToEditAddressSearchStopNoChange(long chatId, Update upd) throws TelegramApiException {
+        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+        return createSearchStopMessage(chatId, upd);
+    }
+
+    // edit details regular replies
+    private SendMessage replyToEditDetailsRegularNoChange(long chatId, Update upd) throws TelegramApiException {
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+    private SendMessage replyToEditDetailsRegularBack(long chatId) throws TelegramApiException {
+        userService.putState(chatId, State.EDITING_ADDRESS_REGULAR);
+        return SendMessageFactory.editAddressRegularSendMessage(chatId, tripService.getTripAddress(chatId));
+    }
+
+    private SendMessage replyToEditDetailsRegularNewDetails(long chatId, String newDetails, Update upd) throws TelegramApiException {
+        logOutDetailsChange(tripService.getTripId(chatId), tripService.getTripDetails(chatId), newDetails);
+        tripService.setTripDetails(chatId, newDetails);
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+    // edit details "Approve trip" menu replies
+    private SendMessage replyToEditDetailsApproveNoChange(long chatId, Update upd) throws TelegramApiException {
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+    private SendMessage replyToEditDetailsApproveNewDetails(long chatId, String newDetails, Update upd) throws TelegramApiException {
+        logOutDetailsChange(tripService.getTripId(chatId), tripService.getTripDetails(chatId), newDetails);
+        tripService.setTripDetails(chatId, newDetails);
+        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+    }
+
+
+    // edit details "Trip search stopped" menu replies
+    private SendMessage replyToEditDetailsSearchStopNoChange(long chatId, Update upd) throws TelegramApiException {
+        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+        return createSearchStopMessage(chatId, upd);
+    }
+
+    private SendMessage replyToEditDetailsSearchStopNewDetails(long chatId, String newDetails, Update upd) throws TelegramApiException {
+        logOutDetailsChange(tripService.getTripId(chatId), tripService.getTripDetails(chatId), newDetails);
+        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+        tripService.setTripDetails(chatId, newDetails);
+        return createSearchStopMessage(chatId, upd);
+    }
+
+    private SendMessage checkIfCurfewAndSendApproveMenu(long chatId, Update upd) throws TelegramApiException {
+        if (!isNowCurfew()) {
+            // changing state and "saving" trip application to send again during curfew
             userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
-            return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
-                    tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+            return createCurfewMessage(chatId, upd);
+        }
+        userService.putState(chatId, State.APPROVING_TRIP);
+        return createApprovingMenuMessage(chatId, upd);
+    }
+
+    private SendMessage replyToApproveTrip(long chatId, Update upd) throws TelegramApiException {
+        if (!isNowCurfew()) {
+            // changing state and "saving" trip application to send again during curfew
+            userService.putState(chatId, State.TRY_AGAIN_DURING_CURFEW);
+            return createCurfewMessage(chatId, upd);
         }
 
         userService.putState(chatId, State.LOOKING_FOR_DRIVER);
@@ -783,16 +926,15 @@ public class ResponseHandler {
         return SendMessageFactory.driversGotYourMessageSendMessage(chatId);
     }
 
-    public SendMessage replyToStopLookingForACar(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+    public SendMessage replyToStopLookingForACar(long chatId, Update upd) throws TelegramApiException {
         tripService.removeTripFromQueueByPassengerId(chatId);
         TakenTrip trip = tripService.getTakenTripByPassenger(chatId);
-        if (trip != null)
+        if (trip != null) {
             logDaoBuilder.putLogInfo("tripId", trip.getTripId());
-        User user = userService.getUserInfo(chatId);
-        return SendMessageFactory.tripSearchStoppedSendMessage(chatId, user,
-                tripService.getTripAddress(chatId), tripService.getTripDetails(chatId),
-                numberService.getNumber(chatId));
+        }
+
+        userService.putState(chatId, State.TRIP_SEARCH_STOPPED);
+        return createSearchStopMessage(chatId, upd);
     }
 
     /**
@@ -802,20 +944,49 @@ public class ResponseHandler {
      * @return Message & menu to enter address
      */
     private SendMessage replyToEditTrip(long chatId) throws TelegramApiException {
-        userService.putState(chatId, State.EDITING_ADDRESS);
+        userService.putState(chatId, State.EDITING_ADDRESS_REGULAR);
         tripService.removeTripFromQueueByPassengerId(chatId);
-        return SendMessageFactory.editAddressSendMessage(chatId, tripService.getTripAddress(chatId));
+        return SendMessageFactory.editAddressRegularSendMessage(chatId, tripService.getTripAddress(chatId));
     }
 
-    private String generateDriverOfferTripMessage(QueueTrip queueTrip) {
-        if (queueTrip == null) {
-            return Constants.NO_TRIPS_MESSAGE;
-        }
-
-        User user = userService.getUserInfo(queueTrip.getPassengerChatId());
+    private String createDriverOfferTripMessage(@NotNull QueueTrip queueTrip) {
+        User passengerInfo = userService.getUserInfo(queueTrip.getPassengerChatId());
         return EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
-                user.getFirstName(), user.getLastName() != null ? " " + user.getLastName() : "",
+                passengerInfo.getFirstName(), passengerInfo.getLastName() != null ? " " + passengerInfo.getLastName() : "",
                 queueTrip.getAddress(), queueTrip.getDetails());
+    }
+
+    private SendMessage createCurfewMessage(long chatId, Update upd) throws TelegramApiException {
+        return SendMessageFactory.tryAgainDuringCurfewSendMessage(chatId, tripService.getTripAddress(chatId),
+                tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+    }
+
+    private SendMessage createCurfewMessage(long chatId) throws TelegramApiException {
+        return SendMessageFactory.tryAgainDuringCurfewSendMessage(chatId, tripService.getTripAddress(chatId),
+                tripService.getTripDetails(chatId), numberService.getNumber(chatId), userService.getUserInfo(chatId));
+    }
+
+    private SendMessage createApprovingMenuMessage(long chatId, Update upd) throws TelegramApiException {
+        return SendMessageFactory.approvingTripSendMessage(chatId, tripService.getTripAddress(chatId),
+                tripService.getTripDetails(chatId), numberService.getNumber(chatId), AbilityUtils.getUser(upd));
+    }
+
+    private SendMessage createSearchStopMessage(long chatId, Update upd) throws TelegramApiException {
+        return SendMessageFactory.tripSearchStoppedSendMessage(chatId, AbilityUtils.getUser(upd),
+                tripService.getTripAddress(chatId), tripService.getTripDetails(chatId),
+                numberService.getNumber(chatId));
+    }
+
+    private void logOutAddressChange(UUID tripId, String oldAddress, String newAddress) {
+        logDaoBuilder.putLogInfo("tripId", tripId);
+        logDaoBuilder.putLogInfo("newAddress", oldAddress);
+        logDaoBuilder.putLogInfo("oldAddress", newAddress);
+    }
+
+    private void logOutDetailsChange(UUID tripId, String oldDetails, String newDetails) {
+        logDaoBuilder.putLogInfo("tripId", tripId);
+        logDaoBuilder.putLogInfo("oldDetails", oldDetails);
+        logDaoBuilder.putLogInfo("newDetails", newDetails);
     }
 
     public AdminService createAdminService() {
@@ -834,14 +1005,24 @@ public class ResponseHandler {
             tripService.removeTripFromQueueByPassengerId(chatId);
             sender.executeAsync(SendMessageFactory.curfewIsOverSendMessage(chatId),
                 (ResultCallback) (botApiMethod, message) ->
-                        sendApprovingTripMessage(chatId));
+                        sendTryAgainDuringCurfewMessage(chatId));
         }
     }
 
     @SneakyThrows
-    private void sendApprovingTripMessage(long chatId) {
-        sender.executeAsync(SendMessageFactory.approvingTripSendMessage(chatId,
-                tripService.getTripAddress(chatId), tripService.getTripDetails(chatId),
-                numberService.getNumber(chatId), userService.getUserInfo(chatId)), emptyCallback);
+    private void sendTryAgainDuringCurfewMessage(long chatId) {
+        sender.executeAsync(createCurfewMessage(chatId), emptyCallback);
+    }
+
+    private boolean isNowCurfew() {
+        int currentHour = Calendar.getInstance(TimeZone.getTimeZone("GMT+2")).get(Calendar.HOUR_OF_DAY);
+        if (Constants.CURFEW_START_HOUR > Constants.CURFEW_END_HOUR) {
+            // if curfew starts today and ends tomorrow (22:00 - 6:00)
+            return currentHour >= Constants.CURFEW_START_HOUR || currentHour < Constants.CURFEW_END_HOUR;
+        } else {
+            // if curfew starts today and ends today (18:00 - 23:00)
+            return currentHour >= Constants.CURFEW_START_HOUR && currentHour < Constants.CURFEW_END_HOUR;
+        }
+
     }
 }

@@ -13,13 +13,12 @@ public interface Constants {
 
     String START_DESCRIPTION = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години \\(%s:00 \\- %s:00\\)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
-//    String START_REPLY = "З якою ціллю ви тут?";
     String CHOOSE_ROLE_REPLY = String.format("Бот для допомоги з розвезенням людей із залізничного вокзалу у Львові під час комендантської години \\(%s:00 \\- %s:00\\)", CURFEW_START_HOUR, CURFEW_END_HOUR);
 
-//    String ROLE_DRIVER = "Підвезу";
-//    String ROLE_PASSENGER = "Підвезіть";
+    String FAQ = "Як це працює?";
+    String FAQ_MESSAGE = "Людина, що приїзжає вночі на вокзал потребує транспорту, щоб дістатися до свого кінцевого пункту прибуття\\.\n\nВона створює заявку, вказуючи адресу й інших пасажирів\\.\n\nАвтоволонтери, що користуються ботом, отримують сповіщення з заявками й можуть на них відгукнутися\\.\n\nАвтоволонтер й автор заявки отримують контакти один одного й домовляються про поїздку\\.";
 
-    String CHOOSE_ROLE_DRIVER = "Я волонтер";
+    String CHOOSE_ROLE_DRIVER = "Я автоволонтер";
 
     String TAKE_TRIP = "Відгукнутися";
     String TRIP_TAKEN_MESSAGE = "Поїздка вже неактуальна :\\(";
@@ -69,7 +68,7 @@ public interface Constants {
     String CHANGE_TRIP_INFO = "Змінити запит";
     String EDIT_ADDRESS = "Змінити адресу";
     String EDIT_DETAILS = "Змінити інформацію про пасажирів";
-    String APPROVE_TRIP = "Підтвердити";
+    String APPROVE_TRIP = "Відправити запит";
     String TRY_AGAIN = "Спробувати ще раз";
     String CURFEW_IS_OVER_MESSAGE = "Комендантська година завершена\\. Спробуйте пізніше\\.";
 
@@ -112,5 +111,5 @@ public interface Constants {
 
     String UNKNOWN_STATE_ERROR_MESSAGE = "Невідомий стан :\\( Зверніться в тех підтримку";
     String SEARCH_STOPPED_MESSAGE = "Запит зупинено:\n\n%s%s шукає траспорт з вокзалу на %s\\.\n%s\n\n%s";
-    String approveOrDismissTrip = "Оберіть, будь ласка, один з пунктів меню";
+    String chooseRightMenuOptionMessage = "Оберіть, будь ласка, один з пунктів меню";
 }

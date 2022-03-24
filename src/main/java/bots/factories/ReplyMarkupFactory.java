@@ -14,7 +14,11 @@ import java.util.List;
  */
 public class ReplyMarkupFactory {
     public static ReplyKeyboardMarkup chooseRoleReplyKeyboard() {
-        return makeOneColumnMenu(Constants.CHOOSE_ROLE_DRIVER, Constants.CHOOSE_ROLE_PASSENGER);
+        return makeOneColumnMenu(Constants.CHOOSE_ROLE_DRIVER, Constants.CHOOSE_ROLE_PASSENGER, Constants.FAQ);
+    }
+
+    public static ReplyKeyboardMarkup faqReplyKeyboard() {
+        return makeOneColumnMenu(Constants.BACK);
     }
 
     // driver menus
@@ -55,20 +59,34 @@ public class ReplyMarkupFactory {
         return makeOneColumnMenu(Constants.BACK);
     }
 
+    // edit address menus
     public static ReplyKeyboardMarkup editAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
     }
 
-    public static ReplyKeyboardMarkup editDetailsReplyKeyboard() {
+    public static ReplyKeyboardMarkup editAddressApproveReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE);
+    }
+
+    public static ReplyKeyboardMarkup editAddressSearchStopReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE);
+    }
+
+    // edit details menus
+    public static ReplyKeyboardMarkup editDetailsRegularReplyKeyboard() {
         return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup editDetailsApproveReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE);
+    }
+
+    public static ReplyKeyboardMarkup editDetailsSearchStopReplyKeyboard() {
+        return makeOneColumnMenu(Constants.DO_NOT_CHANGE);
     }
 
     public static ReplyKeyboardMarkup enterDetailsReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
-    }
-
-    public static ReplyKeyboardMarkup enterOnStationReplyKeyboard() {
-        return makeOneColumnMenu(Constants.ON_STATION_NO, Constants.ON_STATION_YES, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup enterNumberReplyKeyboard() {
@@ -91,11 +109,11 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup lookingForDriverReplyMenu() {
-        return makeOneColumnMenu(Constants.STOP_LOOKING_FOR_A_CAR, Constants.EDIT_TRIP);
+        return makeOneColumnMenu(Constants.STOP_LOOKING_FOR_A_CAR);
     }
 
     public static ReplyKeyboardMarkup searchStoppedReplyMenu() {
-        return makeOneColumnMenu(Constants.RESUME_SEARCH, Constants.CHANGE_TRIP_INFO, Constants.CANCEL_TRIP);
+        return makeOneColumnMenu(Constants.RESUME_SEARCH, Constants.EDIT_ADDRESS, Constants.EDIT_DETAILS, Constants.CANCEL_TRIP);
     }
 
     public static ReplyKeyboardMarkup addressApprovedReplyMarkup() {
