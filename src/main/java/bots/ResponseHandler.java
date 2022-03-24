@@ -142,6 +142,7 @@ public class ResponseHandler {
      * @throws TelegramApiException Classic telegram exception
      */
     public void handleUpdate(Update upd) throws TelegramApiException {
+
         long chatId = AbilityUtils.getChatId(upd);
 
         if (!upd.hasMessage() || ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
@@ -157,6 +158,8 @@ public class ResponseHandler {
             replyToStart(chatId);
             return;
         }
+
+        logDaoBuilder = LogDao.builder();
 
         switch (currentState) {
             case CHOOSING_ROLE:
@@ -235,7 +238,6 @@ public class ResponseHandler {
         if (messageToSend != null)
             sender.execute(messageToSend);
 
-        logDaoBuilder = LogDao.builder();
         logDaoBuilder.stateFrom(currentState);
         logDaoBuilder.userId(chatId);
         logDaoBuilder.message(message);
