@@ -49,7 +49,7 @@ public class DriverService {
             return;
 
         driverList.add(driverChatId);
-        driverViewUpdateService.addDriver(driverChatId);
+//        driverViewUpdateService.addDriver(driverChatId);
     }
 
     // driverUpdateService methods
@@ -76,6 +76,7 @@ public class DriverService {
      */
     public void unsubscribeDriverFromUpdate(long driverChatId) {
         driverViewUpdateService.removeDriver(driverChatId);
+        TripQueueService.getInstance().unsetView(driverChatId);
     }
 
     public List<Long> getDrivers() {

@@ -26,7 +26,7 @@ public interface Constants {
     String NEXT_TRIP = "Наступний запит";
 
     String STOP_BROADCAST = "Зупинити розсилку";
-    String BROADCAST_STOPPED_TEXT = "Розсилку зупинено";
+    String BROADCAST_STOPPED_TEXT = "Розсилку зупинено\\.\nНатисніть \"відновити розсилку\", щоб знову бачити наявні запити\\.";
 //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів\\. Очікуйте на оновлення\\.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*\\.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
 

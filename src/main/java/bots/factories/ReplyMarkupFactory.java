@@ -23,7 +23,8 @@ public class ReplyMarkupFactory {
 
     // driver menus
     public static ReplyKeyboardMarkup resumeBroadcastReplyMarkup() {
-        return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.BACK);
+        return makeOneColumnMenu(Constants.RESUME_BROADCAST);
+//        return makeOneColumnMenu(Constants.RESUME_BROADCAST, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup passengerConfirmingTakingHimReplyKeyboard() {
@@ -39,7 +40,7 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup driverActiveReplyMarkup() {
-        return makeOneColumnMenu(Constants.TAKE_TRIP, Constants.NEXT_TRIP, Constants.BACK);
+        return makeOneColumnMenu(Constants.TAKE_TRIP, Constants.NEXT_TRIP, Constants.STOP_BROADCAST, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup noTripsReplyMarkup() {

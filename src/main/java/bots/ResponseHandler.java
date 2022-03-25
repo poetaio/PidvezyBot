@@ -172,6 +172,9 @@ public class ResponseHandler {
             case DRIVER_ACTIVE:
                 messageToSend = onDriverActive(chatId, message);
                 break;
+            case DRIVER_INACTIVE:
+                messageToSend = onDriverInactive(chatId, message);
+                break;
             case DRIVER_ENTERING_NUMBER:
                 messageToSend = onDriverEnteringNumber(chatId, message, upd);
                 break;
@@ -353,6 +356,8 @@ public class ResponseHandler {
                             }
                         });
                 return null;
+            case Constants.STOP_BROADCAST:
+                return replyToDriverActiveStopBroadcast(chatId);
             case Constants.BACK:
                 userService.putState(chatId, State.CHOOSING_ROLE);
                 driverService.removeDriver(chatId);
@@ -360,6 +365,25 @@ public class ResponseHandler {
             default:
                 return SendMessageFactory.driverActiveSendMessage(chatId,
                         createDriverOfferTripMessage(tripService.getTripFromQueueByDriver(chatId)));
+        }
+    }
+
+    /**
+     * Unsubscribe from getting trip applications
+     *
+     * @param chatId  user chat id
+     * @param message message sent by user
+     * @throws TelegramApiException Classic telegram exception
+     */
+    private SendMessage onDriverInactive(long chatId, String message) throws TelegramApiException {
+        switch (message) {
+            case Constants.RESUME_BROADCAST:
+                return replyToDriverInactiveResumeBroadcast(chatId);
+//            case Constants.BACK:
+//                userService.putState(chatId, State.CHOOSING_ROLE);
+//                return SendMessageFactory.chooseRoleSendMessage(chatId);
+            default:
+                return SendMessageFactory.driverInactiveSendMessage(chatId);
         }
     }
 
@@ -409,25 +433,6 @@ public class ResponseHandler {
 
     private SendMessage onAmGoodBoy(long chatId) throws TelegramApiException {
         return replyToChooseRoleDriver(chatId);
-    }
-
-    /**
-     * Unsubscribe from getting trip applications
-     *
-     * @param chatId  user chat id
-     * @param message message sent by user
-     * @throws TelegramApiException Classic telegram exception
-     */
-    private SendMessage onDriverInactive(long chatId, String message) throws TelegramApiException {
-        switch (message) {
-            case Constants.RESUME_BROADCAST:
-                return replyToChooseRoleDriver(chatId);
-            case Constants.BACK:
-                userService.putState(chatId, State.CHOOSING_ROLE);
-                return SendMessageFactory.chooseRoleSendMessage(chatId);
-            default:
-                return SendMessageFactory.driverInactiveSendMessage(chatId);
-        }
     }
 
     /**
@@ -729,6 +734,7 @@ public class ResponseHandler {
 
         // adding driver to both drivers list and update queue
         driverService.addDriver(chatId);
+        driverService.subscribeDriverOnUpdate(chatId);
 
         QueueTrip tripInfo = tripService.findNextTripForDriver(chatId);
 
@@ -742,6 +748,13 @@ public class ResponseHandler {
         return SendMessageFactory.driverActiveSendMessage(chatId, createDriverOfferTripMessage(tripInfo));
     }
 
+    private SendMessage replyToDriverEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
+        numberService.addNumber(chatId, number);
+        // todo: move the same logic to separate method
+        // todo: and call newly created method from replyToChooseRoleDriver and replyToDriverEnterNumber(this method)
+        return replyToChooseRoleDriver(chatId);
+    }
+
     private SendMessage replyToNextTrip(long chatId) throws TelegramApiException {
         // todo: merge "reset time" with find next trip
         driverService.resetDriverTime(chatId);
@@ -752,6 +765,27 @@ public class ResponseHandler {
         }
         return SendMessageFactory.driverActiveSendMessage(chatId,
                 createDriverOfferTripMessage(nextTripOffer));
+    }
+
+    private SendMessage replyToDriverActiveStopBroadcast(long chatId) throws TelegramApiException {
+        userService.putState(chatId, State.DRIVER_INACTIVE);
+        driverService.unsubscribeDriverFromUpdate(chatId);
+        return SendMessageFactory.driverInactiveSendMessage(chatId);
+    }
+
+    private SendMessage replyToDriverInactiveResumeBroadcast(long chatId) throws TelegramApiException {
+        userService.putState(chatId, State.DRIVER_ACTIVE);
+        driverService.subscribeDriverOnUpdate(chatId);
+
+        QueueTrip nextTrip = tripService.findNextTripForDriver(chatId);
+        if (nextTrip == null) {
+            userService.putState(chatId, State.NO_TRIPS_AVAILABLE);
+            return SendMessageFactory.noTripsAvailableSendMessage(chatId);
+        }
+
+        userService.putState(chatId, State.DRIVER_ACTIVE);
+        return SendMessageFactory.driverActiveSendMessage(chatId,
+                createDriverOfferTripMessage(nextTrip));
     }
 
     public SendMessage replyToChooseRolePassenger(long chatId) throws TelegramApiException {
@@ -780,13 +814,6 @@ public class ResponseHandler {
             return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
         }
         return checkIfCurfewAndSendApproveMenu(chatId, upd);
-    }
-
-    private SendMessage replyToDriverEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
-        numberService.addNumber(chatId, number);
-        // todo: move the same logic to separate method
-        // todo: and call newly created method from replyToChooseRoleDriver and replyToDriverEnterNumber(this method)
-        return replyToChooseRoleDriver(chatId);
     }
 
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
