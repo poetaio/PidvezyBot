@@ -8,10 +8,12 @@ import server.AdminServer;
 import services.admin_services.AdminService;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 public class Main {
     public static void main(String[] args) {
         try {
+            TimeZone.setDefault(TimeZone.getTimeZone("GMT+2"));
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(new PidvesyBot());
             ResponseHandler responseHandler = ResponseHandler.getInstance(null);
