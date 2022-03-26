@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import server.utils.JwtUtils;
+import server.utils.ResponseToken;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,19 +30,29 @@ public class AuthHttpHandler implements HttpHandler {
                 httpExchange.sendResponseHeaders(204, -1);
                 return;
             }
-            if ("POST".equals(httpExchange.getRequestMethod())) {
-                if (httpExchange.getRequestURI().toString().equals(LOGIN_RESOURCE)) {
-                    String body = httpService.getResponse(httpExchange);
-                    Map<String, Object> bodyMap = new ObjectMapper().readValue(body, HashMap.class);
-                    if (bodyMap.get("password").equals(System.getenv("ADMIN_PASSWORD"))) {
-                        httpService.sendResponse(httpExchange, JwtUtils.generateToken(), 200);
-                        return;
-                    }
-                    httpService.sendResponse(httpExchange, "Access denied", 401);
-                    return;
-                }
+            if (!"POST".equals(httpExchange.getRequestMethod())) {
+                httpService.sendErrorResponse(httpExchange, "Method is not supported");
+            }
+
+            if (!httpExchange.getRequestURI().getPath().equals(LOGIN_RESOURCE)) {
                 httpService.sendErrorResponse(httpExchange);
             }
+
+            String body = httpService.getResponse(httpExchange);
+            if (body.isEmpty() || body.isBlank())
+                httpService.sendErrorResponse(httpExchange, "Empty body");
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> bodyMap = objectMapper.readValue(body, HashMap.class);
+
+            if (!bodyMap.get("password").equals(System.getenv("ADMIN_PASSWORD"))) {
+                httpService.sendResponse(httpExchange, "Access denied", 401);
+            }
+
+            ResponseToken tokenObj = new ResponseToken(JwtUtils.generateToken());
+            String response = objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(tokenObj);
+            httpService.sendResponse(httpExchange, response, 200);
         } catch (Exception e) {
             e.printStackTrace();
             httpService.sendErrorResponse(httpExchange, e.getMessage());

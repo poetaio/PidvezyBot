@@ -22,7 +22,7 @@ public class Log {
     @Column(name = "log_id")
     private long logId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -43,6 +43,9 @@ public class HttpHandlingService {
         } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Can't send response. " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Internal server error");
         }
     }
 

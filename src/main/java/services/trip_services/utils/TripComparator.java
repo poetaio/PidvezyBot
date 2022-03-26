@@ -1,4 +1,4 @@
-package models.utils;
+package services.trip_services.utils;
 
 import models.QueueTrip;
 
