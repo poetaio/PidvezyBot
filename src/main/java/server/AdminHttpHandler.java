@@ -1,5 +1,6 @@
 package server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -67,38 +68,41 @@ public class AdminHttpHandler implements HttpHandler {
                 }
             }
             // todo: split into AUTH error and internal server error
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | JsonProcessingException e) {
 //            e.printStackTrace();
+            httpService.sendErrorResponse(httpExchange, e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Internal error occurred");
             httpService.sendErrorResponse(httpExchange, e.getMessage());
         }
     }
 
-    private void getTripQueue(HttpExchange httpExchange) throws IOException {
+    private void getTripQueue(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
         httpService.sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getTripInQueue()), 200);
     }
 
-    private void getInactiveTrips(HttpExchange httpExchange) throws IOException {
+    private void getInactiveTrips(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
         httpService.sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getInactiveTrips()), 200);
     }
 
-    private void getTakenTrips(HttpExchange httpExchange) throws IOException {
+    private void getTakenTrips(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
         httpService.sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getTakenTrips()), 200);
     }
 
-    private void getFinishedTrips(HttpExchange httpExchange) throws IOException {
+    private void getFinishedTrips(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
         httpService.sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getFinishedTrips()), 200);
     }
 
-    private void getActiveDrivers(HttpExchange httpExchange) throws IOException {
+    private void getActiveDrivers(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
         httpService.sendResponse(httpExchange, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(adminService.getActiveDrivers()), 200);
     }
 
-    private void getHistory(HttpExchange httpExchange) throws IOException {
+    private void getHistory(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
         httpService.checkAuth(httpExchange);
 
         HttpParamQuery paramQuery = new HttpParamQuery(httpExchange.getRequestURI().getQuery());
@@ -114,13 +118,8 @@ public class AdminHttpHandler implements HttpHandler {
 
         LogCriteria logCriteria = new LogCriteria(dateFrom, dateTo, stateFrom, stateTo, userId);
 
-        String response = null;
-        try {
-            CountAndLogList res = historyService.getAll(page, limit, logCriteria);
-            response = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(res);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        CountAndLogList res = historyService.getAll(page, limit, logCriteria);
+        String response = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(res);
 
         httpService.sendResponse(httpExchange, response, 200);
     }
