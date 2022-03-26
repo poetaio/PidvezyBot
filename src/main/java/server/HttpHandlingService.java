@@ -22,7 +22,7 @@ public class HttpHandlingService {
         return sb.toString().trim();
     }
 
-    protected void checkAuth(HttpExchange httpExchange) {
+    protected void checkAuth(HttpExchange httpExchange) throws RuntimeException {
         try {
             Headers headers = httpExchange.getRequestHeaders();
             String token = headers.get("Authorization").get(0).replaceAll(".*\\s", "").trim();
@@ -32,7 +32,7 @@ public class HttpHandlingService {
         }
     }
 
-    protected void sendResponse(HttpExchange httpExchange, String responseText, Integer status) {
+    protected void sendResponse(HttpExchange httpExchange, String responseText, Integer status) throws RuntimeException {
         try {
             byte[] bs = responseText.getBytes(StandardCharsets.UTF_8);
             httpExchange.sendResponseHeaders(status, bs.length);
@@ -49,11 +49,11 @@ public class HttpHandlingService {
         }
     }
 
-    protected void sendErrorResponse(HttpExchange httpExchange) throws IOException {
+    protected void sendErrorResponse(HttpExchange httpExchange) throws RuntimeException, IOException {
         sendErrorResponse(httpExchange, "Error happened...");
     }
 
-    protected void sendErrorResponse(HttpExchange httpExchange, String errorMessage) throws IOException {
+    protected void sendErrorResponse(HttpExchange httpExchange, String errorMessage)  throws RuntimeException {
         sendResponse(httpExchange, errorMessage, 500);
     }
 
