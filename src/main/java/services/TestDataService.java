@@ -1,7 +1,7 @@
 package services;
 
 import models.QueueTrip;
-import models.utils.TripComparator;
+import services.trip_services.utils.TripComparator;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.*;

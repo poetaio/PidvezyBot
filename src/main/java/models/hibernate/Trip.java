@@ -1,5 +1,6 @@
 package models.hibernate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,7 @@ public class Trip {
     @Column(name = "trip_status")
     private TripStatus tripStatus;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "viewTrip")
     // add constraint when status=IN_QUEUE
     private List<User> listOfViewDriver;

@@ -1,5 +1,5 @@
 import models.QueueTrip;
-import models.utils.TripComparator;
+import services.trip_services.utils.TripComparator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

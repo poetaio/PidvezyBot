@@ -7,7 +7,9 @@ public interface Constants {
     String TAKEN_TRIPS_RESOURCE = "/takenTrips";
     String FINISHED_TRIPS_RESOURCE = "/finishedTrips";
     String ACTIVE_DRIVERS_RESOURCE = "/activeDrivers";
+    String HISTORY_RESOURCE =  "/history";
 
     String LOGIN_RESOURCE = "/auth/login";
 
+    int DEFAULT_LIMIT = 10;
 }

@@ -1,5 +1,6 @@
 package models.hibernate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,13 +38,16 @@ public class User {
     @Column(name = "user_state")
     private State userState;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "view_trip_id")
     private Trip viewTrip;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "takenByDriver", fetch = FetchType.LAZY)
     private List<Trip> takenTrips;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "finishedByDriver")
     private List<Trip> finishedTrips;
 

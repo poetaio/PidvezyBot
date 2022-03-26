@@ -7,7 +7,7 @@ import models.dao.DriverUpdateDao;
 import models.hibernate.Trip;
 import models.hibernate.User;
 import models.utils.State;
-import models.utils.TripComparator;
+import services.trip_services.utils.TripComparator;
 import org.hibernate.Session;
 import services.driver_services.DriverService;
 import services.driver_services.utils.DriverUpdateEvents;

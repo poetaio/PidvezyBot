@@ -1,7 +1,7 @@
 package services.trip_services;
 
 import models.QueueTrip;
-import models.utils.TripComparator;
+import services.trip_services.utils.TripComparator;
 import repositories.TripRepository;
 
 import java.util.*;
