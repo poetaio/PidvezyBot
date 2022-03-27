@@ -49,6 +49,10 @@ public class HttpHandlingService {
         }
     }
 
+    protected void sendResponse(HttpExchange httpExchange, Integer status) throws IOException {
+        httpExchange.sendResponseHeaders(status, -1);
+    }
+
     protected void sendErrorResponse(HttpExchange httpExchange) throws RuntimeException, IOException {
         sendErrorResponse(httpExchange, "Error happened...");
     }

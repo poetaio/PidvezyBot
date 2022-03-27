@@ -10,24 +10,27 @@ import java.util.*;
  * Service to manage all users who have hit "Я волонтер"
  */
 public class DriverService {
+    private static DriverService INSTANCE;
+
+    public static void initializeInstance(List<Long> driverList, List<DriverUpdateDao> driverUpdateDaos) {
+        if (INSTANCE != null)
+            throw new RuntimeException("Instance has already been initialized");
+        INSTANCE = new DriverService(driverList, driverUpdateDaos);
+    }
+
+    public static DriverService getInstance() {
+        if (INSTANCE == null)
+            throw new RuntimeException("Instance has not been initialized");
+        return INSTANCE;
+    }
+
     private final List<Long> driverList;
 
     private final DriverViewUpdateService driverViewUpdateService;
 
-    public DriverService(List<Long> driverList, List<DriverUpdateDao> driverToUpdateList,
-                         DriverUpdateEvents driverUpdateEvents) {
+    private DriverService(List<Long> driverList, List<DriverUpdateDao> driverToUpdateList) {
         this.driverList = driverList;
-        driverViewUpdateService = new DriverViewUpdateService(driverToUpdateList){
-            @Override
-            protected void onDriverQueueEmptyEvent() {
-                driverUpdateEvents.onDriverQueueEmptyEvent();
-            }
-
-            @Override
-            protected void onDriverQueueNotEmptyEvent() {
-                driverUpdateEvents.onDriverQueueNotEmptyEvent();;
-            }
-        };
+        driverViewUpdateService = new DriverViewUpdateService(driverToUpdateList);
     }
 
     /**

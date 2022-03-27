@@ -1,5 +1,6 @@
 package server.utils;
 
+import models.utils.GroupStatus;
 import models.utils.State;
 
 import java.sql.Timestamp;
@@ -68,11 +69,28 @@ public class HttpParamQuery {
     }
 
     public State getStateParam(String paramName) {
-        if (paramName == null) return null;
+        if (queryParamMap == null) return null;
 
         try {
             String stateStr = queryParamMap.get(paramName);
             return stateStr == null ? null : State.valueOf(stateStr);
+        } catch(IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public String getStringParam(String paramName) {
+        if (queryParamMap == null) return null;
+
+        return queryParamMap.get(paramName);
+    }
+
+    public GroupStatus getGroupStatus(String paramName) {
+        if (queryParamMap == null) return null;
+
+        try {
+            String stateStr = queryParamMap.get(paramName);
+            return stateStr == null ? null : GroupStatus.valueOf(stateStr);
         } catch(IllegalArgumentException e) {
             return null;
         }

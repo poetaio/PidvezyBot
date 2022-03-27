@@ -2,6 +2,11 @@ package bots.utils;
 
 public interface Constants {
     String BOT_USERNAME = "PidvezyBot";
+    String PIDVEZY_BOT_URL = "https://t.me/pidvez_y_bot";
+    String PIDVEZY_BOT_LINK = "@pidvez\\_y\\_bot";
+//    String PIDVEZY_BOT_URL = "https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text=helllo_there";
+
+    String GROUP_BOT_USERNAME = "PidvezyGroupBot";
     String ADMIN_SECRET = System.getenv("ADMIN_SECRET");
     int CREATOR_ID = 278171783;
     int DRIVER_UPDATE_INTERVAL = Integer.parseInt(System.getenv("DRIVER_UPDATE_INTERVAL"));
@@ -27,8 +32,10 @@ public interface Constants {
 
     String STOP_BROADCAST = "Зупинити розсилку";
     String BROADCAST_STOPPED_TEXT = "Розсилку зупинено\\.\nНатисніть \"відновити розсилку\", щоб знову бачити наявні запити\\.";
-//    String NO_TRIPS_MESSAGE = "На даний момент немає запитів\\. Очікуйте на оновлення\\.";
+    //    String NO_TRIPS_MESSAGE = "На даний момент немає запитів\\. Очікуйте на оновлення\\.";
     String IS_LOOKING_FOR_CAR_MESSAGE = "%s%s шукає транспорт з вокзалу на *%s*\\.\n\n*%s*\n\n\\(Ви отримаєте новий запит через " + DRIVER_UPDATE_INTERVAL + "с\\)";
+    String GROUP_BOT_TRIP_MESSAGE = "\uD83D\uDE99\n%s%s шукає транспорт *з вокзалу* на *%s*\\.\n*%s*\n\nКонтакти||%s||||%s||\n\n" + PIDVEZY_BOT_LINK;
+    String GROUP_BOT_TRIP_FINISHED = "✅ Поїздка завершена\n%s%s шукає транспорт *з вокзалу* на *%s*\\.\n*%s*\n\n" + PIDVEZY_BOT_LINK;
 
     String PASSENGER_TRIP_WAS_TAKEN = "%s відгукнувся на вашу заявку\n\n%s\n%s\\.\nДомовтеся з волонтером про зустріч\\.";
 
@@ -85,7 +92,7 @@ public interface Constants {
     String DRIVER_TOOK_YOUR_TRIP_MESSAGE = "%s відгукнувся на вашу заявку\n@%s";
     String LET_US_KNOW_ABOUT_TRIP_STATUS = "Повідомте нас про статус заявки";
 
-//    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
+    //    String FOUND_TRIP = "Підтвердити поїздку з цим водієм";
     String FOUND_TRIP = "Завершити";
     String FIND_AGAIN = "Шукати знову";
 

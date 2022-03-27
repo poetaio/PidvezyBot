@@ -2,9 +2,8 @@ package models.hibernate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import models.dao.LogDao;
+import models.dao.adminDao.LogDao;
 import models.hibernate.utils.MapToJsonConverter;
 import models.utils.State;
 

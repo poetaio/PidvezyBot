@@ -8,13 +8,24 @@ import services.driver_services.DriverService;
 import services.trip_services.TripService;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class UserService {
-    // singleton pattern
-//    private static final UserService INSTANCE = new UserService();
-//    public static UserService getInstance() {
-//        return INSTANCE;
-//    }
+//     singleton
+    private static UserService INSTANCE;
+
+    public static void initializeInstance(Map<Long, State> userStatesMap, Map<Long, User> userInfo, Map<Long, String> userNumbers) {
+        if (INSTANCE != null)
+            throw new RuntimeException("Instance already initialized");
+        INSTANCE = new UserService(userStatesMap, userInfo, userNumbers);
+    }
+
+    public static UserService getInstance() {
+        if (INSTANCE == null)
+            throw new RuntimeException("Instance has not been initialized");
+        return INSTANCE;
+    }
+
     private final DriverService driverService;
     private final TripService tripService;
     private final UserRepository userRepository;
@@ -23,15 +34,19 @@ public class UserService {
     private final Map<Long, User> userInfo;
     // chat id - state
     private final Map<Long, State> userStateMap;
+    // chat id - number
+    private final Map<Long, String> usersNumbers;
 
-    public UserService(Map<Long, State> userStateMap, Map<Long, User> userInfo, DriverService driverService, TripService tripService) {
+    private UserService(Map<Long, State> userStateMap, Map<Long, User> userInfo,
+                       Map<Long, String> usersNumbers) {
         this.userInfo = userInfo;
+        this.usersNumbers = usersNumbers;
 
         userRepository = new UserRepository();
         this.userStateMap = userStateMap;
 
-        this.driverService = driverService;
-        this.tripService = tripService;
+        this.driverService = DriverService.getInstance();
+        this.tripService = TripService.getInstance();
     }
 
     /**
@@ -84,4 +99,14 @@ public class UserService {
         userStateMap.put(chatId, state);
         userRepository.setUserState(chatId, state);
     }
+
+    public void addNumber(long chatId, String number) {
+        usersNumbers.put(chatId, number);
+        CompletableFuture.runAsync(() -> userRepository.setNumber(chatId, number));
+    }
+
+    public String getNumber(long chatId) {
+        return usersNumbers.get(chatId);
+    }
+
 }

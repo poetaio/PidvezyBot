@@ -11,5 +11,7 @@
         <mapping class="models.hibernate.Trip"/>
         <mapping class="models.hibernate.User"/>
         <mapping class="models.hibernate.Log"/>
+        <mapping class="models.hibernate.Group"/>
+        <mapping class="models.hibernate.GroupMessage"/>
     </session-factory>
 </hibernate-configuration>

@@ -2,6 +2,8 @@ package services.driver_services;
 
 import bots.utils.Constants;
 import models.dao.DriverUpdateDao;
+import services.event_service.EventService;
+import services.event_service.utils.Events;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +29,7 @@ public class DriverViewUpdateService {
      */
     public void addDriver(long driverChatId) {
         if (driverUpdateQueue.isEmpty())
-            onDriverQueueNotEmptyEvent();
+            EventService.getInstance().notify(Events.DRIVER_QUEUE_NON_EMPTY_EVENT, null);
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, Constants.DRIVER_UPDATE_INTERVAL);
         driverUpdateQueue.add(new DriverUpdateDao(driverChatId, calendar.getTime()));
@@ -35,7 +37,7 @@ public class DriverViewUpdateService {
 
     public void removeDriver(long driverChatId) {
         if (driverUpdateQueue.remove(new DriverUpdateDao(driverChatId)) && driverUpdateQueue.isEmpty()) {
-            onDriverQueueEmptyEvent();
+            EventService.getInstance().notify(Events.DRIVER_QUEUE_EMPTY_EVENT, null);
         }
     }
 
@@ -99,15 +101,12 @@ public class DriverViewUpdateService {
         driverUpdateQueue.add(newUpdateDao);
     }
 
+    public List<DriverUpdateDao> getDriverUpdateQueueList(){
+        return driverUpdateQueue;
+    }
+
     @Override
     public String toString() {
         return driverUpdateQueue.toString();
-    }
-
-    protected void onDriverQueueEmptyEvent() {}
-    protected void onDriverQueueNotEmptyEvent() {}
-
-    public List<DriverUpdateDao> getDriverUpdateQueueList(){
-        return driverUpdateQueue;
     }
 }

@@ -2,7 +2,10 @@ package services.trip_services;
 
 import models.QueueTrip;
 import models.TakenTrip;
+import models.dao.SendTripDao;
 import repositories.TripRepository;
+import services.event_service.EventService;
+import services.event_service.utils.Events;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +25,27 @@ public class TripService {
     private final FinishedTripService finishedTripService;
     private final TripRepository tripRepository;
 
-    public TripService(Map<Long, QueueTrip> inactiveTrips, Queue<QueueTrip> queueTrips,
+    private static TripService INSTANCE;
+
+    public static TripService getInstance() {
+        if (INSTANCE == null)
+            throw new RuntimeException("Instance has not been initialized");
+        return INSTANCE;
+    }
+
+    private TripService(Map<Long, QueueTrip> inactiveTrips, Queue<QueueTrip> queueTrips,
                        List<TakenTrip> takenTrips, List<TakenTrip> finishedTrips) {
         tripBuilderService = new TripBuilderService(inactiveTrips);
         tripQueueService = new TripQueueService(queueTrips);
         finishedTripService = new FinishedTripService(finishedTrips);
         takenTripService = new TakenTripService(takenTrips);
         tripRepository = new TripRepository();
+    }
+
+    public static void initializeInstance(Map<Long, QueueTrip> builtTrips, Queue<QueueTrip> queueTrips, List<TakenTrip> takenTrips, List<TakenTrip> finishedTrips) {
+        if (INSTANCE != null)
+            throw new RuntimeException("Instance already initialized");
+        INSTANCE = new TripService(builtTrips, queueTrips, takenTrips, finishedTrips);
     }
 
     public UUID getTripId(long passengerChatId) {
@@ -54,7 +71,9 @@ public class TripService {
 
     // trip queue methods
     public void addNewTripToQueue(long chatId) {
-        tripQueueService.add(tripBuilderService.getTripInfo(chatId));
+        QueueTrip trip = tripBuilderService.getTripInfo(chatId);
+        EventService.getInstance().notify(Events.NEW_TRIP_EVENT, new SendTripDao(trip));
+        tripQueueService.add(trip);
     }
 
     public void cancelTripOnSearchStopped(long passengerChatId) {
@@ -93,6 +112,7 @@ public class TripService {
         QueueTrip trip = tripBuilderService.getTripInfo(passengerChatId);
         if (trip != null) {
             UUID tripId = trip.getTripId();
+            EventService.getInstance().notify(Events.REMOVE_TRIP_EVENT, new SendTripDao(trip));
             CompletableFuture.runAsync(() -> tripRepository.deactivateTrip(tripId));
         }
     }
@@ -127,6 +147,7 @@ public class TripService {
             throw new RuntimeException("Driver is not viewing trip");
         TakenTrip takenTrip = new TakenTrip(trip, driverId);
         takenTripService.addTakenTrip(takenTrip);
+        EventService.getInstance().notify(Events.REMOVE_TRIP_EVENT, new SendTripDao(trip));
         CompletableFuture.runAsync(() -> tripRepository.setDriverTookTrip(trip.getTripId(), driverId));
     }
 
@@ -144,8 +165,10 @@ public class TripService {
     // when passenger does not like driver
     public void dismissPassengerTrip(long passengerChatId) {
         TakenTrip takenTrip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
-        if (takenTrip != null)
+        if (takenTrip != null) {
+            EventService.getInstance().notify(Events.NEW_TRIP_EVENT, new SendTripDao(takenTrip));
             tripQueueService.add(new QueueTrip(takenTrip));
+        }
     }
 
     /**
