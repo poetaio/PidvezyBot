@@ -15,10 +15,10 @@ public class NormalizeService {
     // should be called after normalizing number (so that it wouldn't be null)
     public static String normalizeUsername(String username, @NotNull String number) {
         if (username == null) {
-            if (number.equals("")) {
-                return "";
-            }
-            return "https://t.me/" + number;
+            return "";
+//            if (number.equals("")) {
+//            }
+//            return "https://t.me/" + number;
         }
         return "@" + username;
     }

@@ -15,9 +15,9 @@ public class PidvesyBot extends AbilityBot {
         return Constants.CREATOR_ID;
     }
     
-    public PidvesyBot() throws JsonProcessingException {
+    public PidvesyBot() throws JsonProcessingException, TelegramApiException {
         super(System.getenv("PIDVEZY_BOT_TOKEN"), Constants.BOT_USERNAME);
-        responseHandler = ResponseHandler.getInstance(sender);
+        responseHandler = ResponseHandler.getInstance(sender, getMe().getId());
     }
 
     public Ability start() {

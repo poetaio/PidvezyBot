@@ -3,6 +3,8 @@ package bots.pidvezy_chat_bot;
 import bots.pidvezy_chat_bot.factories.SendMessageFactory;
 import bots.pidvezy_chat_bot.tasks.ClearTripsAfterCurfewTask;
 import bots.pidvezy_chat_bot.tasks.DriverViewUpdateTask;
+import bots.pidvezy_group_bot.trip_update_handler.TripUpdateManager;
+import bots.pidvezy_group_bot.utils.EmptyEditCallback;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
 import bots.utils.ResultCallback;
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
 import models.QueueTrip;
 import models.TakenTrip;
+import models.dao.SendTripDao;
 import models.dao.adminDao.LogDao;
 import models.utils.State;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +27,7 @@ import services.*;
 import services.driver_services.DriverService;
 import services.event_service.EventService;
 import services.message_services.EscapeMessageService;
+import services.message_services.NormalizeService;
 import services.trip_services.TripService;
 import services.event_service.utils.EventListener;
 import services.event_service.utils.Events;
@@ -41,33 +45,43 @@ public class ResponseHandler implements EventListener {
     private static ResponseHandler INSTANCE;
     private LogService logService;
 
-    public static ResponseHandler getInstance(MessageSender sender) throws JsonProcessingException {
+    public static ResponseHandler getInstance(MessageSender sender, long botId) throws JsonProcessingException {
         if (INSTANCE == null)
-            INSTANCE = new ResponseHandler(sender);
+            INSTANCE = new ResponseHandler(sender, botId);
         return INSTANCE;
     }
 
     private final MessageSender sender;
+    private final long botId;
 
     private UserService userService;
     private DriverService driverService;
     private TripService tripService;
+    private GroupService groupService;
 
     private final EmptyCallback emptyCallback;
+    private final EmptyEditCallback emptyEditCallback;
     private LogDao.LogDaoBuilder logDaoBuilder;
 
-    public ResponseHandler(MessageSender sender) {
+    public ResponseHandler(MessageSender sender, long botId) {
         this.sender = sender;
+        this.botId = botId;
 
         setupServices();
         setupTasks();
         emptyCallback = new EmptyCallback();
+        emptyEditCallback = new EmptyEditCallback();
+
+        TripUpdateManager updateManager = new TripUpdateManager(this::sendTripOfferMessage, this::updateTripOnFinished);
+        EventService.getInstance().subscribe(Events.NEW_TRIP_EVENT, updateManager);
+        EventService.getInstance().subscribe(Events.REMOVE_TRIP_EVENT, updateManager);
         EventService.getInstance().subscribe(Events.DRIVER_QUEUE_NON_EMPTY_EVENT, this);
         EventService.getInstance().subscribe(Events.DRIVER_QUEUE_EMPTY_EVENT, this);
     }
 
     private void setupServices() {
         logService = new LogService();
+        this.groupService = GroupService.getInstance();
 
         driverService = DriverService.getInstance();
 
@@ -124,6 +138,17 @@ public class ResponseHandler implements EventListener {
         if (!upd.hasMessage() || ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
                 && upd.getMessage().getContact() == null)) {
             return;
+        }
+
+        // if bot has been added send all active trips
+        if (upd.getMessage().getNewChatMembers().stream().map(User::getId).anyMatch(x -> x.equals(botId))) {
+            handleBotJoinedGroup(upd);
+            return;
+        }
+
+        // if bot has been deleted remove chat from updates
+        if (upd.getMessage().getLeftChatMember() != null && upd.getMessage().getLeftChatMember().getId().equals(botId)) {
+            handleBotLeftGroup(upd);
         }
 
         String message = upd.getMessage().getText();
@@ -1008,5 +1033,68 @@ public class ResponseHandler implements EventListener {
         for (Long passengerChatId : tripService.getPassengersInQueue()) {
             sender.executeAsync(SendMessageFactory.driversGotYourMessageSendMessage(passengerChatId), emptyCallback);
         }
+    }
+
+    private void handleBotJoinedGroup(Update update) {
+        long chatId = AbilityUtils.getChatId(update);
+        String groupName = update.getMessage().getChat().getTitle();
+        groupService.addNewGroup(chatId, groupName);
+    }
+
+    private void handleBotLeftGroup(Update update) {
+        long chatId = AbilityUtils.getChatId(update);
+        groupService.removeGroupIfActive(chatId);
+    }
+
+    @SneakyThrows
+    public void sendTripOfferMessage(SendTripDao trip) {
+        String tripOffer = generateTripOffer(trip);
+        for (long groupId : groupService.getActiveGroupIds()) {
+            sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.newTripSendMessage(groupId, tripOffer), (ResultCallback) (botApiMethod, message) ->
+                    // save message that was sent in order to delete it after trip is finished
+                    groupService.setMessageIdByGroupAndTripId(groupId, trip.getTripId(), message.getMessageId()));
+//            sender.execute(SendMessageFactory.newTripSendMessage(chatId, tripOffer));
+        }
+    }
+
+    @SneakyThrows
+    private void updateTripOnFinished(SendTripDao trip) {
+        String tripUpdatedMessage = generateTripUpdate(trip);
+        for (long groupId : groupService.getActiveGroupIds()) {
+            // getting trip message id to remove all info from it
+            Integer messageId = groupService.getMessageIdByGroupAndTripId(groupId, trip.getTripId());
+            if (messageId == null)
+                continue;
+            sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripUpdateMessage(groupId, messageId, tripUpdatedMessage), emptyEditCallback);
+        }
+    }
+
+    private String generateTripOffer(SendTripDao trip) {
+        long passengerChatId = trip.getPassengerChatId();
+        User user = userService.getUserInfo(passengerChatId);
+        String number = NormalizeService.normalizeNumber(userService.getNumber(passengerChatId));
+        String username = NormalizeService.normalizeUsername(user.getUserName(), number);
+
+        if (user == null)
+            throw new RuntimeException("No user with such id " + passengerChatId);
+
+        return EscapeMessageService.escapeMessage(Constants.GROUP_BOT_TRIP_MESSAGE,
+                user.getFirstName(), user.getLastName() == null ? "" : " " + user.getLastName(),
+                trip.getAddress(), trip.getDetails(), number.isEmpty() ? "" : "\n" + number,
+                username.isEmpty() ? "" : "\n" + username);
+    }
+
+    private String generateTripUpdate(SendTripDao trip) {
+        long passengerChatId = trip.getPassengerChatId();
+        User user = userService.getUserInfo(passengerChatId);
+        String number = NormalizeService.normalizeNumber(userService.getNumber(passengerChatId));
+        String username = NormalizeService.normalizeUsername(user.getUserName(), number);
+
+        if (user == null)
+            throw new RuntimeException("No user with such id " + passengerChatId);
+
+        return EscapeMessageService.escapeMessage(Constants.GROUP_BOT_TRIP_FINISHED,
+                user.getFirstName(), user.getLastName() == null ? "" : " " + user.getLastName(),
+                trip.getAddress(), trip.getDetails());
     }
 }
