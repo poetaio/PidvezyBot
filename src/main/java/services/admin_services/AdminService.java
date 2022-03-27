@@ -1,23 +1,39 @@
 package services.admin_services;
 
-import lombok.AllArgsConstructor;
 import models.*;
-import models.dao.UserDao;
+import models.dao.adminDao.AdminInactiveTrip;
+import models.dao.adminDao.AdminQueueTrip;
+import models.dao.adminDao.AdminTakenTrip;
+import models.dao.adminDao.UserDao;
+import models.hibernate.Group;
+import models.hibernate.utils.GroupCriteria;
+import models.utils.GroupStatus;
 import org.telegram.telegrambots.meta.api.objects.User;
+import repositories.utils.CountGroupDao;
+import services.GroupService;
 import services.UserService;
 import services.driver_services.DriverService;
-import services.passenger_services.NumberService;
 import services.trip_services.TripService;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 public class AdminService {
     private final UserService userService;
     private final DriverService driverService;
-    private final NumberService numberService;
     private final TripService tripService;
+
+    private static final AdminService INSTANCE = new AdminService();
+
+    private AdminService() {
+        userService = UserService.getInstance();
+        driverService = DriverService.getInstance();
+        tripService = TripService.getInstance();
+    }
+
+    public static AdminService getInstance() {
+        return INSTANCE;
+    }
 
     public List<AdminInactiveTrip> getInactiveTrips() {
         return tripService.getAllNotFinishedTrips()
@@ -82,5 +98,29 @@ public class AdminService {
                 .stream()
                 .map(this::getUserDaoByChatId)
                 .collect(Collectors.toList());
+    }
+
+    public CountGroupDao getGroups(Integer page, Integer limit, GroupCriteria groupCriteria) {
+        return GroupService.getInstance().getAllGroups(page, limit, groupCriteria);
+    }
+
+    // set status inactive to present group
+    public void deactivateGroupFromGroupBot(long chatId) {
+        GroupService.getInstance().setGroupInactive(chatId);
+    }
+
+    // set status active to present group
+    public void activateGroupInGroupBot(long chatId) {
+        GroupService.getInstance().setGroupActive(chatId);
+    }
+
+    // add new group to group bot if it exists resets the name
+    public void addGroupToGroupBot(long chatId, String groupName) {
+        GroupService.getInstance().addNewGroup(chatId, groupName);
+    }
+
+    // remove totally, if group wants to rejoin it will be able to
+    public void removeGroupFromGroupBot(long chatId) {
+        GroupService.getInstance().removeGroupIfActive(chatId);
     }
 }

@@ -4,16 +4,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import models.utils.LogCriteria;
+import models.dao.GroupDao;
+import models.hibernate.Group;
+import models.hibernate.utils.GroupCriteria;
+import models.utils.GroupStatus;
+import models.hibernate.utils.LogCriteria;
 import models.utils.State;
-import server.utils.CountAndLogList;
+import repositories.GroupRepository;
+import repositories.utils.CountGroupDao;
+import repositories.utils.CountLogDao;
 import server.utils.HttpParamQuery;
+import services.LogService;
 import services.admin_services.AdminService;
-import services.admin_services.HistoryService;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import static server.utils.Constants.*;
 
@@ -22,15 +29,15 @@ public class AdminHttpHandler implements HttpHandler {
     private final AdminService adminService;
     private final ObjectMapper objectMapper;
     private final HttpHandlingService httpService;
-    private final HistoryService historyService;
+    private final LogService logService;
 
-    public AdminHttpHandler(AdminService adminService) {
-        this.adminService = adminService;
-        historyService = new HistoryService();
+    public AdminHttpHandler() {
+        this.adminService = AdminService.getInstance();
         objectMapper = new ObjectMapper();
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm");
         objectMapper.setDateFormat(df);
         httpService = new HttpHandlingService();
+        logService = new LogService();
     }
 
     @Override
@@ -43,8 +50,10 @@ public class AdminHttpHandler implements HttpHandler {
                 httpExchange.sendResponseHeaders(204, -1);
                 return;
             }
-            if ("GET".equals(httpExchange.getRequestMethod())) {
-                switch (httpExchange.getRequestURI().getPath()) {
+            String method = httpExchange.getRequestMethod();
+            String path = httpExchange.getRequestURI().getPath();
+            if ("GET".equals(method)) {
+                switch (path) {
                     case TRIP_QUEUE_RESOURCE:
                         getTripQueue(httpExchange);
                         break;
@@ -63,9 +72,41 @@ public class AdminHttpHandler implements HttpHandler {
                     case HISTORY_RESOURCE:
                         getHistory(httpExchange);
                         break;
+                    case ALL_GROUPS_RESOURCE:
+                        getAllGroups(httpExchange);
+                        break;
                     default:
                         httpService.sendErrorResponse(httpExchange, "No such endpoint...");
                 }
+                return;
+            }
+            if ("POST".equals(method)) {
+                if (path.equals(ADD_GROUP_RESOURCE)) {
+                    addGroupToGroupBot(httpExchange);
+                    return;
+                }
+                httpService.sendErrorResponse(httpExchange, "No such endpoint...");
+                return;
+            }
+            if ("PUT".equals(method)) {
+                switch (path) {
+                    case SET_GROUP_ACTIVE_RESOURCE:
+                        setGroupActive(httpExchange);
+                        break;
+                    case SET_GROUP_INACTIVE_RESOURCE:
+                        setGroupInactive(httpExchange);
+                        break;
+                    default:
+                        httpService.sendErrorResponse(httpExchange, "No such endpoint...");
+                }
+                return;
+            }
+            if ("DELETE".equals(method)) {
+                if (path.equals(REMOVE_GROUP_RESOURCE)) {
+                    removeGroupFromGroupBot(httpExchange);
+                    return;
+                }
+                httpService.sendErrorResponse(httpExchange, "No such endpoint...");
             }
             // todo: split into AUTH error and internal server error
         } catch (RuntimeException | JsonProcessingException e) {
@@ -73,7 +114,7 @@ public class AdminHttpHandler implements HttpHandler {
             httpService.sendErrorResponse(httpExchange, e.getMessage());
         } catch (Exception e) {
             System.out.println("Internal error occurred");
-            httpService.sendErrorResponse(httpExchange, e.getMessage());
+            httpService.sendErrorResponse(httpExchange);
         }
     }
 
@@ -118,10 +159,95 @@ public class AdminHttpHandler implements HttpHandler {
 
         LogCriteria logCriteria = new LogCriteria(dateFrom, dateTo, stateFrom, stateTo, userId);
 
-        CountAndLogList res = historyService.getAll(page, limit, logCriteria);
+        CountLogDao res = logService.getAll(page, limit, logCriteria);
         String response = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(res);
 
         httpService.sendResponse(httpExchange, response, 200);
+    }
+
+    private void getAllGroups(HttpExchange httpExchange) throws RuntimeException, JsonProcessingException {
+        httpService.checkAuth(httpExchange);
+
+        HttpParamQuery query = new HttpParamQuery(httpExchange.getRequestURI().getQuery());
+
+        Integer limit = query.getIntParam("limit");
+        Integer page = query.getIntParam("page");
+        Long groupId = query.getLongParam("groupId");
+        String groupName = query.getStringParam("groupName");
+        GroupStatus groupStatus = query.getGroupStatus("groupStatus");
+
+        CountGroupDao countGroupDao = adminService.getGroups(page, limit, new GroupCriteria(groupId, groupName, groupStatus));
+
+        String response = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(countGroupDao);
+
+        httpService.sendResponse(httpExchange, response, 200);
+    }
+
+    private void setGroupActive(HttpExchange httpExchange) throws RuntimeException, IOException {
+        httpService.checkAuth(httpExchange);
+
+        HttpParamQuery query = new HttpParamQuery(httpExchange.getRequestURI().getQuery());
+
+        Long groupId = query.getLongParam("groupId");
+        if (groupId == null) {
+            httpService.sendResponse(httpExchange, "No group id provided", 400);
+            return;
+        }
+
+        AdminService.getInstance().activateGroupInGroupBot(groupId);
+
+        httpService.sendResponse(httpExchange, 200);
+    }
+
+    private void setGroupInactive(HttpExchange httpExchange) throws RuntimeException, IOException {
+        httpService.checkAuth(httpExchange);
+
+        HttpParamQuery query = new HttpParamQuery(httpExchange.getRequestURI().getQuery());
+
+        Long groupId = query.getLongParam("groupId");
+        if (groupId == null) {
+            httpService.sendResponse(httpExchange, "No group id provided", 400);
+            return;
+        }
+
+        AdminService.getInstance().deactivateGroupFromGroupBot(groupId);
+
+        httpService.sendResponse(httpExchange, 200);
+    }
+
+    private void addGroupToGroupBot(HttpExchange httpExchange) throws RuntimeException, IOException {
+        httpService.checkAuth(httpExchange);
+
+        GroupDao newGroup = new ObjectMapper().readValue(httpExchange.getRequestBody(), GroupDao.class);
+        if (newGroup.getGroupId() == null) {
+            httpService.sendResponse(httpExchange, "No group id provided", 400);
+            return;
+        }
+
+        if (newGroup.getGroupName() == null) {
+            httpService.sendResponse(httpExchange, "No group name provided", 400);
+            return;
+        }
+
+        AdminService.getInstance().addGroupToGroupBot(newGroup.getGroupId(), newGroup.getGroupName());
+
+        httpService.sendResponse(httpExchange, 200);
+    }
+
+    private void removeGroupFromGroupBot(HttpExchange httpExchange) throws RuntimeException, IOException {
+        httpService.checkAuth(httpExchange);
+
+        HttpParamQuery query = new HttpParamQuery(httpExchange.getRequestURI().getQuery());
+
+        Long groupId = query.getLongParam("groupId");
+        if (groupId == null) {
+            httpService.sendResponse(httpExchange, "No group id provided", 400);
+            return;
+        }
+
+        AdminService.getInstance().removeGroupFromGroupBot(groupId);
+
+        httpService.sendResponse(httpExchange, 200);
     }
 
 }

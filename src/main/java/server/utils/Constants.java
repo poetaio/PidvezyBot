@@ -9,6 +9,12 @@ public interface Constants {
     String ACTIVE_DRIVERS_RESOURCE = "/activeDrivers";
     String HISTORY_RESOURCE =  "/history";
 
+    String ALL_GROUPS_RESOURCE = "/group";
+    String SET_GROUP_ACTIVE_RESOURCE = "/group/unban";
+    String SET_GROUP_INACTIVE_RESOURCE = "/group/ban";
+    String ADD_GROUP_RESOURCE = "/group/add";
+    String REMOVE_GROUP_RESOURCE = "/group/remove";
+
     String LOGIN_RESOURCE = "/auth/login";
 
     int DEFAULT_LIMIT = 10;
