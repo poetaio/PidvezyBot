@@ -103,9 +103,10 @@ public class PersistenceService {
                 activeGroupIds.add(x.getGroupId());
             else
                 inactiveGroupIds.add(x.getGroupId());
-            for (GroupMessage groupMessage : x.getGroupMessages())
+            for (GroupMessage groupMessage : x.getGroupMessages()) {
                 groupTripMessageMap.computeIfAbsent(x.getGroupId(), y -> new HashMap<>())
                         .put(groupMessage.getTrip().getTripId(), groupMessage.getMessageId());
+            }
         });
 
         EventService.initializeInstance();
