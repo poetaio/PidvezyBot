@@ -1097,17 +1097,22 @@ public class ResponseHandler implements EventListener {
         for (long groupId : groupService.getActiveGroupIds()) {
             // getting trip message id to remove all info from it
             Integer messageId = groupService.getMessageIdByGroupAndTripId(groupId, trip.getTripId());
-            if (messageId == null)
+            groupService.deleteMessage(groupId, trip.getTripId());
+
+            if (messageId == null) {
                 continue;
+            }
 
             GroupType groupType = groupService.getGroupType(groupId);
 
             // if group   -> update
             // if channel -> delete
-            if (Objects.equals(groupType, GroupType.GROUP))
+            if (Objects.equals(groupType, GroupType.GROUP)) {
                 sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripUpdateMessage(groupId, messageId, tripUpdatedMessage), emptyEditCallback);
-            else if (Objects.equals(groupType, GroupType.CHANNEL))
+            }
+            else if (Objects.equals(groupType, GroupType.CHANNEL)) {
                 sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripDeleteMessage(groupId, messageId), emptyDeleteCallback);
+            }
         }
     }
 

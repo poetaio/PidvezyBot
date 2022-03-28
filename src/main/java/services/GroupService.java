@@ -37,6 +37,8 @@ public class GroupService {
 
     public static void initializeInstance(Collection<Long> activeGroupIds, Collection<Long> inactiveGroupIds
             , Map<Long, GroupDao> groupInfoMap, Map<Long, Map<UUID, Integer>> groupTripMessageMap) {
+        if (INSTANCE != null)
+            throw new RuntimeException("Instance has already been initialized");
         INSTANCE = new GroupService(activeGroupIds, inactiveGroupIds, groupInfoMap, groupTripMessageMap);
     }
 
@@ -68,6 +70,7 @@ public class GroupService {
             return;
         activeGroupIds.remove(chatId);
         groupInfoMap.remove(chatId);
+        groupTripMessageMap.remove(chatId);
         CompletableFuture.runAsync(() -> groupRepository.removeGroup(chatId));
     }
 
@@ -79,6 +82,7 @@ public class GroupService {
 
     public void setGroupInactive(long groupId) {
         activeGroupIds.remove(groupId);
+        groupTripMessageMap.remove(groupId);
         inactiveGroupIds.add(groupId);
         CompletableFuture.runAsync(() -> groupRepository.setGroupInactive(groupId));
     }
@@ -103,7 +107,7 @@ public class GroupService {
     }
 
     public void putChannelName(long channelId, String channelName) {
-        GroupDao channel = groupInfoMap.computeIfAbsent(channelId, x -> new GroupDao(channelId, GroupType.GROUP));
+        GroupDao channel = groupInfoMap.computeIfAbsent(channelId, x -> new GroupDao(channelId, GroupType.CHANNEL));
         channel.setGroupName(channelName);
         CompletableFuture.runAsync(() -> groupRepository.setChannelName(channelId, channelName));
     }
@@ -119,6 +123,11 @@ public class GroupService {
 
     public Integer getMessageIdByGroupAndTripId(long groupId, UUID tripId) {
         return groupTripMessageMap.computeIfAbsent(groupId, x -> new HashMap<>()).get(tripId);
+    }
+
+    public void deleteMessage(long groupId, UUID tripId) {
+        groupTripMessageMap.computeIfAbsent(groupId, x -> new HashMap<>()).remove(tripId);
+        CompletableFuture.runAsync(() -> groupRepository.removeMessageIdByGroupAndTrip(groupId, tripId));
     }
 
     public void setMessageIdByGroupAndTripId(long groupId, UUID tripId, Integer messageId) {

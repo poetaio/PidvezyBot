@@ -19,7 +19,8 @@ public class GroupMessage {
     @EmbeddedId
     private GroupMessageId groupMessageId = new GroupMessageId();
 
-    @ManyToOne(cascade = CascadeType.ALL)
+//    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
 //    @OnDelete(action = OnDeleteAction.CASCADE)
     @MapsId("groupId")
     private Group group;

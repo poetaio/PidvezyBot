@@ -155,4 +155,19 @@ public class GroupRepository {
 
         session.getTransaction().commit();
     }
+
+    public void removeMessageIdByGroupAndTrip(long groupId, UUID tripId) {
+        Session session = HibernateUtil.getSession();
+        session.beginTransaction();
+
+        Group group = getGroupWithDefault(session, groupId);
+        if (group.getGroupMessages() == null)
+            return;
+
+        Trip trip = tripRepository.getTripWithDefault(session, tripId);
+        GroupMessage groupMessage = groupMessageRepository.getGroupMessageWithDefault(session, group, trip);
+        session.delete(groupMessage);
+
+        session.getTransaction().commit();
+    }
 }
