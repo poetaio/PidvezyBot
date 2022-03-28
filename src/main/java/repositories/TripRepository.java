@@ -3,7 +3,7 @@ package repositories;
 import models.QueueTrip;
 import models.hibernate.Trip;
 import models.hibernate.User;
-import models.utils.TripStatus;
+import models.hibernate.utils.TripStatus;
 import org.hibernate.Session;
 import utils.HibernateUtil;
 

@@ -2,6 +2,7 @@ package bots.pidvezy_group_bot.utils;
 
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -39,6 +40,13 @@ public class SendMessageFactory {
                 .messageId(messageId)
                 .text(messageText)
                 .parseMode(ParseMode.MARKDOWNV2)
+                .build();
+    }
+
+    public static DeleteMessage removeTripDeleteMessage(long groupId, Integer messageId) throws TelegramApiException {
+        return DeleteMessage.builder()
+                .chatId(String.valueOf(groupId))
+                .messageId(messageId)
                 .build();
     }
 }

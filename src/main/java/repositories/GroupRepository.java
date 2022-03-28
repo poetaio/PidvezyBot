@@ -4,7 +4,8 @@ import models.hibernate.Group;
 import models.hibernate.GroupMessage;
 import models.hibernate.Trip;
 import models.hibernate.utils.GroupCriteria;
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupStatus;
+import models.hibernate.utils.GroupType;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import repositories.utils.CountGroupDao;
@@ -28,10 +29,21 @@ public class GroupRepository {
         groupMessageRepository = new GroupMessageRepository();
     }
 
-    public Group getWithDefault(Session session, long groupId) {
+    public Group getGroupWithDefault(Session session, long groupId) {
         Group group = session.get(Group.class, groupId);
         if (group == null) {
             group = new Group(groupId);
+            group.setGroupType(GroupType.GROUP);
+            session.persist(group);
+        }
+        return group;
+    }
+
+    public Group getChannelWithDefault(Session session, long groupId) {
+        Group group = session.get(Group.class, groupId);
+        if (group == null) {
+            group = new Group(groupId);
+            group.setGroupType(GroupType.CHANNEL);
             session.persist(group);
         }
         return group;
@@ -41,7 +53,7 @@ public class GroupRepository {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
-        session.delete(getWithDefault(session, chatId));
+        session.delete(getGroupWithDefault(session, chatId));
 
         session.getTransaction().commit();
     }
@@ -50,7 +62,7 @@ public class GroupRepository {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
-        Group group = getWithDefault(session, groupId);
+        Group group = getGroupWithDefault(session, groupId);
         group.setGroupStatus(GroupStatus.ACTIVE);
 
         session.getTransaction().commit();
@@ -60,18 +72,28 @@ public class GroupRepository {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
-        Group group = getWithDefault(session, groupId);
+        Group group = getGroupWithDefault(session, groupId);
         group.setGroupStatus(GroupStatus.INACTIVE);
 
         session.getTransaction().commit();
     }
 
-    public void setName(long groupId, String groupName) {
+    public void setGroupName(long groupId, String groupName) {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
-        Group group = getWithDefault(session, groupId);
+        Group group = getGroupWithDefault(session, groupId);
         group.setGroupName(groupName);
+
+        session.getTransaction().commit();
+    }
+
+    public void setChannelName(long channelId, String channelName) {
+        Session session = HibernateUtil.getSession();
+        session.beginTransaction();
+
+        Group channel = getChannelWithDefault(session, channelId);
+        channel.setGroupName(channelName);
 
         session.getTransaction().commit();
     }
@@ -123,7 +145,7 @@ public class GroupRepository {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
-        Group group = getWithDefault(session, groupId);
+        Group group = getGroupWithDefault(session, groupId);
         if (group.getGroupMessages() == null)
             group.setGroupMessages(new HashSet<>());
 

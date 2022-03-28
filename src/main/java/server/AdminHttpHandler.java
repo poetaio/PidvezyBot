@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import models.dao.GroupDao;
-import models.hibernate.Group;
 import models.hibernate.utils.GroupCriteria;
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupStatus;
 import models.hibernate.utils.LogCriteria;
 import models.utils.State;
-import repositories.GroupRepository;
 import repositories.utils.CountGroupDao;
 import repositories.utils.CountLogDao;
 import server.utils.HttpParamQuery;
@@ -20,7 +18,6 @@ import services.admin_services.AdminService;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.List;
 
 import static server.utils.Constants.*;
 

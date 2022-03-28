@@ -1,6 +1,6 @@
 package server.utils;
 
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupStatus;
 import models.utils.State;
 
 import java.sql.Timestamp;

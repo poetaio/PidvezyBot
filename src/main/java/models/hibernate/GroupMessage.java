@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
@@ -17,7 +19,8 @@ public class GroupMessage {
     @EmbeddedId
     private GroupMessageId groupMessageId = new GroupMessageId();
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
+//    @OnDelete(action = OnDeleteAction.CASCADE)
     @MapsId("groupId")
     private Group group;
 

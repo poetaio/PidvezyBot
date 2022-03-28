@@ -2,7 +2,6 @@ package models.hibernate.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import models.utils.GroupStatus;
 
 @Getter
 @AllArgsConstructor

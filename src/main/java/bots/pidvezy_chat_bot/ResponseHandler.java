@@ -7,6 +7,7 @@ import bots.pidvezy_group_bot.trip_update_handler.TripUpdateManager;
 import bots.pidvezy_group_bot.utils.EmptyEditCallback;
 import bots.utils.Constants;
 import bots.utils.EmptyCallback;
+import bots.utils.EmptyDeleteCallback;
 import bots.utils.ResultCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
@@ -14,15 +15,19 @@ import models.QueueTrip;
 import models.TakenTrip;
 import models.dao.SendTripDao;
 import models.dao.adminDao.LogDao;
+import models.hibernate.utils.GroupType;
 import models.utils.State;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
+import org.telegram.telegrambots.meta.updateshandlers.SentCallback;
 import services.*;
 import services.driver_services.DriverService;
 import services.event_service.EventService;
@@ -44,12 +49,12 @@ import java.util.stream.Collectors;
 public class ResponseHandler implements EventListener {
     private static ResponseHandler INSTANCE;
     private LogService logService;
-
     public static ResponseHandler getInstance(MessageSender sender, long botId) throws JsonProcessingException {
         if (INSTANCE == null)
             INSTANCE = new ResponseHandler(sender, botId);
         return INSTANCE;
     }
+
 
     private final MessageSender sender;
     private final long botId;
@@ -61,6 +66,7 @@ public class ResponseHandler implements EventListener {
 
     private final EmptyCallback emptyCallback;
     private final EmptyEditCallback emptyEditCallback;
+    private final EmptyDeleteCallback emptyDeleteCallback;
     private LogDao.LogDaoBuilder logDaoBuilder;
 
     public ResponseHandler(MessageSender sender, long botId) {
@@ -71,6 +77,7 @@ public class ResponseHandler implements EventListener {
         setupTasks();
         emptyCallback = new EmptyCallback();
         emptyEditCallback = new EmptyEditCallback();
+        emptyDeleteCallback = new EmptyDeleteCallback();
 
         TripUpdateManager updateManager = new TripUpdateManager(this::sendTripOfferMessage, this::updateTripOnFinished);
         EventService.getInstance().subscribe(Events.NEW_TRIP_EVENT, updateManager);
@@ -133,20 +140,33 @@ public class ResponseHandler implements EventListener {
      * @throws TelegramApiException Classic telegram exception
      */
     public void handleUpdate(Update upd) throws TelegramApiException {
-        long chatId = AbilityUtils.getChatId(upd);
-
-        if (!upd.hasMessage())
+        // if bot has been added to channel
+        if (upd.getMyChatMember() != null && "administrator".equals(upd.getMyChatMember().getNewChatMember().getStatus())) {
+            handleBotJoinedChannel(upd);
             return;
+        }
 
-        // if bot has been added send all active trips
-        if (upd.getMessage().getNewChatMembers().stream().map(User::getId).anyMatch(x -> x.equals(botId))) {
+        // if bot has been banned from channel
+        if (upd.getMyChatMember() != null && ("left".equals(upd.getMyChatMember().getNewChatMember().getStatus()) ||
+                "kicked".equals(upd.getMyChatMember().getNewChatMember().getStatus()))) {
+            handleBotLeftChannel(upd);
+            return;
+        }
+
+        if (!upd.hasMessage()) {
+            return;
+        }
+
+        // if bot has been added
+        if (upd.getMessage().getNewChatMembers() != null && upd.getMessage().getNewChatMembers().stream().map(User::getId).anyMatch(x -> x.equals(botId))) {
             handleBotJoinedGroup(upd);
             return;
         }
 
         // if bot has been deleted remove chat from updates
-        if (upd.getMessage().getLeftChatMember() != null && upd.getMessage().getLeftChatMember().getId().equals(botId)) {
+        if (upd.getMessage().getNewChatMembers() != null && upd.getMessage().getLeftChatMember() != null && upd.getMessage().getLeftChatMember().getId().equals(botId)) {
             handleBotLeftGroup(upd);
+            return;
         }
 
         if ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
@@ -154,6 +174,7 @@ public class ResponseHandler implements EventListener {
             return;
         }
 
+        long chatId = AbilityUtils.getChatId(upd);
         String message = upd.getMessage().getText();
         SendMessage messageToSend;
 
@@ -1046,7 +1067,18 @@ public class ResponseHandler implements EventListener {
 
     private void handleBotLeftGroup(Update update) {
         long chatId = AbilityUtils.getChatId(update);
-        groupService.removeGroupIfActive(chatId);
+        groupService.removeIfActive(chatId);
+    }
+
+    private void handleBotJoinedChannel(Update update) {
+        long channelId = AbilityUtils.getChatId(update);
+        String channelName = update.getMyChatMember().getChat().getTitle();
+        groupService.addNewChannel(channelId, channelName);
+    }
+
+    private void handleBotLeftChannel(Update update) {
+        long channelId = AbilityUtils.getChatId(update);
+        groupService.removeIfActive(channelId);
     }
 
     @SneakyThrows
@@ -1056,7 +1088,6 @@ public class ResponseHandler implements EventListener {
             sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.newTripSendMessage(groupId, tripOffer), (ResultCallback) (botApiMethod, message) ->
                     // save message that was sent in order to delete it after trip is finished
                     groupService.setMessageIdByGroupAndTripId(groupId, trip.getTripId(), message.getMessageId()));
-//            sender.execute(SendMessageFactory.newTripSendMessage(chatId, tripOffer));
         }
     }
 
@@ -1068,7 +1099,15 @@ public class ResponseHandler implements EventListener {
             Integer messageId = groupService.getMessageIdByGroupAndTripId(groupId, trip.getTripId());
             if (messageId == null)
                 continue;
-            sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripUpdateMessage(groupId, messageId, tripUpdatedMessage), emptyEditCallback);
+
+            GroupType groupType = groupService.getGroupType(groupId);
+
+            // if group   -> update
+            // if channel -> delete
+            if (Objects.equals(groupType, GroupType.GROUP))
+                sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripUpdateMessage(groupId, messageId, tripUpdatedMessage), emptyEditCallback);
+            else if (Objects.equals(groupType, GroupType.CHANNEL))
+                sender.executeAsync(bots.pidvezy_group_bot.utils.SendMessageFactory.removeTripDeleteMessage(groupId, messageId), emptyDeleteCallback);
         }
     }
 

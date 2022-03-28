@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupStatus;
+import models.hibernate.utils.GroupType;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -24,10 +25,14 @@ public class Group {
     private String groupName;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "group_type")
+    private GroupType groupType;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "group_status")
     private GroupStatus groupStatus;
 
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     private Set<GroupMessage> groupMessages = new HashSet<>();
 
     public Group(long groupId) {
