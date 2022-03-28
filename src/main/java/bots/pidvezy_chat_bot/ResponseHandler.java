@@ -135,10 +135,8 @@ public class ResponseHandler implements EventListener {
     public void handleUpdate(Update upd) throws TelegramApiException {
         long chatId = AbilityUtils.getChatId(upd);
 
-        if (!upd.hasMessage() || ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
-                && upd.getMessage().getContact() == null)) {
+        if (!upd.hasMessage())
             return;
-        }
 
         // if bot has been added send all active trips
         if (upd.getMessage().getNewChatMembers().stream().map(User::getId).anyMatch(x -> x.equals(botId))) {
@@ -149,6 +147,11 @@ public class ResponseHandler implements EventListener {
         // if bot has been deleted remove chat from updates
         if (upd.getMessage().getLeftChatMember() != null && upd.getMessage().getLeftChatMember().getId().equals(botId)) {
             handleBotLeftGroup(upd);
+        }
+
+        if ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
+                && upd.getMessage().getContact() == null) {
+            return;
         }
 
         String message = upd.getMessage().getText();
