@@ -1,7 +1,6 @@
 package models;
 
 import lombok.*;
-import models.utils.TripStatus;
 
 import java.util.UUID;
 

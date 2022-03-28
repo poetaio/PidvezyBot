@@ -1,8 +1,8 @@
 package services;
 
-import models.hibernate.Group;
+import models.dao.GroupDao;
 import models.hibernate.utils.GroupCriteria;
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupType;
 import repositories.GroupRepository;
 import repositories.utils.CountGroupDao;
 
@@ -14,14 +14,14 @@ public class GroupService {
     private final Collection<Long> inactiveGroupIds;
 
     private final GroupRepository groupRepository;
-    private final Map<Long, String> groupNamesMap;
+    private final Map<Long, GroupDao> groupInfoMap;
     private final Map<Long, Map<UUID, Integer>> groupTripMessageMap;
 
     private GroupService(Collection<Long> activeGroupIds, Collection<Long> inactiveGroupIds,
-                         Map<Long, String> groupNamesMap, Map<Long, Map<UUID, Integer>> groupTripMessageMap) {
+                         Map<Long, GroupDao> groupInfoMap, Map<Long, Map<UUID, Integer>> groupTripMessageMap) {
         this.activeGroupIds = activeGroupIds;
         this.inactiveGroupIds = inactiveGroupIds;
-        this.groupNamesMap = groupNamesMap;
+        this.groupInfoMap = groupInfoMap;
 
         this.groupRepository = new GroupRepository();
         this.groupTripMessageMap = groupTripMessageMap;
@@ -36,8 +36,8 @@ public class GroupService {
     }
 
     public static void initializeInstance(Collection<Long> activeGroupIds, Collection<Long> inactiveGroupIds
-            , Map<Long, String> chatNamesMap, Map<Long, Map<UUID, Integer>> groupTripMessageMap) {
-        INSTANCE = new GroupService(activeGroupIds, inactiveGroupIds, chatNamesMap, groupTripMessageMap);
+            , Map<Long, GroupDao> groupInfoMap, Map<Long, Map<UUID, Integer>> groupTripMessageMap) {
+        INSTANCE = new GroupService(activeGroupIds, inactiveGroupIds, groupInfoMap, groupTripMessageMap);
     }
 
     public void addNewGroup(long chatId, String groupName) {
@@ -51,12 +51,23 @@ public class GroupService {
         activeGroupIds.add(chatId);
     }
 
-    public void removeGroupIfActive(long chatId) {
+    public void addNewChannel(long channelId, String channelName) {
+        // if group already saved, then only update name,
+        // otherwise set active
+        if (activeGroupIds.contains(channelId) || inactiveGroupIds.contains(channelId)) {
+            putChannelName(channelId, channelName);
+            return;
+        }
+        putChannelName(channelId, channelName);
+        activeGroupIds.add(channelId);
+    }
+
+    public void removeIfActive(long chatId) {
         // if the group is banned, re-adding bot to chat won't give any result
         if (inactiveGroupIds.contains(chatId))
             return;
         activeGroupIds.remove(chatId);
-        groupNamesMap.remove(chatId);
+        groupInfoMap.remove(chatId);
         CompletableFuture.runAsync(() -> groupRepository.removeGroup(chatId));
     }
 
@@ -81,12 +92,25 @@ public class GroupService {
     }
 
     public String getGroupName(long chatId) {
-        return groupNamesMap.get(chatId);
+        GroupDao group = groupInfoMap.get(chatId);
+        return group == null ? null : group.getGroupName();
     }
 
     public void putGroupName(long groupId, String groupName) {
-        groupNamesMap.put(groupId, groupName);
-        CompletableFuture.runAsync(() -> groupRepository.setName(groupId, groupName));
+        GroupDao group = groupInfoMap.computeIfAbsent(groupId, x -> new GroupDao(groupId, GroupType.GROUP));
+        group.setGroupName(groupName);
+        CompletableFuture.runAsync(() -> groupRepository.setGroupName(groupId, groupName));
+    }
+
+    public void putChannelName(long channelId, String channelName) {
+        GroupDao channel = groupInfoMap.computeIfAbsent(channelId, x -> new GroupDao(channelId, GroupType.GROUP));
+        channel.setGroupName(channelName);
+        CompletableFuture.runAsync(() -> groupRepository.setChannelName(channelId, channelName));
+    }
+
+    public GroupType getGroupType(long chatId) {
+        GroupDao group = groupInfoMap.get(chatId);
+        return group == null ? null : group.getGroupType();
     }
 
     public CountGroupDao getAllGroups(Integer page, Integer limit, GroupCriteria groupCriteria) {

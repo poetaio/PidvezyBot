@@ -1,4 +1,4 @@
-package models.utils;
+package models.hibernate.utils;
 
 public enum TripStatus {
     INACTIVE,

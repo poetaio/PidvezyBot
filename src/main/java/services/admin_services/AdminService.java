@@ -5,9 +5,7 @@ import models.dao.adminDao.AdminInactiveTrip;
 import models.dao.adminDao.AdminQueueTrip;
 import models.dao.adminDao.AdminTakenTrip;
 import models.dao.adminDao.UserDao;
-import models.hibernate.Group;
 import models.hibernate.utils.GroupCriteria;
-import models.utils.GroupStatus;
 import org.telegram.telegrambots.meta.api.objects.User;
 import repositories.utils.CountGroupDao;
 import services.GroupService;
@@ -121,6 +119,6 @@ public class AdminService {
 
     // remove totally, if group wants to rejoin it will be able to
     public void removeGroupFromGroupBot(long chatId) {
-        GroupService.getInstance().removeGroupIfActive(chatId);
+        GroupService.getInstance().removeIfActive(chatId);
     }
 }

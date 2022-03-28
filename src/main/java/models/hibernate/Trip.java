@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import models.utils.TripStatus;
+import models.hibernate.utils.TripStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;

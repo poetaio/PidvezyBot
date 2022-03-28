@@ -4,11 +4,12 @@ import bots.utils.Constants;
 import models.QueueTrip;
 import models.TakenTrip;
 import models.dao.DriverUpdateDao;
+import models.dao.GroupDao;
 import models.hibernate.Group;
 import models.hibernate.GroupMessage;
 import models.hibernate.Trip;
 import models.hibernate.User;
-import models.utils.GroupStatus;
+import models.hibernate.utils.GroupStatus;
 import models.utils.State;
 import services.event_service.EventService;
 import services.trip_services.utils.TripComparator;
@@ -92,12 +93,12 @@ public class PersistenceService {
 
         Collection<Long> inactiveGroupIds = new HashSet<>();
         Collection<Long> activeGroupIds = new HashSet<>();
-        Map<Long, String> groupNamesMap = new HashMap<>();
+        Map<Long, GroupDao> groupInfoMap = new HashMap<>();
         Map<Long, Map<UUID, Integer>> groupTripMessageMap = new HashMap<>();
 
         List<Group> allGroups = session.createQuery("SELECT g FROM groups g", Group.class).getResultList();
         allGroups.forEach(x -> {
-            groupNamesMap.put(x.getGroupId(), x.getGroupName());
+            groupInfoMap.put(x.getGroupId(), new GroupDao(x.getGroupId(), x.getGroupName(), x.getGroupType()));
             if (x.getGroupStatus() == GroupStatus.ACTIVE)
                 activeGroupIds.add(x.getGroupId());
             else
@@ -111,7 +112,7 @@ public class PersistenceService {
         DriverService.initializeInstance(driverList, driverUpdateDaos);
         TripService.initializeInstance(builtTrips, queueTrips, takenTrips, finishedTrips);
         UserService.initializeInstance(userStatesMap, userInfo, userNumbers);
-        GroupService.initializeInstance(activeGroupIds, inactiveGroupIds, groupNamesMap, groupTripMessageMap);
+        GroupService.initializeInstance(activeGroupIds, inactiveGroupIds, groupInfoMap, groupTripMessageMap);
 
         session.getTransaction().commit();
     }
