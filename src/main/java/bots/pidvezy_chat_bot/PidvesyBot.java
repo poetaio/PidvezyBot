@@ -29,7 +29,7 @@ public class PidvesyBot extends AbilityBot {
                 .privacy(Privacy.PUBLIC)
                 .action(ctx -> {
                     try {
-                        responseHandler.replyToStart(ctx.chatId());
+                        responseHandler.replyToStart(ctx.update(), ctx.chatId());
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
