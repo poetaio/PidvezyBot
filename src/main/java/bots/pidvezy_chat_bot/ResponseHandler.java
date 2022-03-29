@@ -125,9 +125,13 @@ public class ResponseHandler implements EventListener {
     /**
      * Replies to /start command with two roles to choose from
      *
+     * @param update update entity of the message
      * @param chatId of the chat message comes from
      */
-    public void replyToStart(long chatId) throws TelegramApiException {
+    public void replyToStart(Update update, long chatId) throws TelegramApiException {
+        if (update.getMessage() == null || update.getMessage().getChat() == null ||
+                !"private".equals(update.getMessage().getChat().getType()))
+            return;
         userService.performCleanup(chatId);
         userService.putState(chatId, State.CHOOSING_ROLE);
         sender.executeAsync(SendMessageFactory.chooseRoleSendMessage(chatId), emptyCallback);
@@ -180,7 +184,7 @@ public class ResponseHandler implements EventListener {
 
         State currentState = userService.getState(chatId);
         if (currentState == null) {
-            replyToStart(chatId);
+            replyToStart(upd, chatId);
             return;
         }
 
@@ -1093,7 +1097,11 @@ public class ResponseHandler implements EventListener {
 
     @SneakyThrows
     private void updateTripOnFinished(SendTripDao trip) {
+        if (trip == null)
+            return;
+
         String tripUpdatedMessage = generateTripUpdate(trip);
+
         for (long groupId : groupService.getActiveGroupIds()) {
             // getting trip message id to remove all info from it
             Integer messageId = groupService.getMessageIdByGroupAndTripId(groupId, trip.getTripId());
