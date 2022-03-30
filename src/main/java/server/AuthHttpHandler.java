@@ -55,7 +55,7 @@ public class AuthHttpHandler implements HttpHandler {
             httpService.sendResponse(httpExchange, response, 200);
         } catch (Exception e) {
             e.printStackTrace();
-            httpService.sendErrorResponse(httpExchange, e.getMessage());
+            httpService.sendErrorResponse(httpExchange, e.getMessage() == null ? "" : e.getMessage());
         }
     }
 }

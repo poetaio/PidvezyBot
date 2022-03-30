@@ -2,6 +2,7 @@ package repositories;
 
 import models.dao.adminDao.LogDao;
 import models.hibernate.Log;
+import models.hibernate.LogMessage;
 import models.hibernate.utils.LogCriteria;
 import org.hibernate.Session;
 import models.hibernate.User;
@@ -80,5 +81,14 @@ public class LogRepository {
         session.getTransaction().commit();
 
         return new CountLogDao(totalResultsNumber, query.getResultList());
+    }
+
+    public void logMessage(long chatId, byte[] messageText) {
+        Session session = HibernateUtil.getSession();
+        session.beginTransaction();
+
+        session.save(new LogMessage(chatId, messageText));
+
+        session.getTransaction().commit();
     }
 }

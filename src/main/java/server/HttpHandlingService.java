@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+import org.jetbrains.annotations.NotNull;
 import server.utils.JwtUtils;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class HttpHandlingService {
         sendErrorResponse(httpExchange, "Error happened...");
     }
 
-    protected void sendErrorResponse(HttpExchange httpExchange, String errorMessage)  throws RuntimeException {
+    protected void sendErrorResponse(HttpExchange httpExchange, @NotNull String errorMessage)  throws RuntimeException {
         sendResponse(httpExchange, errorMessage, 500);
     }
 

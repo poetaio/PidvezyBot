@@ -18,6 +18,10 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup faqReplyKeyboard() {
+        return makeOneColumnMenu(Constants.HOW_TO_GET_PERMIT, Constants.BACK);
+    }
+
+    public static ReplyKeyboardMarkup permitReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
     }
 
@@ -50,17 +54,17 @@ public class ReplyMarkupFactory {
     public static ReplyKeyboardMarkup driverTookTrip() {
         return makeOneColumnMenu(Constants.FINISH_TRIP, Constants.DRIVER_DISMISS_TRIP);
     }
-
     public static ReplyKeyboardMarkup goodBoyReplyKeyboard() throws TelegramApiException {
         return makeOneColumnMenu(Constants.AM_GOOD_BOY);
     }
+
     // passenger menus
 
     public static ReplyKeyboardMarkup enterAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.BACK);
     }
-
     // edit address menus
+
     public static ReplyKeyboardMarkup editAddressReplyKeyboard() {
         return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
     }
@@ -72,8 +76,8 @@ public class ReplyMarkupFactory {
     public static ReplyKeyboardMarkup editAddressSearchStopReplyKeyboard() {
         return makeOneColumnMenu(Constants.DO_NOT_CHANGE);
     }
-
     // edit details menus
+
     public static ReplyKeyboardMarkup editDetailsRegularReplyKeyboard() {
         return makeOneColumnMenu(Constants.DO_NOT_CHANGE, Constants.BACK);
     }
