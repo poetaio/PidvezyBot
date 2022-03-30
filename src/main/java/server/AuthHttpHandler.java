@@ -3,8 +3,9 @@ package server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import server.utils.JwtUtils;
-import server.utils.ResponseToken;
+import services.http_services.HttpHandlingService;
+import services.http_services.JwtService;
+import models.dao.ResponseTokenDao;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,24 +33,29 @@ public class AuthHttpHandler implements HttpHandler {
             }
             if (!"POST".equals(httpExchange.getRequestMethod())) {
                 httpService.sendErrorResponse(httpExchange, "Method is not supported");
+                return;
             }
 
             if (!httpExchange.getRequestURI().getPath().equals(LOGIN_RESOURCE)) {
                 httpService.sendErrorResponse(httpExchange);
+                return;
             }
 
             String body = httpService.getResponse(httpExchange);
-            if (body.isEmpty() || body.isBlank())
+            if (body.isEmpty() || body.isBlank()) {
                 httpService.sendErrorResponse(httpExchange, "Empty body");
+                return;
+            }
 
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> bodyMap = objectMapper.readValue(body, HashMap.class);
 
             if (!bodyMap.get("password").equals(System.getenv("ADMIN_PASSWORD"))) {
                 httpService.sendResponse(httpExchange, "Access denied", 401);
+                return;
             }
 
-            ResponseToken tokenObj = new ResponseToken(JwtUtils.generateToken());
+            ResponseTokenDao tokenObj = new ResponseTokenDao(JwtService.generateToken());
             String response = objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(tokenObj);
             httpService.sendResponse(httpExchange, response, 200);

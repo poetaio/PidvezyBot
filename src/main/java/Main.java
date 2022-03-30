@@ -1,4 +1,4 @@
-import bots.pidvezy_chat_bot.PidvesyBot;
+import bot.PidvesyBot;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -20,7 +20,7 @@ public class Main {
             new Thread(() -> {
                 try {
                     AdminServer adminServer = new AdminServer();
-                    adminServer.startAdminSever();
+                    adminServer.start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

@@ -1,6 +1,7 @@
 package models;
 
 import lombok.*;
+import models.hibernate.Trip;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -44,6 +45,10 @@ public class QueueTrip {
 
     public QueueTrip(TakenTrip takenTrip) {
         this(takenTrip.getTripId(), takenTrip.getPassengerChatId(), takenTrip.getAddress(), takenTrip.getDetails());
+    }
+
+    public QueueTrip(Trip trip) {
+        this(trip.getTripId(), trip.getPassenger().getUserId(), trip.getAddress(), trip.getDetails());
     }
 
     public void addDriverChatId(long driverChatId) {

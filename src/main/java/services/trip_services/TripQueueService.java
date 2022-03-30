@@ -19,17 +19,13 @@ import java.util.stream.Collectors;
  */
 public class TripQueueService {
     private static TripQueueService instance;
-    // pq goes in here, yeah boiiii
-    private Queue<QueueTrip> tripQueue;
-    private Queue<QueueTrip> bufferedTrips;
-
+    private final Queue<QueueTrip> tripQueue;
     private final TripRepository tripRepository;
 
     public TripQueueService(Queue<QueueTrip> tripQueue) {
         this.tripQueue = tripQueue;
         if (instance == null)
             instance = this;
-        bufferedTrips = new PriorityQueue<>(TripComparator.TRIP_COMPARATOR);
         tripRepository = new TripRepository();
     }
 
@@ -71,7 +67,6 @@ public class TripQueueService {
         }
 
         // add driver to list
-        assert nextTripToView != null;
         nextTripToView.addDriverChatId(driverChatId);
         UUID nextTripId = nextTripToView.getTripId();
         CompletableFuture.runAsync(() ->
@@ -116,42 +111,6 @@ public class TripQueueService {
         CompletableFuture.runAsync(() -> tripRepository.addTripToQueue(trip.getTripId()));
     }
 
-    public void returnTripFromBuffer(long passengerChatId) {
-        try {
-            QueueTrip tripToReturn = bufferedTrips.stream()
-                    .filter(trip -> trip.getPassengerChatId() == passengerChatId)
-                    .findFirst()
-                    .get();
-
-            bufferedTrips.remove(tripToReturn);
-            add(tripToReturn);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void removeTripFromBuffer(long passengerChatId) {
-        try {
-            bufferedTrips.removeIf(passenger -> passenger.getPassengerChatId() != passengerChatId);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void removeAndSaveInBufferByPassengerId(long passengerChatId) {
-        try {
-            QueueTrip tripToBuffer = tripQueue.stream()
-                    .filter(trip -> trip.getPassengerChatId() == passengerChatId)
-                    .findFirst()
-                    .get();
-
-            bufferedTrips.add(tripToBuffer);
-            tripQueue.removeIf(trip -> trip.getPassengerChatId() != passengerChatId);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void removeByPassengerId(long passengerChatId) {
         tripQueue.removeIf(trip -> trip.getPassengerChatId() == passengerChatId);
     }
@@ -169,12 +128,6 @@ public class TripQueueService {
         removeByDriverId(driverChatId);
         return resTrip;
     }
-
-//    public QueueTrip getAndRemoveByPassengerId(long passengerChatId) {
-//        QueueTrip resTrip = getPassengerDaoByPassenger(passengerChatId);
-//        removeByPassengerId(passengerChatId);
-//        return resTrip;
-//    }
 
     /**
      * Unsets driver id of trip on which it was set, when driver leaves
@@ -202,29 +155,5 @@ public class TripQueueService {
         return tripQueue.stream().map(QueueTrip::clone).collect(Collectors.toList());
     }
 
-//    // testing queue service
-//    public static void main(String[] args) {
-//        PassengerQueueService pqservice = new PassengerQueueService();
-//        Trip ps2 = new Trip(2l, "Lavruhina", "A child, a mom", 7l);
-//        Trip ps3 = new Trip(3l, "Lavruhina", "A child, a mom", 6l);
-//        Trip ps4 = new Trip(4l, "Lavruhina", "A child, a mom", 5l);
-//        Trip ps5 = new Trip(5l,"Lavruhina", "A child, a mom", 3l);
-//        Trip ps6 = new Trip(6l,"Lavruhina", "A child, a mom", 4l);
-//
-//        pqservice.add(ps2);
-//        pqservice.add(ps3);
-//        pqservice.add(ps4);
-//        pqservice.add(ps5);
-//        pqservice.add(ps6);
-//
-//        System.out.println(pqservice.getNextFree(2)); // all passengers are being viewed
-//        System.out.println(pqservice.getNextFree(3)); // frees passenger 5
-//        System.out.println(pqservice.getNextFree(5)); // gets passenger 5
-//
-//        System.out.println("___");
-//        PassengerQueueService pq = new PassengerQueueService();
-//        pq.add(ps2);
-//        System.out.println(pq.getNextFree(7));
-//    }
 }
 

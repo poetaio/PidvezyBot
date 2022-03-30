@@ -1,6 +1,6 @@
 package services.driver_services;
 
-import bots.utils.Constants;
+import bot.utils.Constants;
 import models.dao.DriverUpdateDao;
 import services.event_service.EventService;
 import services.event_service.utils.Events;

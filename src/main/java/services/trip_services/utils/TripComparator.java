@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.Date;
 
 public class TripComparator {
-    private static final Comparator<Date> NULL_DATE_COMPARATOR = (o1, o2) -> {
+    public static final Comparator<Date> NULL_DATE_COMPARATOR = (o1, o2) -> {
         if (o1 == null)
             return -1;
         if (o2 == null)

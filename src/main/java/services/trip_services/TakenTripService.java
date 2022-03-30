@@ -51,28 +51,22 @@ public class TakenTripService {
     }
 
     public void removeTrip(long driverChatId) {
-        takenTrips = takenTrips.stream().filter(
-                x -> x.getDriverChatId() != driverChatId
-        ).collect(Collectors.toList());
+        takenTrips.removeIf(x -> x.getDriverChatId() != null && x.getDriverChatId() == driverChatId);
     }
 
     public void removePassengerTrip(long passengerChatId) {
-        takenTrips = takenTrips.stream().filter(
-                x -> x.getPassengerChatId() != passengerChatId
-        ).collect(Collectors.toList());
+        takenTrips.removeIf(x -> x.getPassengerChatId() == passengerChatId);
     }
 
     public TakenTrip getAndRemoveTripByDriverChatId(long driverChatId) {
         TakenTrip trip = getTripByDriverChatId(driverChatId);
-        takenTrips = takenTrips.stream().filter(x -> x.getDriverChatId() != driverChatId).collect(Collectors.toList());
+        takenTrips.removeIf(x -> x.getDriverChatId() != null && x.getDriverChatId() == driverChatId);
         return trip;
     }
 
     public TakenTrip getAndRemoveTripByPassengerChatId(long passengerChatId) {
         TakenTrip trip = getTripByPassengerChatId(passengerChatId);
-        takenTrips = takenTrips.stream()
-                .filter(x -> x.getPassengerChatId() != passengerChatId)
-                .collect(Collectors.toList());
+        takenTrips.removeIf(x -> x.getPassengerChatId() == passengerChatId);
         if (trip != null) {
             if (trip.getDriverChatId() != null)
                 CompletableFuture.runAsync(() -> tripRepository.unsetDriverTookTrip(trip.getTripId(), trip.getDriverChatId()));

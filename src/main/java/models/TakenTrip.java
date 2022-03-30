@@ -1,6 +1,7 @@
 package models;
 
 import lombok.*;
+import models.hibernate.Trip;
 
 import java.util.UUID;
 
@@ -23,6 +24,11 @@ public class TakenTrip {
         address = driverTrip.getAddress();
         details = driverTrip.getDetails();
         this.driverChatId = driverChatId;
+    }
+
+    public TakenTrip(Trip trip) {
+        this(trip.getTripId(), trip.getPassenger().getUserId(), trip.getAddress(),
+                trip.getDetails(), trip.getTakenByDriver().getUserId());
     }
 
     @Override
