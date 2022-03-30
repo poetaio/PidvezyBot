@@ -4,6 +4,7 @@ public enum State {
     CHOOSING_ROLE,
 
     FAQ,
+    PERMIT,
 
     DRIVER_ACTIVE,
     DRIVER_ENTERING_NUMBER,

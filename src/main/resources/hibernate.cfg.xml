@@ -13,5 +13,6 @@
         <mapping class="models.hibernate.Log"/>
         <mapping class="models.hibernate.Group"/>
         <mapping class="models.hibernate.GroupMessage"/>
+        <mapping class="models.hibernate.LogMessage"/>
     </session-factory>
 </hibernate-configuration>

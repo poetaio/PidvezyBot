@@ -107,10 +107,10 @@ public class AdminHttpHandler implements HttpHandler {
             }
             // todo: split into AUTH error and internal server error
         } catch (RuntimeException | JsonProcessingException e) {
-//            e.printStackTrace();
-            httpService.sendErrorResponse(httpExchange, e.getMessage());
+            e.printStackTrace();
+            httpService.sendErrorResponse(httpExchange, e.getMessage() == null ? e.toString() : "No message provided");
         } catch (Exception e) {
-            System.out.println("Internal error occurred");
+            System.out.println("Internal error occurred" + e);
             httpService.sendErrorResponse(httpExchange);
         }
     }

@@ -20,14 +20,11 @@ import models.utils.State;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.abilitybots.api.sender.MessageSender;
 import org.telegram.abilitybots.api.util.AbilityUtils;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.meta.updateshandlers.SentCallback;
 import services.*;
 import services.driver_services.DriverService;
 import services.event_service.EventService;
@@ -132,7 +129,7 @@ public class ResponseHandler implements EventListener {
         if (update.getMessage() == null || update.getMessage().getChat() == null ||
                 !"private".equals(update.getMessage().getChat().getType()))
             return;
-        if (GroupService.getInstance().getGroupName(chatId) != null)
+        if (groupService.getGroupName(chatId) != null)
             return;
         userService.performCleanup(chatId);
         userService.putState(chatId, State.CHOOSING_ROLE);
@@ -207,6 +204,9 @@ public class ResponseHandler implements EventListener {
 
             case FAQ:
                 messageToSend = onFaq(chatId, message);
+                break;
+            case PERMIT:
+                messageToSend = onPermit(chatId, message);
                 break;
 
             // Driver states
@@ -312,7 +312,19 @@ public class ResponseHandler implements EventListener {
             userService.putState(chatId, State.CHOOSING_ROLE);
             return SendMessageFactory.chooseRoleSendMessage(chatId);
         }
+        if (Constants.HOW_TO_GET_PERMIT.equals(message)) {
+            userService.putState(chatId, State.PERMIT);
+            return SendMessageFactory.permitSendMessage(chatId);
+        }
         return SendMessageFactory.faqSendMessage(chatId);
+    }
+
+    private SendMessage onPermit(long chatId, String message) throws TelegramApiException {
+        if (Constants.BACK.equals(message)) {
+            userService.putState(chatId, State.FAQ);
+            return SendMessageFactory.faqSendMessage(chatId);
+        }
+        return SendMessageFactory.permitSendMessage(chatId);
     }
 
     private SendMessage onDriverEnteringNumber(long chatId, String message, Update upd) throws TelegramApiException {
@@ -929,7 +941,7 @@ public class ResponseHandler implements EventListener {
 
     private String createDriverOfferTripMessage(@NotNull QueueTrip queueTrip) {
         User passengerInfo = userService.getUserInfo(queueTrip.getPassengerChatId());
-        return EscapeMessageService.escapeMessage(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
+        return EscapeMessageService.escapeMessageWithArgs(Constants.IS_LOOKING_FOR_CAR_MESSAGE,
                 passengerInfo.getFirstName(), passengerInfo.getLastName() != null ? " " + passengerInfo.getLastName() : "",
                 queueTrip.getAddress(), queueTrip.getDetails());
     }
@@ -1142,7 +1154,7 @@ public class ResponseHandler implements EventListener {
         if (user == null)
             throw new RuntimeException("No user with such id " + passengerChatId);
 
-        return EscapeMessageService.escapeMessage(Constants.GROUP_BOT_TRIP_MESSAGE,
+        return EscapeMessageService.escapeMessageWithArgs(Constants.GROUP_BOT_TRIP_MESSAGE,
                 user.getFirstName(), user.getLastName() == null ? "" : " " + user.getLastName(),
                 trip.getAddress(), trip.getDetails(), number.isEmpty() ? "" : "\n" + number,
                 username.isEmpty() ? "" : "\n" + username);
@@ -1157,7 +1169,7 @@ public class ResponseHandler implements EventListener {
         if (user == null)
             throw new RuntimeException("No user with such id " + passengerChatId);
 
-        return EscapeMessageService.escapeMessage(Constants.GROUP_BOT_TRIP_FINISHED,
+        return EscapeMessageService.escapeMessageWithArgs(Constants.GROUP_BOT_TRIP_FINISHED,
                 user.getFirstName(), user.getLastName() == null ? "" : " " + user.getLastName(),
                 trip.getAddress(), trip.getDetails());
     }
