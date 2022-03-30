@@ -132,6 +132,8 @@ public class ResponseHandler implements EventListener {
         if (update.getMessage() == null || update.getMessage().getChat() == null ||
                 !"private".equals(update.getMessage().getChat().getType()))
             return;
+        if (GroupService.getInstance().getGroupName(chatId) != null)
+            return;
         userService.performCleanup(chatId);
         userService.putState(chatId, State.CHOOSING_ROLE);
         sender.executeAsync(SendMessageFactory.chooseRoleSendMessage(chatId), emptyCallback);
@@ -172,6 +174,13 @@ public class ResponseHandler implements EventListener {
             handleBotLeftGroup(upd);
             return;
         }
+
+        if (upd.getMessage() == null || upd.getMessage().getChat() == null ||
+                !"private".equals(upd.getMessage().getChat().getType()))
+            return;
+
+        if (GroupService.getInstance().getGroupName(AbilityUtils.getChatId(upd)) != null)
+            return;
 
         if ((!upd.getMessage().hasText() || upd.getMessage().getText().indexOf('/') == 0)
                 && upd.getMessage().getContact() == null) {
