@@ -39,7 +39,6 @@ public class TripBuilderService {
     }
 
     public UUID getTripId(long passengerUserId) {
-        System.out.println();
         return getTripInfoWithDefault(passengerUserId).getTripId();
     }
 

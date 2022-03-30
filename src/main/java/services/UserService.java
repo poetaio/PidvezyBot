@@ -30,17 +30,14 @@ public class UserService {
     private final TripService tripService;
     private final UserRepository userRepository;
 
-    // chat id - user
-    private final Map<Long, User> userInfo;
-    // chat id - state
+    private final Map<Long, User> userInfoMap;
     private final Map<Long, State> userStateMap;
-    // chat id - number
-    private final Map<Long, String> usersNumbers;
+    private final Map<Long, String> usersNumbersMap;
 
-    private UserService(Map<Long, State> userStateMap, Map<Long, User> userInfo,
-                       Map<Long, String> usersNumbers) {
-        this.userInfo = userInfo;
-        this.usersNumbers = usersNumbers;
+    private UserService(Map<Long, State> userStateMap, Map<Long, User> userInfoMap,
+                       Map<Long, String> usersNumberMap) {
+        this.userInfoMap = userInfoMap;
+        this.usersNumbersMap = usersNumberMap;
 
         userRepository = new UserRepository();
         this.userStateMap = userStateMap;
@@ -55,7 +52,7 @@ public class UserService {
      * @return user entity
      */
     public User getUserInfo(long chatId) {
-        return userInfo.get(chatId);
+        return userInfoMap.get(chatId);
     }
 
     /**
@@ -64,8 +61,7 @@ public class UserService {
      * @param user user entity
      */
     public void putUserInfo(long chatId, User user) {
-        // TODO: make copy
-        userInfo.put(chatId, user);
+        userInfoMap.put(chatId, user);
         userRepository.setUserInfo(chatId, user);
     }
 
@@ -78,7 +74,6 @@ public class UserService {
         tripService.cancelTripOnSearchStopped(chatId);
         driverService.removeDriver(chatId);
         // not deleting user, as info+trips stay in db
-//        userRepository.removeUser(chatId):
     }
 
     /**
@@ -101,12 +96,12 @@ public class UserService {
     }
 
     public void addNumber(long chatId, String number) {
-        usersNumbers.put(chatId, number);
+        usersNumbersMap.put(chatId, number);
         CompletableFuture.runAsync(() -> userRepository.setNumber(chatId, number));
     }
 
     public String getNumber(long chatId) {
-        return usersNumbers.get(chatId);
+        return usersNumbersMap.get(chatId);
     }
 
 }

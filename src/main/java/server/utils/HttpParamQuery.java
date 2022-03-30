@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class HttpParamQuery {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private Map<String, String> queryParamMap;
+    private final Map<String, String> queryParamMap;
 
     public HttpParamQuery(String query) {
         queryParamMap = queryToMap(query);

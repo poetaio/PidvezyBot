@@ -1,6 +1,6 @@
 package services;
 
-import bots.utils.Constants;
+import bot.utils.Constants;
 import models.QueueTrip;
 import models.TakenTrip;
 import models.dao.DriverUpdateDao;
@@ -19,13 +19,17 @@ import services.trip_services.TripService;
 import utils.HibernateUtil;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-// make me persistent baby
+/**
+ * Service to get data from db and initialize all services on application start
+ */
 public class PersistenceService {
     public static void initServices() {
         Session session = HibernateUtil.getSession();
         session.beginTransaction();
 
+        // move users from db to memory
         Map<Long, State> userStatesMap = new HashMap<>();
         Map<Long, String> userNumbers = new HashMap<>();
         Map<Long, org.telegram.telegrambots.meta.api.objects.User> userInfo = new HashMap<>();
@@ -39,49 +43,42 @@ public class PersistenceService {
         List<User> allUsers = session.createQuery("SELECT u FROM users u", User.class).getResultList();
 
         for (User user : allUsers) {
-//            System.out.printf("%d %s %s%n", user.getUserId(), user.getFirstName(), user.getUsername());
             userNumbers.put(user.getUserId(), user.getPhoneNumber());
             userStatesMap.put(user.getUserId(), user.getUserState());
             userInfo.put(user.getUserId(), toTelegramUser(user));
 
-            // drivers queue
+            // drivers queue (all + active)
             if (user.getUserState() == State.DRIVER_ACTIVE ||
                     user.getUserState() == State.NO_TRIPS_AVAILABLE) {
                 driverList.add(user.getUserId());
                 driverUpdateDaos.add(new DriverUpdateDao(user.getUserId(), calendar.getTime()));
             }
         }
-        // (all not finished trips) building trips or (inactive + in queue) not sure
-        // trips queue
-        // taken trips
-        // finished trips
 
+        // move trips from db to memory
+        // (all not finished trips) building trips or (inactive + in queue)
         Map<Long, QueueTrip> builtTrips = new HashMap<>();
         Queue<QueueTrip> queueTrips = new PriorityQueue<>(TripComparator.TRIP_COMPARATOR);
         List<TakenTrip> takenTrips = new LinkedList<>();
         List<TakenTrip> finishedTrips = new LinkedList<>();
 
         List<Trip> allTrips = session.createQuery("Select t from trips t", Trip.class).getResultList();
+        allTrips.sort((x, y) -> TripComparator.NULL_DATE_COMPARATOR.reversed().compare(x.getTakenAt(), y.getTakenAt()));
 
         for (Trip trip : allTrips) {
             switch (trip.getTripStatus()) {
                 case INACTIVE:
-                    builtTrips.put(trip.getPassenger().getUserId(),
-                            new QueueTrip(trip.getTripId(), trip.getPassenger().getUserId(),
-                            trip.getAddress(), trip.getDetails()));
+                    builtTrips.put(trip.getPassenger().getUserId(), new QueueTrip(trip));
                     break;
                 case IN_QUEUE:
-                    QueueTrip newQueueTrip = new QueueTrip(trip.getTripId(), trip.getPassenger().getUserId(),
-                            trip.getAddress(), trip.getDetails());
+                    QueueTrip newQueueTrip = new QueueTrip(trip);
                     queueTrips.add(newQueueTrip);
                     builtTrips.put(trip.getPassenger().getUserId(), newQueueTrip);
                     break;
                 case TAKEN:
-                    takenTrips.add(new TakenTrip(trip.getTripId(), trip.getPassenger().getUserId(),
-                            trip.getAddress(), trip.getDetails(), trip.getTakenByDriver().getUserId()));
+                    takenTrips.add(new TakenTrip(trip));
                     builtTrips.put(trip.getPassenger().getUserId(),
-                            new QueueTrip(trip.getTripId(), trip.getPassenger().getUserId(),
-                                    trip.getAddress(), trip.getDetails()));
+                            new QueueTrip(trip));
                     break;
                 case FINISHED:
                     User driver = trip.getFinishedByDriver();
@@ -91,6 +88,7 @@ public class PersistenceService {
             }
         }
 
+        // move groups from db to memory
         Collection<Long> inactiveGroupIds = new HashSet<>();
         Collection<Long> activeGroupIds = new HashSet<>();
         Map<Long, GroupDao> groupInfoMap = new HashMap<>();
@@ -109,6 +107,7 @@ public class PersistenceService {
             }
         });
 
+        // initialize all services with data from above
         EventService.initializeInstance();
         DriverService.initializeInstance(driverList, driverUpdateDaos);
         TripService.initializeInstance(builtTrips, queueTrips, takenTrips, finishedTrips);

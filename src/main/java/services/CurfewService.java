@@ -1,6 +1,6 @@
 package services;
 
-import bots.utils.Constants;
+import bot.utils.Constants;
 
 import java.util.Calendar;
 import java.util.TimeZone;

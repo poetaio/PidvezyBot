@@ -15,7 +15,6 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Common service to manage trips (delegation)
- * TODO: use
  */
 public class TripService {
 
@@ -107,6 +106,10 @@ public class TripService {
         return tripQueueService.getPassengerDaoByPassenger(passengerChatId);
     }
 
+    /**
+     * Passenger cancels trip search
+     * @param passengerChatId passenger chat id
+     */
     public void removeTripFromQueueByPassengerId(long passengerChatId) {
         tripQueueService.removeByPassengerId(passengerChatId);
         QueueTrip trip = tripBuilderService.getTripInfo(passengerChatId);
@@ -117,14 +120,14 @@ public class TripService {
         }
     }
 
-//    public void removeTripFromQueueByDriverId(long driverChatId) {
-//        tripQueueService.removeByDriverId(driverChatId);
-//    }
-
     public QueueTrip findNextTripForDriver(long driverChatId) {
         return tripQueueService.getNextFree(driverChatId);
     }
 
+    /**
+     * Passenger hits "Finish" removing trip from queue and taken
+     * @param passengerChatId passenger chat-user id
+     */
     public void removeTripOnPassengerFoundACar(long passengerChatId) {
         TakenTrip trip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
         if (trip != null)
@@ -141,6 +144,10 @@ public class TripService {
         tripBuilderService.removeTripInfo(passengerChatId);
     }
 
+    /**
+     * Driver takes trip: removes it from queue and adds to taken list
+     * @param driverId driver chat-user id
+     */
     public void takeDriverTrip(long driverId) {
         QueueTrip trip = tripQueueService.getAndRemoveByDriverId(driverId);
         if (!trip.getDriverList().contains(driverId))
@@ -152,17 +159,17 @@ public class TripService {
     }
 
     /**
-     * When driver doesn't like the passenger and hits "Dismiss"
+     * Driver cancels taking trip and removes their view from trip
      * @param driverChatId driver chat id
      */
     public void dismissDriverTrip(long driverChatId) {
         takenTripService.dismissDriverTrip(driverChatId);
-//        // if not already dismissed by user
-//        if (takenTrip != null)
-//            tripQueueService.add(new QueueTrip(takenTrip));
     }
 
-    // when passenger does not like driver
+    /**
+     * Passenger cancels trip with the driver to find a new one
+     * @param passengerChatId passenger chat id
+     */
     public void dismissPassengerTrip(long passengerChatId) {
         TakenTrip takenTrip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
         if (takenTrip != null) {
@@ -189,22 +196,7 @@ public class TripService {
         return takenTripService.getTripByPassengerChatId(passengerChatId);
     }
 
-//    public void finishTripByDriver(long driverChatId) {}
-
-    public void finishTripByPassenger(long passengerChatId) {
-        TakenTrip trip = takenTripService.getAndRemoveTripByPassengerChatId(passengerChatId);
-        finishedTripService.addFinishedTrip(trip);
-    }
-
     public List<Long> getPassengersInQueue() {
         return tripQueueService.getPassengersInQueue();
-    }
-
-    public TripBuilderService getTripBuilderService() {
-        return tripBuilderService;
-    }
-
-    public TakenTripService getTakenTripService() {
-        return takenTripService;
     }
 }
