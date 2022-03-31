@@ -48,7 +48,7 @@ public class ReplyMarkupFactory {
     }
 
     public static ReplyKeyboardMarkup noTripsReplyMarkup() {
-        return makeOneColumnMenu(Constants.BACK);
+        return makeOneColumnMenu(Constants.STOP_BROADCAST, Constants.BACK);
     }
 
     public static ReplyKeyboardMarkup driverTookTrip() {
