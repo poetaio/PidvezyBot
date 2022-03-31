@@ -403,6 +403,14 @@ public class ResponseHandler implements EventListener {
         return SendMessageFactory.driverInactiveSendMessage(chatId);
     }
 
+
+    /**
+     * Handles "No trips available state" for driver
+     *
+     * @param chatId  user chat id
+     * @param message message sent by user
+     * @throws TelegramApiException Classic telegram exception
+     */
     private SendMessage onNoTripsAvailable(long chatId, String message) throws TelegramApiException {
         switch (message) {
             case Constants.BACK:
@@ -418,7 +426,7 @@ public class ResponseHandler implements EventListener {
     }
 
     /**
-     * Handles State after driver takes trip, hits "Відгукнутися"
+     * Handles driver State after taking trip
      *
      * @param chatId  driver chat id
      * @param message message sent by driver
@@ -479,6 +487,15 @@ public class ResponseHandler implements EventListener {
         }
     }
 
+
+    /**
+     * Entering passenger user number if no username provided handler
+     * @param chatId  user chat id
+     * @param message message sent by user
+     * @param upd Update entity
+     * @return SendMessage to send
+     * @throws TelegramApiException Classic telegram exception
+     */
     private SendMessage onEnteringNumber(long chatId, String message, Update upd) throws TelegramApiException {
         Contact contact = upd.getMessage().getContact();
         if (contact != null) {
@@ -493,7 +510,13 @@ public class ResponseHandler implements EventListener {
         return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
     }
 
-    // is active when user hits "Back" after entering details
+    /**
+     * Handles editing address when user hits "Back" after entering/editing details "for the first time"
+     * @param chatId
+     * @param message
+     * @return SendMessage to send
+     * @throws TelegramApiException
+     */
     private SendMessage onEditingAddressRegular(long chatId, String message) throws TelegramApiException {
         switch (message) {
             case Constants.DO_NOT_CHANGE:
@@ -511,6 +534,13 @@ public class ResponseHandler implements EventListener {
         }
     }
 
+    /**
+     * Handles editing address on trip approving
+     * @param chatId
+     * @param message
+     * @return SendMessage to send
+     * @throws TelegramApiException
+     */
     private SendMessage onEditingAddressApprove(long chatId, String message, Update upd) throws TelegramApiException {
         if (Constants.DO_NOT_CHANGE.equals(message)) {// returning to approving trip (if it's curfew time)
             return replyToEditAddressApproveNoChange(chatId, upd);
@@ -524,7 +554,13 @@ public class ResponseHandler implements EventListener {
         // resending the same message
         return SendMessageFactory.editAddressApproveSendMessage(chatId, tripService.getTripAddress(chatId));
     }
-
+    /**
+     * Handles editing address on trip search stopped
+     * @param chatId
+     * @param message
+     * @return SendMessage to send
+     * @throws TelegramApiException
+     */
     private SendMessage onEditingAddressSearchStop(long chatId, String message, Update upd) throws TelegramApiException {
         if (Constants.DO_NOT_CHANGE.equals(message)) {// move back to "search stop" menu
             return replyToEditAddressSearchStopNoChange(chatId, upd);
@@ -536,7 +572,13 @@ public class ResponseHandler implements EventListener {
 
         return SendMessageFactory.editAddressSearchStopSendMessage(chatId, tripService.getTripAddress(chatId));
     }
-
+    /**
+     * Handles editing details on "Back" button on "Entering number"/Approving trip
+     * @param chatId user chat id
+     * @param message sent message by user
+     * @return SendMessage to send
+     * @throws TelegramApiException basic exc
+     */
     private SendMessage onEditingDetailsRegular(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.DO_NOT_CHANGE:
@@ -553,6 +595,14 @@ public class ResponseHandler implements EventListener {
         }
     }
 
+    /**
+     * Handles editing details on trip approving
+     * @param chatId chat id of the user
+     * @param message message sent
+     * @param upd Update entity
+     * @return SendMessage to send
+     * @throws TelegramApiException basic exception
+     */
     private SendMessage onEditingDetailsApprove(long chatId, String message, Update upd) throws TelegramApiException {
         if (Constants.DO_NOT_CHANGE.equals(message)) {
             return replyToEditDetailsApproveNoChange(chatId, upd);
@@ -565,6 +615,14 @@ public class ResponseHandler implements EventListener {
         return SendMessageFactory.editDetailsApproveSendMessage(chatId, tripService.getTripDetails(chatId));
     }
 
+    /**
+     * Handles editing details on trip search stopped
+     * @param chatId chat id of the user
+     * @param message message sent
+     * @param upd Update entity
+     * @return SendMessage to send
+     * @throws TelegramApiException basic exception
+     */
     private SendMessage onEditingDetailsSearchStop(long chatId, String message, Update upd) throws TelegramApiException {
         if (Constants.DO_NOT_CHANGE.equals(message)) {
             return replyToEditDetailsSearchStopNoChange(chatId, upd);
@@ -604,6 +662,14 @@ public class ResponseHandler implements EventListener {
         }
     }
 
+    /**
+     * Handles block screen when it's not curfew time
+     * @param chatId chat id of the user
+     * @param message message sent
+     * @param upd Update entity
+     * @return SendMessage to send
+     * @throws TelegramApiException basic exception
+     */
     private SendMessage onTryAgainDuringCurfew(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.TRY_AGAIN:
@@ -624,7 +690,6 @@ public class ResponseHandler implements EventListener {
 
     /**
      * Handles state when passenger has approved trip and is looking for driver
-     *
      * @param chatId  passenger chat id
      * @param message message sent by passenger
      * @return message to reply with
@@ -666,9 +731,10 @@ public class ResponseHandler implements EventListener {
     }
 
     /**
-     * Handles "Я знайшов транспорт" reply
-     *
+     * Handles user state, when driver took trip reply
      * @param chatId chat id of the passenger
+     * @param  message sent by user
+     * @param chatId user chat id
      * @return Choosing role text & menu
      * @throws TelegramApiException basic telegram exception
      */
