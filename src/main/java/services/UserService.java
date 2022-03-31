@@ -96,12 +96,13 @@ public class UserService {
     }
 
     public void addNumber(long chatId, String number) {
-        usersNumbersMap.put(chatId, number);
-        CompletableFuture.runAsync(() -> userRepository.setNumber(chatId, number));
+        String encryptedNumber = EncryptionService.encrypt(number);
+        usersNumbersMap.put(chatId, encryptedNumber);
+        CompletableFuture.runAsync(() -> userRepository.setNumber(chatId, encryptedNumber));
     }
 
     public String getNumber(long chatId) {
-        return usersNumbersMap.get(chatId);
+        return EncryptionService.decrypt(usersNumbersMap.get(chatId));
     }
 
 }
