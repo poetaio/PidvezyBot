@@ -104,6 +104,7 @@ public class AdminHttpHandler implements HttpHandler {
                     removeGroupFromGroupBot(httpExchange);
                     return;
                 }
+
                 httpService.sendErrorResponse(httpExchange, "No such endpoint...");
             }
             // todo: split into AUTH error and internal server error
@@ -247,5 +248,4 @@ public class AdminHttpHandler implements HttpHandler {
 
         httpService.sendResponse(httpExchange, 200);
     }
-
 }

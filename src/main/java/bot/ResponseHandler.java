@@ -794,12 +794,7 @@ public class ResponseHandler implements EventListener {
     private SendMessage replyToEnterDetails(long chatId, String newDetails, Update upd) throws TelegramApiException {
         logOutDetailsChange(tripService.getTripId(chatId), newDetails, tripService.getTripDetails(chatId));
         tripService.setTripDetails(chatId, newDetails);
-        String number = userService.getNumber(chatId);
-        if (AbilityUtils.getUser(upd).getUserName() == null && number == null) {
-            userService.putState(chatId, State.ENTERING_NUMBER);
-            return SendMessageFactory.passengerEnterNumberSendMessage(chatId);
-        }
-        return checkIfCurfewAndSendApproveMenu(chatId, upd);
+        return checkPhoneCurfewAndSendApproveMenu(chatId, upd);
     }
 
     private SendMessage replyToEnterNumber(long chatId, String number, Update upd) throws TelegramApiException {
