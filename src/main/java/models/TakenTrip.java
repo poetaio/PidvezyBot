@@ -28,7 +28,7 @@ public class TakenTrip {
 
     public TakenTrip(Trip trip) {
         this(trip.getTripId(), trip.getPassenger().getUserId(), trip.getAddress(),
-                trip.getDetails(), trip.getTakenByDriver().getUserId());
+                trip.getDetails(), trip.getTakenByDriver() == null ? null : trip.getTakenByDriver().getUserId());
     }
 
     @Override

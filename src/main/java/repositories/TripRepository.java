@@ -129,7 +129,7 @@ public class TripRepository {
         Trip trip = getTripWithDefault(session, tripId);
         if (trip.getTakenByDriver() != null && trip.getTakenByDriver().getUserId() == userId) {
             trip.setTakenByDriver(null);
-            trip.setTripStatus(TripStatus.INACTIVE);
+//            trip.setTripStatus(TripStatus.INACTIVE);
             trip.setTakenAt(null);
         }
 

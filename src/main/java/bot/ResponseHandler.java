@@ -638,6 +638,14 @@ public class ResponseHandler implements EventListener {
         return SendMessageFactory.requestPendingMessage(chatId);
     }
 
+    /**
+     * Handles state when passenger stopped trip search
+     * @param chatId chat id
+     * @param message message
+     * @param upd Update entity
+     * @return SendMessage to send
+     * @throws TelegramApiException basic exception
+     */
     private SendMessage onTripSearchStopped(long chatId, String message, Update upd) throws TelegramApiException {
         switch (message) {
             case Constants.RESUME_SEARCH:
