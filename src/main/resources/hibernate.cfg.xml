@@ -6,14 +6,10 @@
     <session-factory>
         <property name="hibernate.archive.autodetection">class,hbm</property>
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL10Dialect</property>
-        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.show_sql">false</property>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.username">pidvezy_pidvezu_user</property>
-        <property name="hibernate.connection.password">password</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/pidvezy_pidvezu_db</property>
-        <property name="hibernate.hbm2ddl.auto">update</property>
-        <mapping class="models.Driver"/>
-        <mapping class="models.Passenger"/>
-        <mapping class="models.Trip"/>
+        <mapping class="models.hibernate.Trip"/>
+        <mapping class="models.hibernate.User"/>
+        <mapping class="models.hibernate.Log"/>
     </session-factory>
 </hibernate-configuration>

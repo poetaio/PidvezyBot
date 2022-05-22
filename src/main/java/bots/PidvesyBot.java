@@ -1,6 +1,7 @@
 package bots;
 
 import bots.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -14,9 +15,9 @@ public class PidvesyBot extends AbilityBot {
         return Constants.CREATOR_ID;
     }
     
-    public PidvesyBot() {
-        super(Constants.BOT_TOKEN, Constants.BOT_USERNAME);
-        responseHandler = new ResponseHandler(sender);
+    public PidvesyBot() throws JsonProcessingException {
+        super(System.getenv("PIDVEZY_BOT_TOKEN"), Constants.BOT_USERNAME);
+        responseHandler = ResponseHandler.getInstance(sender);
     }
 
     public Ability start() {
@@ -39,6 +40,10 @@ public class PidvesyBot extends AbilityBot {
     @Override
     public void onUpdateReceived(Update update) {
         super.onUpdateReceived(update);
-        responseHandler.handleUpdate(update);
+        try {
+            responseHandler.handleUpdate(update);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
