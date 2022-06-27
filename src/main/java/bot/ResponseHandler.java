@@ -143,6 +143,7 @@ public class ResponseHandler implements EventListener {
      * @throws TelegramApiException Classic telegram exception
      */
     public void handleUpdate(Update upd) throws TelegramApiException {
+
         // if bot has been added to channel
         if (upd.getMyChatMember() != null && "administrator".equals(upd.getMyChatMember().getNewChatMember().getStatus())) {
             handleBotJoinedChannel(upd);

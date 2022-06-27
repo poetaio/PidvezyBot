@@ -160,6 +160,10 @@ public class SendMessageFactory {
         return makeSendMessage(chatId, Constants.CURFEW_IS_OVER_MESSAGE, ReplyMarkupFactory.tryAgainDuringCurfewReplyKeyboard());
     }
 
+    public static SendMessage botInactiveSendMessage(long chatId) throws TelegramApiException {
+        return makeSendMessage(chatId, Constants.BOT_INACTIVE_MESSAGE);
+    }
+
     private static SendMessage makeSendMessage(long chatId, String messageText) throws TelegramApiException {
         return SendMessage.builder()
                 .chatId(String.valueOf(chatId))
