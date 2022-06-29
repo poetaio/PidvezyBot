@@ -47,8 +47,8 @@ public class PidvesyBot extends AbilityBot {
         super.onUpdateReceived(update);
         try {
 //            responseHandler.handleUpdate(update);
+//            sender.execute(SendMessageFactory.botInactiveSendMessage(AbilityUtils.getChatId(update)));
             sender.executeAsync(SendMessageFactory.botInactiveSendMessage(AbilityUtils.getChatId(update)), emptyCallback);
-            return;
         } catch (Exception e) {
             e.printStackTrace();
         }

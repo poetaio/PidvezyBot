@@ -82,7 +82,7 @@ public interface Constants {
     String APPROVE_TRIP = "Відправити запит";
     String TRY_AGAIN = "Спробувати ще раз";
     String CURFEW_IS_OVER_MESSAGE = "Комендантська година завершена\\. Спробуйте пізніше\\.";
-    String BOT_INACTIVE_MESSAGE = "На жаль, бот більше не працює :(";
+    String BOT_INACTIVE_MESSAGE = "На жаль, бот більше не працює :\\(";
 
     String APPROVE_MESSAGE_CURFEW = "Ваш запит збережено: \n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n%s\n\n%s\n\nБот працює лише під час комендантської години\\. Ви зможете його відправити після "+CURFEW_START_HOUR+":00";
     String APPROVE_MESSAGE = "Перевірте запит і натисніть \"Відправити запит\", щоб волонтери його отримали:\n\n%s%s шукає транспорт з вокзалу на %s\\.\n%s\n\n%s\n%s";
